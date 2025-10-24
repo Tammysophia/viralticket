@@ -113,7 +113,7 @@ const AdminOverview = () => {
           {recentActivity.map((activity, i) => (
             <div key={i} className="flex items-center justify-between glass border border-white/5 rounded-lg p-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center font-bold"
+                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center font-bold">
                   {activity.user[0]}
                 </div>
                 <div>
