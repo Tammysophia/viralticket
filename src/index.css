@@ -9,6 +9,7 @@
 }
 
 @layer utilities {
+  /* Glassmorphism */
   .glass {
     @apply bg-white/10 backdrop-blur-xl border border-white/20;
   }
@@ -17,11 +18,139 @@
     @apply hover:bg-white/15 transition-all duration-300;
   }
   
+  /* Gradientes Primários */
   .gradient-primary {
     @apply bg-gradient-to-r from-purple-600 to-pink-600;
   }
   
+  /* Background Gradiente Padrão */
   .gradient-bg {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  }
+
+  /* Background Gradiente Admin - Tema Especificado */
+  .admin-gradient {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1a0a2e 50%, #0A0A0A 100%);
+    position: relative;
+  }
+
+  .admin-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(250, 204, 21, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* Gradiente de Texto Admin - Roxo → Lilás → Dourado */
+  .admin-gradient-text {
+    background: linear-gradient(
+      90deg,
+      #8B5CF6 0%,
+      #A78BFA 50%,
+      #FACC15 100%
+    );
+  }
+
+  /* Gradiente Premium para Cards */
+  .gradient-admin-card {
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.1) 0%,
+      rgba(167, 139, 250, 0.1) 50%,
+      rgba(250, 204, 21, 0.05) 100%
+    );
+  }
+
+  /* Borda Gradiente Admin */
+  .border-admin-gradient {
+    border-image: linear-gradient(
+      90deg,
+      #8B5CF6,
+      #A78BFA,
+      #FACC15
+    ) 1;
+  }
+
+  /* Animações Suaves */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.5s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(139, 92, 246, 0.1) 0%,
+      rgba(167, 139, 250, 0.2) 50%,
+      rgba(139, 92, 246, 0.1) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 3s infinite linear;
+  }
+
+  /* Scrollbar Customizada */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      #8B5CF6 0%,
+      #A78BFA 100%
+    );
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      #A78BFA 0%,
+      #FACC15 100%
+    );
   }
 }
