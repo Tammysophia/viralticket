@@ -5,8 +5,10 @@ import PlanBadge from './PlanBadge';
 import Button from './Button';
 import Modal from './Modal';
 import { useToast } from './Toast';
+import { useAuth } from '../hooks/useAuth';
 
 const AdminUsers = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([
     {
       id: '1',
@@ -49,6 +51,15 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const { success } = useToast();
+
+  // Proteção adicional - não renderizar se não for admin
+  if (!currentUser?.isAdmin) {
+    return (
+      <Card>
+        <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
+      </Card>
+    );
+  }
 
   const handleChangePlan = (userId, newPlan) => {
     setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));

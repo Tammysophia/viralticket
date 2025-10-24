@@ -1,8 +1,19 @@
 import { TrendingUp, Users, Key, Activity } from 'lucide-react';
 import Card from './Card';
 import { motion } from 'framer-motion';
+import { useAuth } from '../hooks/useAuth';
 
 const AdminOverview = () => {
+  const { user } = useAuth();
+
+  // Proteção adicional - não renderizar se não for admin
+  if (!user?.isAdmin) {
+    return (
+      <Card>
+        <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
+      </Card>
+    );
+  }
   const stats = [
     {
       icon: Users,

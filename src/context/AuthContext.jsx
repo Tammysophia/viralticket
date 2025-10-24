@@ -19,19 +19,21 @@ export const AuthProvider = ({ children }) => {
     // Simulação de login - substituir por Firebase Auth
     return new Promise((resolve) => {
       setTimeout(() => {
+        const isAdmin = email === 'tamara14@gmail.com';
         const mockUser = {
           id: '1',
           email,
           name: email.split('@')[0],
-          plan: 'FREE',
+          plan: isAdmin ? 'ADMIN' : 'FREE',
+          isAdmin,
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: {
             offers: 1,
             urls: 2,
           },
           limits: {
-            offers: 3,
-            urls: 3,
+            offers: isAdmin ? 'unlimited' : 3,
+            urls: isAdmin ? 'unlimited' : 3,
           },
         };
         setUser(mockUser);
@@ -47,19 +49,21 @@ export const AuthProvider = ({ children }) => {
     // Simulação de registro - substituir por Firebase Auth
     return new Promise((resolve) => {
       setTimeout(() => {
+        const isAdmin = email === 'tamara14@gmail.com';
         const mockUser = {
           id: Date.now().toString(),
           email,
           name: email.split('@')[0],
-          plan: 'FREE',
+          plan: isAdmin ? 'ADMIN' : 'FREE',
+          isAdmin,
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: {
             offers: 0,
             urls: 0,
           },
           limits: {
-            offers: 3,
-            urls: 3,
+            offers: isAdmin ? 'unlimited' : 3,
+            urls: isAdmin ? 'unlimited' : 3,
           },
         };
         setUser(mockUser);

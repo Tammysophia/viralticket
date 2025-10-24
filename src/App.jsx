@@ -24,6 +24,31 @@ const PrivateRoute = ({ children }) => {
   return user ? children : <Navigate to="/" />;
 };
 
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" />;
+  }
+
+  if (!user.isAdmin) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -39,9 +64,9 @@ const AppRoutes = () => {
       <Route
         path="/admin"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <Admin />
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" />} />

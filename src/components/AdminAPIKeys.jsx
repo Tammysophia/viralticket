@@ -8,12 +8,23 @@ import { useAPIKeys } from '../hooks/useAPIKeys';
 import { useToast } from './Toast';
 import { maskAPIKey, formatDate } from '../utils/validation';
 import ProgressBar from './ProgressBar';
+import { useAuth } from '../hooks/useAuth';
 
 const AdminAPIKeys = () => {
+  const { user } = useAuth();
   const { apiKeys, loading, addAPIKey, updateAPIKey, deleteAPIKey, rotateAPIKey } = useAPIKeys();
   const [showModal, setShowModal] = useState(false);
   const [newKey, setNewKey] = useState({ name: '', key: '', type: 'youtube' });
   const { success, error } = useToast();
+
+  // Proteção adicional - não renderizar se não for admin
+  if (!user?.isAdmin) {
+    return (
+      <Card>
+        <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
+      </Card>
+    );
+  }
 
   const handleAdd = () => {
     if (!newKey.name || !newKey.key) {

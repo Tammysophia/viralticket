@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 
 export const useAPIKeys = () => {
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadAPIKeys();
-  }, []);
+    if (user?.isAdmin) {
+      loadAPIKeys();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const loadAPIKeys = () => {
     setLoading(true);
@@ -14,7 +20,7 @@ export const useAPIKeys = () => {
     if (saved) {
       setApiKeys(JSON.parse(saved));
     } else {
-      // Mock data
+      // Mock data - apenas para admin
       const mockKeys = [
         {
           id: '1',
@@ -42,6 +48,8 @@ export const useAPIKeys = () => {
   };
 
   const addAPIKey = (keyData) => {
+    if (!user?.isAdmin) return;
+    
     const newKey = {
       id: Date.now().toString(),
       ...keyData,
@@ -55,6 +63,8 @@ export const useAPIKeys = () => {
   };
 
   const updateAPIKey = (id, updates) => {
+    if (!user?.isAdmin) return;
+    
     const updated = apiKeys.map(key => 
       key.id === id ? { ...key, ...updates } : key
     );
@@ -63,12 +73,16 @@ export const useAPIKeys = () => {
   };
 
   const deleteAPIKey = (id) => {
+    if (!user?.isAdmin) return;
+    
     const updated = apiKeys.filter(key => key.id !== id);
     setApiKeys(updated);
     localStorage.setItem('viralticket_api_keys', JSON.stringify(updated));
   };
 
   const rotateAPIKey = (id) => {
+    if (!user?.isAdmin) return;
+    
     // Estrutura para rotação automática de chaves
     updateAPIKey(id, {
       lastRotated: new Date().toISOString(),

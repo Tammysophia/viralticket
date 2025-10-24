@@ -12,6 +12,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
   const [urls, setUrls] = useState(['', '', '']);
   const [loading, setLoading] = useState(false);
   const [comments, setComments] = useState([]);
+  const [apiError, setApiError] = useState(false);
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
@@ -33,6 +34,19 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     
     // Simulação de extração
     setTimeout(() => {
+      // Simular falha de API apenas para demonstração de mensagens
+      const apiKeyMissing = false; // Ajuste conforme necessário
+      
+      if (apiKeyMissing) {
+        setLoading(false);
+        if (user.isAdmin) {
+          error('⚠️ Chave da API não configurada. Configure em Admin > API Keys.');
+        } else {
+          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
+        }
+        return;
+      }
+
       const mockComments = Array.from({ length: 50 }, (_, i) => ({
         id: i + 1,
         author: `Usuário ${i + 1}`,

@@ -6,8 +6,10 @@ import Modal from './Modal';
 import Input from './Input';
 import { useToast } from './Toast';
 import { formatDate } from '../utils/validation';
+import { useAuth } from '../hooks/useAuth';
 
 const AdminWebhooks = () => {
+  const { user } = useAuth();
   const [webhooks, setWebhooks] = useState([
     {
       id: '1',
@@ -32,6 +34,15 @@ const AdminWebhooks = () => {
   const [showModal, setShowModal] = useState(false);
   const [newWebhook, setNewWebhook] = useState({ name: '', url: '', platform: '' });
   const { success, error } = useToast();
+
+  // Proteção adicional - não renderizar se não for admin
+  if (!user?.isAdmin) {
+    return (
+      <Card>
+        <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
+      </Card>
+    );
+  }
 
   const handleAdd = () => {
     if (!newWebhook.name || !newWebhook.url || !newWebhook.platform) {

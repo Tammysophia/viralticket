@@ -47,6 +47,19 @@ const AIChat = ({ initialText = '' }) => {
 
     // Simulação de geração de oferta
     setTimeout(() => {
+      // Simular falha de API apenas para demonstração de mensagens
+      const apiError = false; // Ajuste conforme necessário
+      
+      if (apiError) {
+        setLoading(false);
+        if (user.isAdmin) {
+          error('⚠️ Erro na API do OpenAI. Verifique a chave em Admin > API Keys.');
+        } else {
+          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
+        }
+        return;
+      }
+
       const mockOffer = {
         title: '🎯 Transforme Sua Vida em 30 Dias!',
         subtitle: 'O Método Definitivo para Alcançar Seus Objetivos',

@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
-import { Globe } from 'lucide-react';
+import { Globe, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
   const { language, changeLanguage } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const languages = [
     { code: 'pt-BR', flag: '🇧🇷', name: 'Português' },
@@ -39,6 +41,15 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-2">
+        {user?.isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="px-3 py-1.5 rounded-lg text-sm transition-all glass-hover text-purple-400 flex items-center gap-1 mr-2"
+          >
+            <Shield className="w-4 h-4" />
+            <span className="hidden sm:inline">Admin</span>
+          </button>
+        )}
         <Globe className="w-4 h-4 text-gray-400" />
         {languages.map((lang) => (
           <button
