@@ -29,7 +29,11 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     }
 
     if (!hasYoutubeKey()) {
-      error('❌ Chave da API do YouTube não configurada. Configure no painel admin.');
+      if (user?.isAdmin) {
+        error('❌ Chave da API do YouTube não configurada. Configure no painel admin.');
+      } else {
+        error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
+      }
       return;
     }
 
@@ -44,7 +48,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       // Usar apenas a primeira URL por enquanto
       const videoUrl = validUrls[0];
       
-      console.log('🎬 Extraindo comentários reais do YouTube...');
+      // Extraindo comentários do YouTube
       
       // Extrair comentários reais da API do YouTube
       const result = await extractCommentsFromYouTube(
@@ -71,11 +75,16 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
         },
       });
       
-      success(`✅ ${result.comments.length} comentários REAIS extraídos!`);
+      success(`✅ ${result.comments.length} comentários extraídos com sucesso!`);
       
     } catch (err) {
-      console.error('Erro ao extrair comentários:', err);
-      error(`❌ Erro: ${err.message}`);
+      // Log apenas para admin
+      if (user?.isAdmin) {
+        console.error('Erro ao extrair comentários:', err);
+        error(`❌ Erro técnico: ${err.message}`);
+      } else {
+        error('⚡ Não foi possível conectar ao servidor. Tente novamente em instantes!');
+      }
     } finally {
       setLoading(false);
     }
@@ -95,8 +104,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
 
   return (
     <div className="space-y-6">
-      {/* Alerta se não tiver chave configurada */}
-      {!hasYoutubeKey() && (
+      {/* Alerta se não tiver chave configurada - APENAS PARA ADMIN */}
+      {!hasYoutubeKey() && user?.isAdmin && (
         <Card className="border-yellow-500/30 bg-yellow-500/10">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -105,9 +114,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
                 ⚠️ Chave da API do YouTube não configurada
               </p>
               <p className="text-sm text-yellow-200/80">
-                {user?.isAdmin 
-                  ? 'Configure a chave no painel admin (Chaves API) para extrair comentários reais.'
-                  : 'Entre em contato com o administrador para configurar as chaves de API.'}
+                Configure a chave no painel admin (Chaves API) para extrair comentários reais.
               </p>
             </div>
           </div>
@@ -118,7 +125,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       <Card>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Youtube className="w-6 h-6 text-red-500" />
-          URLs do YouTube {hasYoutubeKey() && <span className="text-xs text-green-400">(✓ API Ativa)</span>}
+          URLs do YouTube {hasYoutubeKey() && user?.isAdmin && <span className="text-xs text-green-400">(✓ API Ativa)</span>}
         </h3>
         <div className="space-y-3">
           {urls.map((url, index) => (
@@ -141,7 +148,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
           disabled={!hasYoutubeKey()}
           className="w-full mt-4"
         >
-          {loading ? 'Extraindo comentários reais...' : '🎬 Extrair Comentários REAIS'}
+          {loading ? 'Extraindo comentários...' : '🎬 Extrair Comentários'}
         </Button>
       </Card>
 
@@ -172,7 +179,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
-              ✅ {comments.length} Comentários REAIS Extraídos
+              ✅ {comments.length} Comentários Extraídos
             </h3>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={handleCopyAll} icon={Copy}>
