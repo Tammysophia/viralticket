@@ -64,7 +64,7 @@ const Login = () => {
             rotate: [0, 180, 360],
           }}
           transition={{ duration: 20, repeat: Infinity }}
-          className="absolute -top-1/2 -left-1/2 w-full h-full bg-purple-600/10 rounded-full blur-3xl"
+          className="absolute -top-1/2 -left-1/2 w-full h-full bg-primary-purple/10 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
@@ -72,7 +72,7 @@ const Login = () => {
             rotate: [360, 180, 0],
           }}
           transition={{ duration: 15, repeat: Infinity }}
-          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-pink-600/10 rounded-full blur-3xl"
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-primary-lilac/10 rounded-full blur-3xl"
         />
       </div>
 
@@ -80,7 +80,7 @@ const Login = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass border border-white/20 rounded-2xl p-8 max-w-md w-full relative z-10"
+        className="glass rounded-2xl p-8 max-w-md w-full relative z-10 shadow-[0_4px_30px_rgba(139,92,246,0.15)]"
       >
         {/* Logo */}
         <div className="text-center mb-8">
@@ -88,15 +88,17 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center gap-2 text-4xl font-bold mb-2"
+            className="inline-flex flex-col items-center gap-3 mb-4"
           >
-            <span>🎟️</span>
-            <span className="gradient-primary bg-clip-text text-transparent">
+            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center text-4xl shadow-lg shadow-primary-purple/30">
+              🎟️
+            </div>
+            <span className="text-4xl font-bold gradient-primary bg-clip-text text-transparent">
               ViralTicket
             </span>
           </motion.div>
-          <p className="text-gray-400 flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4" />
+          <p className="text-zinc-400 flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary-lilac" />
             <span>Transforme comentários em ofertas virais</span>
           </p>
         </div>
@@ -138,32 +140,12 @@ const Login = () => {
             className="text-sm text-gray-400 hover:text-white transition-colors"
           >
             {isLogin ? t('dontHaveAccount') : t('alreadyHaveAccount')}{' '}
-            <span className="text-purple-400 font-semibold">
+            <span className="text-primary-lilac font-semibold">
               {isLogin ? t('register') : t('login')}
             </span>
           </button>
         </div>
 
-        {/* Features */}
-        <div className="mt-8 pt-8 border-t border-white/10 space-y-3">
-          <p className="text-sm text-gray-400 font-semibold mb-3">O que você terá acesso:</p>
-          {[
-            '✨ Extração de comentários do YouTube',
-            '🤖 IA para criar ofertas virais',
-            '📊 Kanban para organizar ofertas',
-            '🌐 Multi-idioma (PT, EN, ES)',
-          ].map((feature, i) => (
-            <motion.p
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="text-sm text-gray-300"
-            >
-              {feature}
-            </motion.p>
-          ))}
-        </div>
       </motion.div>
     </div>
   );

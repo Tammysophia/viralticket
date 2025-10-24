@@ -55,7 +55,7 @@ const Dashboard = () => {
                   <h1 className="text-2xl font-bold mb-1">
                     Bem-vindo, {user?.name}! 👋
                   </h1>
-                  <p className="text-gray-400">
+                  <p className="text-zinc-400">
                     Vamos criar ofertas incríveis hoje?
                   </p>
                 </div>

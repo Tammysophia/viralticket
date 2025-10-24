@@ -11,10 +11,11 @@ const Button = ({
   icon: Icon,
 }) => {
   const variants = {
-    primary: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700',
-    secondary: 'glass glass-hover text-white',
-    danger: 'bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30',
-    success: 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30',
+    primary: 'bg-gradient-to-r from-primary-purple to-primary-lilac text-white hover:shadow-lg hover:shadow-primary-lilac/50 hover:brightness-110',
+    secondary: 'glass glass-hover text-white border-white/10',
+    danger: 'bg-red-900/30 border border-red-500/50 text-red-400 hover:bg-red-900/50',
+    success: 'bg-green-900/30 border border-green-500/50 text-green-400 hover:bg-green-900/50',
+    gold: 'gradient-gold text-white hover:shadow-lg hover:shadow-gold-500/50 font-bold border-0',
   };
 
   return (

@@ -12,7 +12,7 @@ const Tabs = ({ tabs, activeTab, onTabChange }) => {
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTab"
-              className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"
+              className="absolute inset-0 gradient-primary rounded-lg shadow-lg shadow-primary-purple/30"
             />
           )}
           <span className="relative z-10 flex items-center justify-center gap-2">

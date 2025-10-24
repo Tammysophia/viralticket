@@ -38,7 +38,7 @@ export const getPlanColor = (planName) => {
     FREE: 'from-gray-600 to-gray-800',
     BRONZE: 'from-orange-600 to-orange-800',
     PRATA: 'from-gray-400 to-gray-600',
-    OURO: 'from-yellow-500 to-yellow-700',
+    OURO: 'from-gold-500 to-gold-600',
   };
   return colors[planName] || colors.FREE;
 };

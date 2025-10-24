@@ -13,13 +13,13 @@ const Input = ({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-300">
+        <label className="block text-sm font-medium text-zinc-300">
           {label}
         </label>
       )}
       <div className="relative">
         {Icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Icon className="w-5 h-5" />
           </div>
         )}
@@ -33,7 +33,7 @@ const Input = ({
             error ? 'border-red-500/50' : 'border-white/10'
           } rounded-lg px-4 py-3 ${
             Icon ? 'pl-12' : ''
-          } focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all`}
+          } focus:outline-none focus:ring-2 focus:ring-primary-purple/50 transition-all`}
           {...props}
         />
       </div>

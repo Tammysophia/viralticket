@@ -30,7 +30,7 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
         animate={{ x: 0, opacity: 1 }}
         className={`${
           collapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'
-        } fixed lg:static inset-y-0 left-0 z-40 w-64 glass border-r border-white/10 p-6 flex flex-col transition-transform duration-300`}
+        } fixed lg:static inset-y-0 left-0 z-40 w-64 bg-black/20 backdrop-blur-[15px] border-r border-white/5 p-6 flex flex-col transition-transform duration-300`}
       >
         {/* Logo */}
         <div className="mb-8">
@@ -53,8 +53,8 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                 activePage === item.id
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                  : 'glass-hover text-gray-400'
+                  ? 'gradient-primary text-white shadow-lg shadow-primary-purple/30'
+                  : 'glass-hover text-zinc-400 hover:text-white'
               }`}
             >
               <item.icon className="w-5 h-5" />
@@ -66,7 +66,7 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg glass-hover text-red-400 mt-4"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-900/20 border border-red-500/30 hover:bg-red-900/40 text-red-400 mt-4 transition-all"
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Sair</span>

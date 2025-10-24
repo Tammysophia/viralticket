@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2 } from 'lucide-react';
+import { Sparkles, Copy, Loader2, Plus } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { createOffer } from '../firebase/offers';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -28,7 +29,7 @@ const AIChat = ({ initialText = '' }) => {
       name: 'Sofia Universal',
       emoji: '🌟',
       description: 'IA versátil para todos os nichos',
-      color: 'from-purple-500 to-pink-600',
+      color: 'from-primary-purple to-primary-lilac',
     },
   ];
 
@@ -80,6 +81,31 @@ const AIChat = ({ initialText = '' }) => {
     success('Oferta copiada!');
   };
 
+  const handleAddToKanban = async () => {
+    if (!output) return;
+    
+    try {
+      const agent = agents.find(a => a.id === selectedAgent);
+      const offerData = {
+        title: output.title,
+        description: output.subtitle,
+        agent: `${agent.name} ${agent.emoji}`,
+        status: 'pending',
+        content: {
+          bullets: output.bullets,
+          cta: output.cta,
+          bonus: output.bonus,
+        },
+      };
+      
+      await createOffer(offerData);
+      success('✅ Oferta adicionada ao Kanban!');
+    } catch (error) {
+      console.error('Error adding to Kanban:', error);
+      error('Erro ao adicionar oferta ao Kanban');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Agent Selection */}
@@ -92,13 +118,13 @@ const AIChat = ({ initialText = '' }) => {
               onClick={() => setSelectedAgent(agent.id)}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedAgent === agent.id
-                  ? 'border-purple-500 bg-purple-500/10'
+                  ? 'border-primary-purple bg-primary-purple/10'
                   : 'border-white/10 glass-hover'
               }`}
             >
               <div className="text-4xl mb-2">{agent.emoji}</div>
               <h4 className="font-bold mb-1">{agent.name}</h4>
-              <p className="text-sm text-gray-400">{agent.description}</p>
+              <p className="text-sm text-zinc-400">{agent.description}</p>
             </button>
           ))}
         </div>
@@ -111,7 +137,7 @@ const AIChat = ({ initialText = '' }) => {
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder={t('enterText')}
-          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary-purple/50 resize-none"
         />
         <Button
           onClick={handleGenerate}
@@ -128,9 +154,14 @@ const AIChat = ({ initialText = '' }) => {
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-              {t('copy')}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="gold" onClick={handleAddToKanban} icon={Plus}>
+                Adicionar ao Kanban
+              </Button>
+              <Button variant="secondary" onClick={handleCopy} icon={Copy}>
+                {t('copy')}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -138,16 +169,16 @@ const AIChat = ({ initialText = '' }) => {
               <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
                 {output.title}
               </h2>
-              <p className="text-lg text-gray-300 mt-2">{output.subtitle}</p>
+              <p className="text-lg text-zinc-300 mt-2">{output.subtitle}</p>
             </div>
 
             <div className="space-y-2">
               {output.bullets.map((bullet, index) => (
-                <p key={index} className="text-gray-300">{bullet}</p>
+                <p key={index} className="text-zinc-300">{bullet}</p>
               ))}
             </div>
 
-            <div className="glass border border-purple-500/30 rounded-lg p-4 text-center">
+            <div className="glass border border-primary-purple/30 rounded-lg p-4 text-center">
               <p className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
                 {output.cta}
               </p>

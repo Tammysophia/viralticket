@@ -25,7 +25,7 @@ const Navbar = () => {
             <img
               src={user.avatar}
               alt={user.name}
-              className="w-10 h-10 rounded-full ring-2 ring-purple-500/50"
+              className="w-10 h-10 rounded-full ring-2 ring-primary-purple/50"
             />
             <div>
               <p className="font-semibold">{user.name}</p>
@@ -46,8 +46,8 @@ const Navbar = () => {
             onClick={() => changeLanguage(lang.code)}
             className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
               language === lang.code
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                : 'glass-hover text-gray-400'
+                ? 'gradient-primary text-white shadow-md shadow-primary-purple/30'
+                : 'glass-hover text-zinc-400 hover:text-white'
             }`}
           >
             <span className="mr-1">{lang.flag}</span>

@@ -77,7 +77,7 @@ const AdminUsers = () => {
                   <td className="py-3 px-2">
                     <div>
                       <p className="font-semibold">{user.name}</p>
-                      <p className="text-sm text-gray-400">{user.email}</p>
+                      <p className="text-sm text-zinc-400">{user.email}</p>
                     </div>
                   </td>
                   <td className="py-3 px-2">
@@ -86,7 +86,7 @@ const AdminUsers = () => {
                   <td className="py-3 px-2">
                     <div className="text-sm">
                       <p>{user.dailyOffers} ofertas</p>
-                      <p className="text-gray-400">{user.dailyUrls} URLs</p>
+                      <p className="text-zinc-400">{user.dailyUrls} URLs</p>
                     </div>
                   </td>
                   <td className="py-3 px-2">
@@ -122,15 +122,15 @@ const AdminUsers = () => {
         {selectedUser && (
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-400">Nome</p>
+              <p className="text-sm text-zinc-400">Nome</p>
               <p className="font-semibold">{selectedUser.name}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Email</p>
+              <p className="text-sm text-zinc-400">Email</p>
               <p className="font-semibold">{selectedUser.email}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400 mb-2">Alterar Plano</p>
+              <p className="text-sm text-zinc-400 mb-2">Alterar Plano</p>
               <div className="grid grid-cols-2 gap-2">
                 {['FREE', 'BRONZE', 'PRATA', 'OURO'].map((plan) => (
                   <button
@@ -138,7 +138,7 @@ const AdminUsers = () => {
                     onClick={() => handleChangePlan(selectedUser.id, plan)}
                     className={`p-3 rounded-lg border-2 transition-all ${
                       selectedUser.plan === plan
-                        ? 'border-purple-500 bg-purple-500/10'
+                        ? 'border-primary-purple bg-primary-purple/10'
                         : 'border-white/10 glass-hover'
                     }`}
                   >

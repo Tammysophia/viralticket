@@ -120,13 +120,13 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
                 className="glass border border-white/5 rounded-lg p-4"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <p className="font-semibold text-purple-400">{comment.author}</p>
-                  <div className="flex items-center gap-1 text-sm text-gray-400">
+                  <p className="font-semibold text-primary-lilac">{comment.author}</p>
+                  <div className="flex items-center gap-1 text-sm text-zinc-400">
                     <Heart className="w-4 h-4" />
                     {comment.likes}
                   </div>
                 </div>
-                <p className="text-gray-300">{comment.text}</p>
+                <p className="text-zinc-300">{comment.text}</p>
               </div>
             ))}
           </div>
