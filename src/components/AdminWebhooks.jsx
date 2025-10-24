@@ -73,8 +73,8 @@ const AdminWebhooks = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold">{webhook.name}</h4>
-                    <p className="text-sm text-gray-400 font-mono">{webhook.url}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-zinc-400 font-mono">{webhook.url}</p>
+                    <p className="text-xs text-zinc-500 mt-1">
                       Plataforma: {webhook.platform}
                     </p>
                   </div>
@@ -88,14 +88,14 @@ const AdminWebhooks = () => {
 
               <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/5">
                 <div>
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <div className="flex items-center gap-2 text-sm text-zinc-400">
                     <Activity className="w-4 h-4" />
                     <span>Total de Eventos</span>
                   </div>
                   <p className="text-2xl font-bold mt-1">{webhook.events}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Último Disparo</p>
+                  <p className="text-sm text-zinc-400">Último Disparo</p>
                   <p className="text-sm font-semibold mt-1">{formatDate(webhook.lastTriggered)}</p>
                 </div>
               </div>
@@ -125,11 +125,11 @@ const AdminWebhooks = () => {
           />
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">Plataforma</label>
+            <label className="block text-sm font-medium text-zinc-300">Plataforma</label>
             <select
               value={newWebhook.platform}
               onChange={(e) => setNewWebhook({ ...newWebhook, platform: e.target.value })}
-              className="w-full glass border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              className="w-full glass border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-purple/50"
             >
               <option value="">Selecione...</option>
               <option value="Stripe">Stripe</option>

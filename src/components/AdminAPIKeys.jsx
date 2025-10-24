@@ -57,13 +57,13 @@ const AdminAPIKeys = () => {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <Key className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 rounded-lg bg-primary-purple/20">
+                    <Key className="w-5 h-5 text-primary-lilac" />
                   </div>
                   <div>
                     <h4 className="font-semibold">{key.name}</h4>
-                    <p className="text-sm text-gray-400 font-mono">{maskAPIKey(key.key)}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-zinc-400 font-mono">{maskAPIKey(key.key)}</p>
+                    <p className="text-xs text-zinc-500 mt-1">
                       Último uso: {formatDate(key.lastUsed)}
                     </p>
                   </div>
@@ -114,11 +114,11 @@ const AdminAPIKeys = () => {
           />
           
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">Tipo</label>
+            <label className="block text-sm font-medium text-zinc-300">Tipo</label>
             <select
               value={newKey.type}
               onChange={(e) => setNewKey({ ...newKey, type: e.target.value })}
-              className="w-full glass border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              className="w-full glass border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-purple/50"
             >
               <option value="youtube">YouTube Data API</option>
               <option value="openai">OpenAI API</option>

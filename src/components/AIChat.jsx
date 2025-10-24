@@ -28,7 +28,7 @@ const AIChat = ({ initialText = '' }) => {
       name: 'Sofia Universal',
       emoji: '🌟',
       description: 'IA versátil para todos os nichos',
-      color: 'from-purple-500 to-pink-600',
+      color: 'from-primary-purple to-primary-lilac',
     },
   ];
 
@@ -92,13 +92,13 @@ const AIChat = ({ initialText = '' }) => {
               onClick={() => setSelectedAgent(agent.id)}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedAgent === agent.id
-                  ? 'border-purple-500 bg-purple-500/10'
+                  ? 'border-primary-purple bg-primary-purple/10'
                   : 'border-white/10 glass-hover'
               }`}
             >
               <div className="text-4xl mb-2">{agent.emoji}</div>
               <h4 className="font-bold mb-1">{agent.name}</h4>
-              <p className="text-sm text-gray-400">{agent.description}</p>
+              <p className="text-sm text-zinc-400">{agent.description}</p>
             </button>
           ))}
         </div>
@@ -111,7 +111,7 @@ const AIChat = ({ initialText = '' }) => {
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder={t('enterText')}
-          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary-purple/50 resize-none"
         />
         <Button
           onClick={handleGenerate}
@@ -138,16 +138,16 @@ const AIChat = ({ initialText = '' }) => {
               <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
                 {output.title}
               </h2>
-              <p className="text-lg text-gray-300 mt-2">{output.subtitle}</p>
+              <p className="text-lg text-zinc-300 mt-2">{output.subtitle}</p>
             </div>
 
             <div className="space-y-2">
               {output.bullets.map((bullet, index) => (
-                <p key={index} className="text-gray-300">{bullet}</p>
+                <p key={index} className="text-zinc-300">{bullet}</p>
               ))}
             </div>
 
-            <div className="glass border border-purple-500/30 rounded-lg p-4 text-center">
+            <div className="glass border border-primary-purple/30 rounded-lg p-4 text-center">
               <p className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
                 {output.cta}
               </p>

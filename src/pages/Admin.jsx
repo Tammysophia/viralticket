@@ -56,7 +56,7 @@ const Admin = () => {
             <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
               {menuItems.find(item => item.id === activePage)?.label}
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-zinc-400 mt-1">
               Gerencie sua plataforma ViralTicket
             </p>
           </motion.div>

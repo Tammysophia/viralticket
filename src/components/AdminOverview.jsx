@@ -16,7 +16,7 @@ const AdminOverview = () => {
       label: 'Ofertas Geradas Hoje',
       value: '567',
       change: '+8%',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-primary-purple to-primary-lilac',
     },
     {
       icon: Key,
@@ -49,7 +49,7 @@ const AdminOverview = () => {
           <Card key={index} hover={false}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+                <p className="text-sm text-zinc-400 mb-1">{stat.label}</p>
                 <p className="text-3xl font-bold">{stat.value}</p>
                 <p className="text-sm text-green-400 mt-1">{stat.change}</p>
               </div>
@@ -72,7 +72,7 @@ const AdminOverview = () => {
                 initial={{ height: 0 }}
                 animate={{ height: `${height}%` }}
                 transition={{ delay: i * 0.1 }}
-                className="flex-1 bg-gradient-to-t from-purple-600 to-pink-600 rounded-t-lg"
+                className="flex-1 bg-gradient-to-t from-primary-purple to-primary-lilac rounded-t-lg"
               />
             ))}
           </div>
@@ -85,7 +85,7 @@ const AdminOverview = () => {
               { plan: 'FREE', percentage: 45, color: 'gray' },
               { plan: 'BRONZE', percentage: 25, color: 'orange' },
               { plan: 'PRATA', percentage: 20, color: 'gray' },
-              { plan: 'OURO', percentage: 10, color: 'yellow' },
+              { plan: 'OURO', percentage: 10, color: 'gold-500' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between text-sm mb-1">
@@ -113,17 +113,17 @@ const AdminOverview = () => {
           {recentActivity.map((activity, i) => (
             <div key={i} className="flex items-center justify-between glass border border-white/5 rounded-lg p-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center font-bold"
                   {activity.user[0]}
                 </div>
                 <div>
                   <p className="font-semibold">{activity.user}</p>
-                  <p className="text-sm text-gray-400">{activity.action}</p>
+                  <p className="text-sm text-zinc-400">{activity.action}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-500">{activity.time}</p>
-                <p className="text-xs font-semibold text-purple-400">{activity.plan}</p>
+                <p className="text-xs text-zinc-500">{activity.time}</p>
+                <p className="text-xs font-semibold text-primary-lilac">{activity.plan}</p>
               </div>
             </div>
           ))}

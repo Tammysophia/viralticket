@@ -89,10 +89,10 @@ const Kanban = () => {
   };
 
   const columnColors = {
-    pending: 'border-yellow-500/30',
-    inExecution: 'border-blue-500/30',
-    modeling: 'border-purple-500/30',
-    completed: 'border-green-500/30',
+    pending: 'border-yellow-500/30 hover:border-yellow-500/50',
+    inExecution: 'border-blue-500/30 hover:border-blue-500/50',
+    modeling: 'border-primary-purple/30 hover:border-primary-lilac/50',
+    completed: 'border-green-500/30 hover:border-green-500/50',
   };
 
   return (
@@ -106,8 +106,8 @@ const Kanban = () => {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors ${
-                    snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
+                  className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors bg-black/10 ${
+                    snapshot.isDraggingOver ? 'border-primary-lilac bg-primary-lilac/10' : 'border-white/5'
                   }`}
                 >
                   {column.items.map((item, index) => (
@@ -117,16 +117,16 @@ const Kanban = () => {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
-                            snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
+                          className={`glass-dark border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all shadow-md ${
+                            snapshot.isDragging ? 'rotate-2 scale-105 shadow-2xl shadow-primary-lilac/30' : 'hover:shadow-lg hover:shadow-primary-purple/20'
                           }`}
                         >
                           <h4 className="font-bold mb-2">{item.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                          <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
                             <Sparkles className="w-4 h-4" />
                             <span>{item.agent}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-zinc-500">
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(item.date)}</span>
                           </div>
