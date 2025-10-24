@@ -1,5 +1,60 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { getAllAPIKeys, getAPIKey } from '../services/firebaseService';
+import { decrypt, isEncrypted } from '../utils/cryptoUtils';
+
+/**
+ * Busca todas as chaves API ativas e descriptografadas
+ * Função global que pode ser importada em qualquer lugar
+ */
+export const getActiveAPIKeys = async () => {
+  try {
+    const keys = await getAllAPIKeys();
+    const decryptedKeys = {};
+    
+    for (const [service, keyData] of Object.entries(keys)) {
+      if (keyData.status === 'active' && keyData.key) {
+        // Descriptografar se necessário
+        const actualKey = isEncrypted(keyData.key) 
+          ? decrypt(keyData.key) 
+          : keyData.key;
+        
+        decryptedKeys[service] = {
+          ...keyData,
+          key: actualKey,
+        };
+      }
+    }
+    
+    return decryptedKeys;
+  } catch (error) {
+    console.error('Erro ao buscar chaves ativas:', error);
+    return {};
+  }
+};
+
+/**
+ * Busca uma chave API específica por serviço
+ * @param {string} service - Nome do serviço (youtube, openai, firebase)
+ */
+export const getServiceAPIKey = async (service) => {
+  try {
+    const keyData = await getAPIKey(service);
+    if (!keyData || keyData.status !== 'active') {
+      return null;
+    }
+    
+    // Descriptografar se necessário
+    const actualKey = isEncrypted(keyData.key) 
+      ? decrypt(keyData.key) 
+      : keyData.key;
+    
+    return actualKey;
+  } catch (error) {
+    console.error(`Erro ao buscar chave ${service}:`, error);
+    return null;
+  }
+};
 
 export const useAPIKeys = () => {
   const [apiKeys, setApiKeys] = useState([]);

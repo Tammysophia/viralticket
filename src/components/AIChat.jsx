@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2 } from 'lucide-react';
+import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { verifyAPIConnection, generateOffer } from '../services/openaiService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
   const [inputText, setInputText] = useState(initialText);
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [apiConnected, setApiConnected] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
@@ -32,6 +35,34 @@ const AIChat = ({ initialText = '' }) => {
     },
   ];
 
+  const handleVerifyConnection = async () => {
+    setVerifying(true);
+    try {
+      const result = await verifyAPIConnection();
+      
+      if (result.success) {
+        setApiConnected(true);
+        success('✅ Conexão com OpenAI API estabelecida!');
+      } else {
+        setApiConnected(false);
+        if (user.isAdmin) {
+          error(`⚠️ ${result.message}`);
+        } else {
+          error('🎯 O sistema está em operação normal. Tente novamente!');
+        }
+      }
+    } catch (err) {
+      setApiConnected(false);
+      if (user.isAdmin) {
+        error(`⚠️ Erro: ${err.message}`);
+      } else {
+        error('🎯 Erro ao conectar. Tente novamente!');
+      }
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!inputText.trim()) {
       error('Digite um comentário ou texto');
@@ -45,35 +76,24 @@ const AIChat = ({ initialText = '' }) => {
 
     setLoading(true);
 
-    // Simulação de geração de oferta
-    setTimeout(() => {
-      // Simular falha de API apenas para demonstração de mensagens
-      const apiError = false; // Ajuste conforme necessário
+    try {
+      // Verificar conexão antes de gerar
+      const connectionCheck = await verifyAPIConnection();
       
-      if (apiError) {
-        setLoading(false);
+      if (!connectionCheck.success) {
         if (user.isAdmin) {
-          error('⚠️ Erro na API do OpenAI. Verifique a chave em Admin > API Keys.');
+          error(`⚠️ ${connectionCheck.message}`);
         } else {
           error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
         }
+        setLoading(false);
         return;
       }
 
-      const mockOffer = {
-        title: '🎯 Transforme Sua Vida em 30 Dias!',
-        subtitle: 'O Método Definitivo para Alcançar Seus Objetivos',
-        bullets: [
-          '✅ Sistema comprovado usado por +10.000 pessoas',
-          '✅ Resultados garantidos em 30 dias ou seu dinheiro de volta',
-          '✅ Acesso vitalício + bônus exclusivos',
-          '✅ Suporte dedicado 24/7',
-        ],
-        cta: '🚀 QUERO TRANSFORMAR MINHA VIDA AGORA!',
-        bonus: '🎁 Bônus: Curso Gratuito de Mentalidade Vencedora',
-      };
+      // Gerar oferta com OpenAI
+      const offerData = await generateOffer(inputText, selectedAgent);
 
-      setOutput(mockOffer);
+      setOutput(offerData);
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
@@ -81,8 +101,17 @@ const AIChat = ({ initialText = '' }) => {
         },
       });
       success('Oferta gerada com sucesso!');
+      setApiConnected(true);
+    } catch (err) {
+      console.error('Erro ao gerar oferta:', err);
+      if (user.isAdmin) {
+        error(`⚠️ ${err.message}`);
+      } else {
+        error('🎯 Erro ao gerar oferta. Tente novamente!');
+      }
+    } finally {
       setLoading(false);
-    }, 3000);
+    }
   };
 
   const handleCopy = () => {
@@ -97,7 +126,28 @@ const AIChat = ({ initialText = '' }) => {
     <div className="space-y-6">
       {/* Agent Selection */}
       <Card>
-        <h3 className="text-xl font-bold mb-4">Selecione a IA</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Selecione a IA</h3>
+          {apiConnected && (
+            <span className="flex items-center gap-2 text-green-400 text-sm">
+              <CheckCircle className="w-4 h-4" />
+              API Conectada
+            </span>
+          )}
+        </div>
+        
+        {user?.isAdmin && (
+          <div className="mb-4">
+            <Button
+              onClick={handleVerifyConnection}
+              loading={verifying}
+              variant="secondary"
+              className="w-full"
+            >
+              {apiConnected ? '✅ Reconectar API' : '🔌 Verificar Conexão API'}
+            </Button>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {agents.map((agent) => (
             <button

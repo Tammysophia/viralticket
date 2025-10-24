@@ -9,6 +9,8 @@ import { useToast } from './Toast';
 import { maskAPIKey, formatDate } from '../utils/validation';
 import ProgressBar from './ProgressBar';
 import { useAuth } from '../hooks/useAuth';
+import { saveAPIKey as saveToFirestore } from '../services/firebaseService';
+import { encrypt, decrypt, isEncrypted } from '../utils/cryptoUtils';
 
 const AdminAPIKeys = () => {
   const { user } = useAuth();
@@ -38,16 +40,40 @@ const AdminAPIKeys = () => {
     );
   }
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newKey.name || !newKey.key) {
       error('Preencha todos os campos');
       return;
     }
 
-    addAPIKey(newKey);
-    success('Chave adicionada com sucesso!');
-    setShowModal(false);
-    setNewKey({ name: '', key: '', type: 'youtube' });
+    try {
+      // Criptografar a chave antes de salvar
+      const encryptedKey = encrypt(newKey.key);
+      
+      // Salvar no Firestore
+      await saveToFirestore(newKey.type, {
+        name: newKey.name,
+        key: encryptedKey,
+        type: newKey.type,
+        status: 'active',
+        quota: 0,
+        encrypted: true,
+        lastUsed: new Date().toISOString(),
+      });
+
+      // Atualizar estado local
+      addAPIKey({
+        ...newKey,
+        key: encryptedKey,
+        encrypted: true,
+      });
+
+      success('Chave adicionada e criptografada com sucesso!');
+      setShowModal(false);
+      setNewKey({ name: '', key: '', type: 'youtube' });
+    } catch (err) {
+      error('Erro ao adicionar chave: ' + err.message);
+    }
   };
 
   const handleRotate = (id) => {
@@ -62,13 +88,56 @@ const AdminAPIKeys = () => {
     }
   };
 
-  const handleEncrypt = (id) => {
-    encryptAPIKey(id);
-    success('Chave criptografada com sucesso!');
+  const handleEncrypt = async (keyId) => {
+    try {
+      const key = apiKeys.find(k => k.id === keyId);
+      if (!key) {
+        error('Chave não encontrada');
+        return;
+      }
+
+      // Se já estiver criptografada, não fazer nada
+      if (key.encrypted || isEncrypted(key.key)) {
+        success('Chave já está criptografada!');
+        return;
+      }
+
+      // Criptografar a chave
+      const encryptedKey = encrypt(key.key);
+
+      // Salvar no Firestore
+      await saveToFirestore(key.type, {
+        ...key,
+        key: encryptedKey,
+        encrypted: true,
+      });
+
+      // Atualizar estado local
+      encryptAPIKey(keyId);
+      success('Chave criptografada com sucesso!');
+    } catch (err) {
+      error('Erro ao criptografar: ' + err.message);
+    }
   };
 
-  const handleSave = (id) => {
-    success('Chave salva com sucesso!');
+  const handleSave = async (keyId) => {
+    try {
+      const key = apiKeys.find(k => k.id === keyId);
+      if (!key) {
+        error('Chave não encontrada');
+        return;
+      }
+
+      // Salvar no Firestore
+      await saveToFirestore(key.type, {
+        ...key,
+        lastUpdated: new Date().toISOString(),
+      });
+
+      success('Chave salva com sucesso!');
+    } catch (err) {
+      error('Erro ao salvar: ' + err.message);
+    }
   };
 
   return (

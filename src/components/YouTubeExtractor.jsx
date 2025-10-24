@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Loader2, Copy, Sparkles, Heart } from 'lucide-react';
+import { Youtube, Loader2, Copy, Sparkles, Heart, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import Input from './Input';
 import Card from './Card';
@@ -7,6 +7,7 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { validateYouTubeUrl } from '../utils/validation';
+import { verifyAPIConnection, fetchMultipleVideosComments } from '../services/youtubeService';
 
 const YouTubeExtractor = ({ onUseWithAI }) => {
   const [urls, setUrls] = useState(['', '', '']);
@@ -16,6 +17,34 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+
+  const handleVerifyConnection = async () => {
+    setVerifying(true);
+    try {
+      const result = await verifyAPIConnection('youtube');
+      
+      if (result.success) {
+        setApiConnected(true);
+        success('✅ Conexão com YouTube API estabelecida!');
+      } else {
+        setApiConnected(false);
+        if (user.isAdmin) {
+          error(`⚠️ ${result.message}`);
+        } else {
+          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
+        }
+      }
+    } catch (err) {
+      setApiConnected(false);
+      if (user.isAdmin) {
+        error(`⚠️ Erro: ${err.message}`);
+      } else {
+        error('⚡ Erro ao conectar. Tente novamente em instantes!');
+      }
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const handleExtract = async () => {
     const validUrls = urls.filter(url => url && validateYouTubeUrl(url));
@@ -32,38 +61,48 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
 
     setLoading(true);
     
-    // Simulação de extração
-    setTimeout(() => {
-      // Simular falha de API apenas para demonstração de mensagens
-      const apiKeyMissing = false; // Ajuste conforme necessário
+    try {
+      // Verificar conexão antes de buscar
+      const connectionCheck = await verifyAPIConnection('youtube');
       
-      if (apiKeyMissing) {
-        setLoading(false);
+      if (!connectionCheck.success) {
         if (user.isAdmin) {
-          error('⚠️ Chave da API não configurada. Configure em Admin > API Keys.');
+          error(`⚠️ ${connectionCheck.message}`);
         } else {
           error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
         }
+        setLoading(false);
         return;
       }
 
-      const mockComments = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
-        author: `Usuário ${i + 1}`,
-        text: `Este é um comentário de exemplo #${i + 1}. Adorei o conteúdo!`,
-        likes: Math.floor(Math.random() * 1000),
-      }));
+      // Buscar comentários reais
+      const fetchedComments = await fetchMultipleVideosComments(validUrls, 50);
       
-      setComments(mockComments);
+      if (fetchedComments.length === 0) {
+        error('Nenhum comentário encontrado nos vídeos');
+        setLoading(false);
+        return;
+      }
+
+      setComments(fetchedComments);
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           urls: user.dailyUsage.urls + validUrls.length,
         },
       });
-      success(`${mockComments.length} comentários extraídos com sucesso!`);
+      success(`${fetchedComments.length} comentários extraídos com sucesso!`);
+      setApiConnected(true);
+    } catch (err) {
+      console.error('Erro ao extrair comentários:', err);
+      if (user.isAdmin) {
+        error(`⚠️ ${err.message}`);
+      } else {
+        error('⚡ Erro ao extrair comentários. Tente novamente!');
+      }
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   const handleCopyAll = () => {
@@ -82,10 +121,32 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     <div className="space-y-6">
       {/* URL Inputs */}
       <Card>
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Youtube className="w-6 h-6 text-red-500" />
-          URLs do YouTube
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <Youtube className="w-6 h-6 text-red-500" />
+            URLs do YouTube
+          </h3>
+          {apiConnected && (
+            <span className="flex items-center gap-2 text-green-400 text-sm">
+              <CheckCircle className="w-4 h-4" />
+              API Conectada
+            </span>
+          )}
+        </div>
+        
+        {user?.isAdmin && (
+          <div className="mb-4">
+            <Button
+              onClick={handleVerifyConnection}
+              loading={verifying}
+              variant="secondary"
+              className="w-full"
+            >
+              {apiConnected ? '✅ Reconectar API' : '🔌 Verificar Conexão API'}
+            </Button>
+          </div>
+        )}
+
         <div className="space-y-3">
           {urls.map((url, index) => (
             <Input
