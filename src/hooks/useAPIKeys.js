@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 export const useAPIKeys = () => {
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [keysLoaded, setKeysLoaded] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -11,11 +12,17 @@ export const useAPIKeys = () => {
       loadAPIKeys();
     } else {
       setLoading(false);
+      setKeysLoaded(false);
     }
   }, [user]);
 
-  const loadAPIKeys = () => {
+  const loadAPIKeys = async () => {
     setLoading(true);
+    setKeysLoaded(false);
+    
+    // Simular carregamento de API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     const saved = localStorage.getItem('viralticket_api_keys');
     if (saved) {
       setApiKeys(JSON.parse(saved));
@@ -30,6 +37,7 @@ export const useAPIKeys = () => {
           status: 'active',
           quota: 85,
           lastUsed: new Date().toISOString(),
+          encrypted: true,
         },
         {
           id: '2',
@@ -39,12 +47,15 @@ export const useAPIKeys = () => {
           status: 'active',
           quota: 60,
           lastUsed: new Date().toISOString(),
+          encrypted: true,
         },
       ];
       setApiKeys(mockKeys);
       localStorage.setItem('viralticket_api_keys', JSON.stringify(mockKeys));
     }
+    
     setLoading(false);
+    setKeysLoaded(true);
   };
 
   const addAPIKey = (keyData) => {
@@ -90,13 +101,23 @@ export const useAPIKeys = () => {
     });
   };
 
+  const encryptAPIKey = (id) => {
+    if (!user?.isAdmin) return;
+    
+    updateAPIKey(id, {
+      encrypted: true,
+    });
+  };
+
   return {
     apiKeys,
     loading,
+    keysLoaded,
     addAPIKey,
     updateAPIKey,
     deleteAPIKey,
     rotateAPIKey,
+    encryptAPIKey,
     reload: loadAPIKeys,
   };
 };

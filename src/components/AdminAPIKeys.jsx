@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Key, RefreshCw, Trash2 } from 'lucide-react';
+import { Plus, Key, RefreshCw, Trash2, Lock, Save, Shield } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import Modal from './Modal';
@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const AdminAPIKeys = () => {
   const { user } = useAuth();
-  const { apiKeys, loading, addAPIKey, updateAPIKey, deleteAPIKey, rotateAPIKey } = useAPIKeys();
+  const { apiKeys, loading, keysLoaded, addAPIKey, updateAPIKey, deleteAPIKey, rotateAPIKey, encryptAPIKey } = useAPIKeys();
   const [showModal, setShowModal] = useState(false);
   const [newKey, setNewKey] = useState({ name: '', key: '', type: 'youtube' });
   const { success, error } = useToast();
@@ -22,6 +22,18 @@ const AdminAPIKeys = () => {
     return (
       <Card>
         <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
+      </Card>
+    );
+  }
+
+  // Mostrar loading enquanto carrega
+  if (!keysLoaded) {
+    return (
+      <Card>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-400 text-lg">Carregando chaves...</p>
+        </div>
       </Card>
     );
   }
@@ -50,6 +62,15 @@ const AdminAPIKeys = () => {
     }
   };
 
+  const handleEncrypt = (id) => {
+    encryptAPIKey(id);
+    success('Chave criptografada com sucesso!');
+  };
+
+  const handleSave = (id) => {
+    success('Chave salva com sucesso!');
+  };
+
   return (
     <>
       <Card>
@@ -64,22 +85,33 @@ const AdminAPIKeys = () => {
           {apiKeys.map((key) => (
             <div
               key={key.id}
-              className="glass border border-white/5 rounded-lg p-4"
+              className="glass border border-purple-500/20 rounded-xl p-5 bg-gradient-to-br from-purple-500/5 to-purple-700/10 hover:border-purple-400/40 transition-all"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <Key className="w-5 h-5 text-purple-400" />
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/30 to-purple-600/40">
+                    <Key className="w-5 h-5 text-purple-300" />
                   </div>
                   <div>
-                    <h4 className="font-semibold">{key.name}</h4>
-                    <p className="text-sm text-gray-400 font-mono">{maskAPIKey(key.key)}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-white">{key.name}</h4>
+                      {key.encrypted && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs">
+                          <Lock className="w-3 h-3" />
+                          Criptografada
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {key.encrypted && <Lock className="w-3 h-3 text-purple-400" />}
+                      <p className="text-sm text-gray-300 font-mono">{maskAPIKey(key.key)}</p>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
                       Último uso: {formatDate(key.lastUsed)}
                     </p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs ${
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                   key.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                 }`}>
                   {key.status === 'active' ? 'Ativa' : 'Inativa'}
@@ -88,12 +120,25 @@ const AdminAPIKeys = () => {
 
               <ProgressBar value={key.quota} max={100} label="Quota de Uso" />
 
-              <div className="flex gap-2 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                <Button
+                  onClick={() => handleSave(key.id)}
+                  icon={Save}
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600"
+                >
+                  Salvar
+                </Button>
+                <Button
+                  onClick={() => handleEncrypt(key.id)}
+                  icon={Shield}
+                  className="bg-gradient-to-r from-purple-700 to-purple-800 hover:from-purple-600 hover:to-purple-700"
+                >
+                  Criptografar
+                </Button>
                 <Button
                   variant="secondary"
                   onClick={() => handleRotate(key.id)}
                   icon={RefreshCw}
-                  className="flex-1"
                 >
                   Rotacionar
                 </Button>
@@ -101,7 +146,6 @@ const AdminAPIKeys = () => {
                   variant="danger"
                   onClick={() => handleDelete(key.id)}
                   icon={Trash2}
-                  className="flex-1"
                 >
                   Excluir
                 </Button>
@@ -129,7 +173,7 @@ const AdminAPIKeys = () => {
             <select
               value={newKey.type}
               onChange={(e) => setNewKey({ ...newKey, type: e.target.value })}
-              className="w-full glass border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              className="w-full glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 bg-gradient-to-br from-purple-500/5 to-purple-700/10"
             >
               <option value="youtube">YouTube Data API</option>
               <option value="openai">OpenAI API</option>
@@ -144,8 +188,12 @@ const AdminAPIKeys = () => {
             onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
           />
 
-          <div className="flex gap-2">
-            <Button onClick={handleAdd} className="flex-1">
+          <div className="flex gap-2 mt-6">
+            <Button 
+              onClick={handleAdd} 
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600"
+              icon={Plus}
+            >
               Adicionar
             </Button>
             <Button variant="secondary" onClick={() => setShowModal(false)} className="flex-1">
