@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2 } from 'lucide-react';
+import { Sparkles, Copy, Loader2, Plus } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { createOffer } from '../firebase/offers';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -80,6 +81,31 @@ const AIChat = ({ initialText = '' }) => {
     success('Oferta copiada!');
   };
 
+  const handleAddToKanban = async () => {
+    if (!output) return;
+    
+    try {
+      const agent = agents.find(a => a.id === selectedAgent);
+      const offerData = {
+        title: output.title,
+        description: output.subtitle,
+        agent: `${agent.name} ${agent.emoji}`,
+        status: 'pending',
+        content: {
+          bullets: output.bullets,
+          cta: output.cta,
+          bonus: output.bonus,
+        },
+      };
+      
+      await createOffer(offerData);
+      success('✅ Oferta adicionada ao Kanban!');
+    } catch (error) {
+      console.error('Error adding to Kanban:', error);
+      error('Erro ao adicionar oferta ao Kanban');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Agent Selection */}
@@ -128,9 +154,14 @@ const AIChat = ({ initialText = '' }) => {
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-              {t('copy')}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="gold" onClick={handleAddToKanban} icon={Plus}>
+                Adicionar ao Kanban
+              </Button>
+              <Button variant="secondary" onClick={handleCopy} icon={Copy}>
+                {t('copy')}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
