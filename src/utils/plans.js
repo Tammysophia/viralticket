@@ -27,6 +27,13 @@ export const PLANS = {
     color: 'yellow',
     badge: '🥇',
   },
+  ADMIN: {
+    name: 'ADMIN',
+    offers: 'unlimited',
+    urls: 'unlimited',
+    color: 'purple',
+    badge: '👑',
+  },
 };
 
 export const getPlanLimits = (planName) => {
@@ -39,6 +46,7 @@ export const getPlanColor = (planName) => {
     BRONZE: 'from-orange-600 to-orange-800',
     PRATA: 'from-gray-400 to-gray-600',
     OURO: 'from-yellow-500 to-yellow-700',
+    ADMIN: 'from-purple-600 via-purple-500 to-pink-600',
   };
   return colors[planName] || colors.FREE;
 };

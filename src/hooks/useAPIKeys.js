@@ -1,88 +1,87 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
+import { secureRetrieve, secureStore } from '../utils/cryptoUtils';
 
+/**
+ * Hook para gerenciar chaves de API de forma segura
+ */
 export const useAPIKeys = () => {
-  const [apiKeys, setApiKeys] = useState([]);
+  const { user } = useAuth();
+  const [youtubeKey, setYoutubeKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadAPIKeys();
-  }, []);
-
-  const loadAPIKeys = () => {
-    setLoading(true);
-    const saved = localStorage.getItem('viralticket_api_keys');
-    if (saved) {
-      setApiKeys(JSON.parse(saved));
-    } else {
-      // Mock data
-      const mockKeys = [
-        {
-          id: '1',
-          name: 'YouTube Data API',
-          key: 'AIza************************',
-          type: 'youtube',
-          status: 'active',
-          quota: 85,
-          lastUsed: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'OpenAI API',
-          key: 'sk-••••••••••••••••••••••••',
-          type: 'openai',
-          status: 'active',
-          quota: 60,
-          lastUsed: new Date().toISOString(),
-        },
-      ];
-      setApiKeys(mockKeys);
-      localStorage.setItem('viralticket_api_keys', JSON.stringify(mockKeys));
+    if (user) {
+      loadKeys();
     }
-    setLoading(false);
+  }, [user]);
+
+  const loadKeys = () => {
+    try {
+      // Tentar carregar das variáveis de ambiente primeiro
+      const envYoutubeKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+      const envOpenaiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+      if (envYoutubeKey && envYoutubeKey !== 'sua-chave-youtube-aqui') {
+        setYoutubeKey(envYoutubeKey);
+      } else {
+        // Senão, carregar do localStorage (chaves do admin)
+        const storedYoutubeKey = secureRetrieve('youtube_api_key');
+        if (storedYoutubeKey) {
+          setYoutubeKey(storedYoutubeKey);
+        }
+      }
+
+      if (envOpenaiKey && envOpenaiKey !== 'sua-chave-openai-aqui') {
+        setOpenaiKey(envOpenaiKey);
+      } else {
+        const storedOpenaiKey = secureRetrieve('openai_api_key');
+        if (storedOpenaiKey) {
+          setOpenaiKey(storedOpenaiKey);
+        }
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Erro ao carregar chaves:', error);
+      setLoading(false);
+    }
   };
 
-  const addAPIKey = (keyData) => {
-    const newKey = {
-      id: Date.now().toString(),
-      ...keyData,
-      status: 'active',
-      quota: 0,
-      lastUsed: new Date().toISOString(),
-    };
-    const updated = [...apiKeys, newKey];
-    setApiKeys(updated);
-    localStorage.setItem('viralticket_api_keys', JSON.stringify(updated));
+  const saveYoutubeKey = (key) => {
+    secureStore('youtube_api_key', key);
+    setYoutubeKey(key);
   };
 
-  const updateAPIKey = (id, updates) => {
-    const updated = apiKeys.map(key => 
-      key.id === id ? { ...key, ...updates } : key
-    );
-    setApiKeys(updated);
-    localStorage.setItem('viralticket_api_keys', JSON.stringify(updated));
+  const saveOpenaiKey = (key) => {
+    secureStore('openai_api_key', key);
+    setOpenaiKey(key);
   };
 
-  const deleteAPIKey = (id) => {
-    const updated = apiKeys.filter(key => key.id !== id);
-    setApiKeys(updated);
-    localStorage.setItem('viralticket_api_keys', JSON.stringify(updated));
+  const hasKeys = () => {
+    return !!youtubeKey && !!openaiKey;
   };
 
-  const rotateAPIKey = (id) => {
-    // Estrutura para rotação automática de chaves
-    updateAPIKey(id, {
-      lastRotated: new Date().toISOString(),
-      quota: 0,
-    });
+  const hasYoutubeKey = () => {
+    return !!youtubeKey;
+  };
+
+  const hasOpenaiKey = () => {
+    return !!openaiKey;
   };
 
   return {
-    apiKeys,
+    youtubeKey,
+    openaiKey,
     loading,
-    addAPIKey,
-    updateAPIKey,
-    deleteAPIKey,
-    rotateAPIKey,
-    reload: loadAPIKeys,
+    hasKeys,
+    hasYoutubeKey,
+    hasOpenaiKey,
+    saveYoutubeKey,
+    saveOpenaiKey,
+    reloadKeys: loadKeys,
   };
 };
+
+export default useAPIKeys;

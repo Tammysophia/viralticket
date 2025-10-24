@@ -41,13 +41,25 @@ const Login = () => {
 
     try {
       if (isLogin) {
-        await login(email, password);
+        const user = await login(email, password);
         success('Login realizado com sucesso!');
-        navigate('/dashboard');
+        
+        // Redirecionar admin para /admin, outros para /dashboard
+        if (email === 'tamara14@gmail.com') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        await register(email, password);
+        const user = await register(email, password);
         success('Cadastro realizado com sucesso!');
-        navigate('/dashboard');
+        
+        // Redirecionar admin para /admin, outros para /dashboard
+        if (email === 'tamara14@gmail.com') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
       showError('Erro ao processar solicitação');

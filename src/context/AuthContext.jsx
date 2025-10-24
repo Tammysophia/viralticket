@@ -6,10 +6,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Email do administrador
+  const ADMIN_EMAIL = 'tamara14@gmail.com';
+
+  const isAdmin = (email) => {
+    return email === ADMIN_EMAIL;
+  };
+
   useEffect(() => {
     const savedUser = localStorage.getItem('viralticket_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      setUser({ ...parsedUser, isAdmin: isAdmin(parsedUser.email) });
     }
     setLoading(false);
   }, []);
@@ -23,15 +31,16 @@ export const AuthProvider = ({ children }) => {
           id: '1',
           email,
           name: email.split('@')[0],
-          plan: 'FREE',
+          plan: isAdmin(email) ? 'ADMIN' : 'FREE',
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+          isAdmin: isAdmin(email),
           dailyUsage: {
             offers: 1,
             urls: 2,
           },
           limits: {
-            offers: 3,
-            urls: 3,
+            offers: isAdmin(email) ? 999999 : 3,
+            urls: isAdmin(email) ? 999999 : 3,
           },
         };
         setUser(mockUser);
@@ -51,15 +60,16 @@ export const AuthProvider = ({ children }) => {
           id: Date.now().toString(),
           email,
           name: email.split('@')[0],
-          plan: 'FREE',
+          plan: isAdmin(email) ? 'ADMIN' : 'FREE',
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+          isAdmin: isAdmin(email),
           dailyUsage: {
             offers: 0,
             urls: 0,
           },
           limits: {
-            offers: 3,
-            urls: 3,
+            offers: isAdmin(email) ? 999999 : 3,
+            urls: isAdmin(email) ? 999999 : 3,
           },
         };
         setUser(mockUser);
@@ -82,7 +92,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, isAdmin: user?.isAdmin || false }}>
       {children}
     </AuthContext.Provider>
   );

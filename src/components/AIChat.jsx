@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2 } from 'lucide-react';
+import { Sparkles, Copy, Loader2, AlertCircle, Plus } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { useAPIKeys } from '../hooks/useAPIKeys';
+import { generateOfferFromComment } from '../firebase/offers';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -14,6 +16,7 @@ const AIChat = ({ initialText = '' }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+  const { openaiKey, hasOpenaiKey } = useAPIKeys();
 
   const agents = [
     {
@@ -38,38 +41,60 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
-    if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
+    if (!hasOpenaiKey()) {
+      error('❌ Chave da API do OpenAI não configurada. Configure no painel admin.');
+      return;
+    }
+
+    if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 999999) {
       error('Limite diário de ofertas atingido');
       return;
     }
 
     setLoading(true);
 
-    // Simulação de geração de oferta
-    setTimeout(() => {
-      const mockOffer = {
-        title: '🎯 Transforme Sua Vida em 30 Dias!',
-        subtitle: 'O Método Definitivo para Alcançar Seus Objetivos',
+    try {
+      console.log('🤖 Gerando oferta REAL com OpenAI...');
+      
+      // Gerar oferta real com OpenAI e salvar no Firestore
+      const offerResult = await generateOfferFromComment(
+        inputText,
+        null, // ID do comentário (null se for texto direto)
+        openaiKey,
+        user.id,
+        {
+          agent: selectedAgent,
+        }
+      );
+
+      const generatedOffer = {
+        title: `🎯 ${offerResult.titulo}`,
+        subtitle: offerResult.descricao,
         bullets: [
-          '✅ Sistema comprovado usado por +10.000 pessoas',
-          '✅ Resultados garantidos em 30 dias ou seu dinheiro de volta',
-          '✅ Acesso vitalício + bônus exclusivos',
-          '✅ Suporte dedicado 24/7',
+          `✅ Categoria: ${offerResult.categoria}`,
+          `✅ Público-alvo: ${offerResult.publico}`,
+          `✅ Gatilho mental: ${offerResult.gatilho}`,
+          `✅ Gerado com IA (${selectedAgent})`,
         ],
-        cta: '🚀 QUERO TRANSFORMAR MINHA VIDA AGORA!',
-        bonus: '🎁 Bônus: Curso Gratuito de Mentalidade Vencedora',
+        cta: `🚀 ${offerResult.callToAction}`,
+        bonus: `🎁 Comentário original: "${offerResult.comentarioOriginal.substring(0, 100)}..."`,
+        id: offerResult.id,
       };
 
-      setOutput(mockOffer);
+      setOutput(generatedOffer);
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('Oferta gerada com sucesso!');
+      success('✅ Oferta REAL gerada e salva no Kanban!');
+    } catch (err) {
+      console.error('Erro ao gerar oferta:', err);
+      error(`❌ Erro: ${err.message}`);
+    } finally {
       setLoading(false);
-    }, 3000);
+    }
   };
 
   const handleCopy = () => {
@@ -82,9 +107,30 @@ const AIChat = ({ initialText = '' }) => {
 
   return (
     <div className="space-y-6">
+      {/* Alerta se não tiver chave configurada */}
+      {!hasOpenaiKey() && (
+        <Card className="border-yellow-500/30 bg-yellow-500/10">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-yellow-500 mb-1">
+                ⚠️ Chave da API do OpenAI não configurada
+              </p>
+              <p className="text-sm text-yellow-200/80">
+                {user?.isAdmin 
+                  ? 'Configure a chave no painel admin (Chaves API) para gerar ofertas com IA real.'
+                  : 'Entre em contato com o administrador para configurar as chaves de API.'}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Agent Selection */}
       <Card>
-        <h3 className="text-xl font-bold mb-4">Selecione a IA</h3>
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          Selecione a IA {hasOpenaiKey() && <span className="text-xs text-green-400">(✓ API Ativa)</span>}
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {agents.map((agent) => (
             <button
@@ -110,30 +156,40 @@ const AIChat = ({ initialText = '' }) => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder={t('enterText')}
+          placeholder="Cole um comentário do YouTube ou escreva um texto para gerar uma oferta viral..."
           className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
         />
         <Button
           onClick={handleGenerate}
           loading={loading}
+          disabled={!hasOpenaiKey()}
           className="w-full mt-4"
           icon={Sparkles}
         >
-          {t('generate')}
+          {loading ? '🤖 Gerando oferta com IA real...' : '✨ Gerar Oferta REAL com IA'}
         </Button>
       </Card>
 
       {/* Output */}
       {output && (
-        <Card gradient>
+        <Card gradient className="border-green-500/30">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Oferta Gerada</h3>
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              ✅ Oferta Gerada com IA REAL
+              <span className="text-xs text-green-400">(Salva no Kanban)</span>
+            </h3>
             <Button variant="secondary" onClick={handleCopy} icon={Copy}>
               {t('copy')}
             </Button>
           </div>
 
           <div className="space-y-4">
+            <div className="glass border border-green-500/30 rounded-lg p-3 mb-4">
+              <p className="text-xs text-green-400 font-semibold">
+                🤖 Gerado por GPT-4o-mini • Salvo no Firestore • ID: {output.id}
+              </p>
+            </div>
+
             <div>
               <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
                 {output.title}
