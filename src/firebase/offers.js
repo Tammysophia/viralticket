@@ -31,8 +31,6 @@ const COMMENTS_COLLECTION = 'comments';
  */
 export const extractCommentsFromYouTube = async (videoUrl, youtubeApiKey, userId) => {
   try {
-    console.log('🎬 Iniciando extração de comentários...');
-    
     // Extrair ID do vídeo
     const videoId = extractVideoId(videoUrl);
     if (!videoId) {
@@ -41,11 +39,9 @@ export const extractCommentsFromYouTube = async (videoUrl, youtubeApiKey, userId
     
     // Buscar informações do vídeo
     const videoInfo = await fetchVideoInfo(videoId, youtubeApiKey);
-    console.log('✅ Informações do vídeo obtidas:', videoInfo.title);
     
     // Buscar comentários reais
     const comments = await fetchYouTubeComments(videoId, youtubeApiKey, 50);
-    console.log(`✅ ${comments.length} comentários extraídos`);
     
     // Salvar comentários no Firestore
     const savedComments = [];
@@ -70,8 +66,6 @@ export const extractCommentsFromYouTube = async (videoUrl, youtubeApiKey, userId
       });
     }
     
-    console.log('✅ Comentários salvos no Firestore');
-    
     return {
       success: true,
       videoInfo,
@@ -80,7 +74,7 @@ export const extractCommentsFromYouTube = async (videoUrl, youtubeApiKey, userId
     };
     
   } catch (error) {
-    console.error('❌ Erro ao extrair comentários:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -102,8 +96,6 @@ export const generateOfferFromComment = async (
   metadata = {}
 ) => {
   try {
-    console.log('🤖 Gerando oferta com IA...');
-    
     // Gerar oferta com OpenAI
     const aiOffer = await generateOffer(commentText, openaiApiKey);
     
@@ -129,8 +121,6 @@ export const generateOfferFromComment = async (
       atualizadoEm: serverTimestamp(),
     });
     
-    console.log('✅ Oferta salva no Firestore:', offerRef.id);
-    
     // Marcar comentário como processado
     if (commentId) {
       const commentRef = doc(db, COMMENTS_COLLECTION, commentId);
@@ -154,7 +144,7 @@ export const generateOfferFromComment = async (
     };
     
   } catch (error) {
-    console.error('❌ Erro ao gerar oferta:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -185,11 +175,10 @@ export const getUserOffers = async (userId) => {
       });
     });
     
-    console.log(`✅ ${offers.length} ofertas carregadas do Firestore`);
     return offers;
     
   } catch (error) {
-    console.error('❌ Erro ao buscar ofertas:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -207,10 +196,8 @@ export const updateOffer = async (offerId, updates) => {
       ...updates,
       atualizadoEm: serverTimestamp(),
     });
-    
-    console.log('✅ Oferta atualizada:', offerId);
   } catch (error) {
-    console.error('❌ Erro ao atualizar oferta:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -224,10 +211,8 @@ export const deleteOffer = async (offerId) => {
   try {
     const offerRef = doc(db, OFFERS_COLLECTION, offerId);
     await deleteDoc(offerRef);
-    
-    console.log('✅ Oferta deletada:', offerId);
   } catch (error) {
-    console.error('❌ Erro ao deletar oferta:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -257,11 +242,10 @@ export const duplicateOffer = async (offerId, userId) => {
       atualizadoEm: serverTimestamp(),
     });
     
-    console.log('✅ Oferta duplicada:', newOfferRef.id);
     return newOfferRef.id;
     
   } catch (error) {
-    console.error('❌ Erro ao duplicar oferta:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -343,7 +327,7 @@ export const getUserStats = async (userId) => {
     };
     
   } catch (error) {
-    console.error('❌ Erro ao buscar estatísticas:', error);
+    // Retornar valores padrão em caso de erro
     return {
       totalOfertas: 0,
       totalComentarios: 0,

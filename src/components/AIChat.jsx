@@ -42,7 +42,11 @@ const AIChat = ({ initialText = '' }) => {
     }
 
     if (!hasOpenaiKey()) {
-      error('❌ Chave da API do OpenAI não configurada. Configure no painel admin.');
+      if (user?.isAdmin) {
+        error('❌ Chave da API do OpenAI não configurada. Configure no painel admin.');
+      } else {
+        error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
+      }
       return;
     }
 
@@ -54,7 +58,7 @@ const AIChat = ({ initialText = '' }) => {
     setLoading(true);
 
     try {
-      console.log('🤖 Gerando oferta REAL com OpenAI...');
+      // Gerando oferta com IA
       
       // Gerar oferta real com OpenAI e salvar no Firestore
       const offerResult = await generateOfferFromComment(
@@ -88,10 +92,15 @@ const AIChat = ({ initialText = '' }) => {
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('✅ Oferta REAL gerada e salva no Kanban!');
+      success('✅ Oferta gerada com sucesso e salva no Kanban!');
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
-      error(`❌ Erro: ${err.message}`);
+      // Log apenas para admin
+      if (user?.isAdmin) {
+        console.error('Erro ao gerar oferta:', err);
+        error(`❌ Erro técnico: ${err.message}`);
+      } else {
+        error('⚡ Não foi possível gerar a oferta. Tente novamente em instantes!');
+      }
     } finally {
       setLoading(false);
     }
@@ -107,8 +116,8 @@ const AIChat = ({ initialText = '' }) => {
 
   return (
     <div className="space-y-6">
-      {/* Alerta se não tiver chave configurada */}
-      {!hasOpenaiKey() && (
+      {/* Alerta se não tiver chave configurada - APENAS PARA ADMIN */}
+      {!hasOpenaiKey() && user?.isAdmin && (
         <Card className="border-yellow-500/30 bg-yellow-500/10">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -117,9 +126,7 @@ const AIChat = ({ initialText = '' }) => {
                 ⚠️ Chave da API do OpenAI não configurada
               </p>
               <p className="text-sm text-yellow-200/80">
-                {user?.isAdmin 
-                  ? 'Configure a chave no painel admin (Chaves API) para gerar ofertas com IA real.'
-                  : 'Entre em contato com o administrador para configurar as chaves de API.'}
+                Configure a chave no painel admin (Chaves API) para gerar ofertas com IA.
               </p>
             </div>
           </div>
@@ -129,7 +136,7 @@ const AIChat = ({ initialText = '' }) => {
       {/* Agent Selection */}
       <Card>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          Selecione a IA {hasOpenaiKey() && <span className="text-xs text-green-400">(✓ API Ativa)</span>}
+          Selecione a IA {hasOpenaiKey() && user?.isAdmin && <span className="text-xs text-green-400">(✓ API Ativa)</span>}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {agents.map((agent) => (
@@ -166,7 +173,7 @@ const AIChat = ({ initialText = '' }) => {
           className="w-full mt-4"
           icon={Sparkles}
         >
-          {loading ? '🤖 Gerando oferta com IA real...' : '✨ Gerar Oferta REAL com IA'}
+          {loading ? '🤖 Gerando oferta com IA...' : '✨ Gerar Oferta com IA'}
         </Button>
       </Card>
 
@@ -175,7 +182,7 @@ const AIChat = ({ initialText = '' }) => {
         <Card gradient className="border-green-500/30">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
-              ✅ Oferta Gerada com IA REAL
+              ✅ Oferta Gerada com IA
               <span className="text-xs text-green-400">(Salva no Kanban)</span>
             </h3>
             <Button variant="secondary" onClick={handleCopy} icon={Copy}>
@@ -184,11 +191,13 @@ const AIChat = ({ initialText = '' }) => {
           </div>
 
           <div className="space-y-4">
-            <div className="glass border border-green-500/30 rounded-lg p-3 mb-4">
-              <p className="text-xs text-green-400 font-semibold">
-                🤖 Gerado por GPT-4o-mini • Salvo no Firestore • ID: {output.id}
-              </p>
-            </div>
+            {user?.isAdmin && (
+              <div className="glass border border-green-500/30 rounded-lg p-3 mb-4">
+                <p className="text-xs text-green-400 font-semibold">
+                  🤖 Gerado por GPT-4o-mini • Salvo no Firestore • ID: {output.id}
+                </p>
+              </div>
+            )}
 
             <div>
               <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">

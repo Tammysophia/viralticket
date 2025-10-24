@@ -62,8 +62,6 @@ export const fetchYouTubeComments = async (videoId, apiKey, maxResults = 50) => 
       key: decryptedKey,
     });
     
-    console.log('🔍 Buscando comentários do YouTube...', videoId);
-    
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -87,12 +85,10 @@ export const fetchYouTubeComments = async (videoId, apiKey, maxResults = 50) => 
       };
     }) || [];
     
-    console.log('✅ Comentários extraídos:', comments.length);
-    
     return comments;
     
   } catch (error) {
-    console.error('❌ Erro ao buscar comentários:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -148,7 +144,7 @@ export const fetchVideoInfo = async (videoId, apiKey) => {
     };
     
   } catch (error) {
-    console.error('❌ Erro ao buscar info do vídeo:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };

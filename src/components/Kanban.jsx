@@ -46,7 +46,6 @@ const Kanban = () => {
   const loadOffers = async () => {
     try {
       setLoading(true);
-      console.log('📊 Carregando ofertas do Firestore...');
       
       const offers = await getUserOffers(user.id);
       
@@ -73,9 +72,7 @@ const Kanban = () => {
       });
 
       setColumns(organized);
-      console.log(`✅ ${offers.length} ofertas carregadas`);
     } catch (err) {
-      console.error('Erro ao carregar ofertas:', err);
       error('Erro ao carregar ofertas');
     } finally {
       setLoading(false);

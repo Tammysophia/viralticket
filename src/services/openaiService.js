@@ -55,8 +55,6 @@ Formato da resposta (JSON):
 
 Retorne APENAS o JSON sem texto adicional.`;
 
-    console.log('🤖 Gerando oferta com OpenAI...');
-    
     const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -88,11 +86,9 @@ Retorne APENAS o JSON sem texto adicional.`;
     try {
       offer = JSON.parse(content);
     } catch (e) {
-      console.error('❌ Erro ao fazer parse do JSON:', content);
+      // Erro ao processar resposta da IA
       throw new Error('Resposta da IA em formato inválido');
     }
-    
-    console.log('✅ Oferta gerada:', offer.titulo);
     
     return {
       ...offer,
@@ -102,7 +98,7 @@ Retorne APENAS o JSON sem texto adicional.`;
     };
     
   } catch (error) {
-    console.error('❌ Erro ao gerar oferta com IA:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };
@@ -155,7 +151,7 @@ Retorne apenas a oferta melhorada, sem explicações.`;
     return data.choices[0].message.content.trim();
     
   } catch (error) {
-    console.error('❌ Erro ao melhorar oferta:', error);
+    // Erro será tratado no componente
     throw error;
   }
 };

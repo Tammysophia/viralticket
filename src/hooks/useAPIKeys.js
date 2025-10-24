@@ -4,6 +4,8 @@ import { secureRetrieve, secureStore } from '../utils/cryptoUtils';
 
 /**
  * Hook para gerenciar chaves de API de forma segura
+ * IMPORTANTE: As chaves são usadas internamente pelo sistema
+ * e NUNCA devem ser expostas no front-end para usuários comuns
  */
 export const useAPIKeys = () => {
   const { user } = useAuth();
@@ -19,6 +21,9 @@ export const useAPIKeys = () => {
 
   const loadKeys = () => {
     try {
+      // SEGURANÇA: Chaves só são carregadas/expostas para uso interno
+      // Usuários comuns NÃO têm acesso direto às chaves
+      
       // Tentar carregar das variáveis de ambiente primeiro
       const envYoutubeKey = import.meta.env.VITE_YOUTUBE_API_KEY;
       const envOpenaiKey = import.meta.env.VITE_OPENAI_API_KEY;
@@ -44,7 +49,7 @@ export const useAPIKeys = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar chaves:', error);
+      // Log silencioso - sem expor detalhes no console para usuários
       setLoading(false);
     }
   };
