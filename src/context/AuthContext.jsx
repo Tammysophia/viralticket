@@ -6,7 +6,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { auth, db, isFirebaseConfigured } from '../config/firebase';
 import { PLANS } from '../utils/plans';
 
 export const AuthContext = createContext();
