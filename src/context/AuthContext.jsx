@@ -107,27 +107,36 @@ export const AuthProvider = ({ children }) => {
       
       const isAdmin = email === 'tamara14@gmail.com';
       
-      // Get user data from Firestore
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
+      let userData = {
+        name: email.split('@')[0],
+        email: firebaseUser.email,
+        plan: isAdmin ? 'ADMIN' : 'FREE',
+        avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+        dailyUsage: { offers: 0, urls: 0 },
+        createdAt: new Date().toISOString(),
+      };
       
-      let userData;
-      
-      if (userDoc.exists()) {
-        userData = userDoc.data();
-      } else {
-        // Se usuário existe no Auth mas não no Firestore, criar dados
-        userData = {
-          name: email.split('@')[0],
-          email: firebaseUser.email,
-          plan: isAdmin ? 'ADMIN' : 'FREE',
-          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
-          dailyUsage: { offers: 0, urls: 0 },
-          createdAt: new Date().toISOString(),
-        };
-        
-        // Salvar no Firestore
-        await setDoc(userDocRef, userData);
+      // Tentar buscar/salvar no Firestore (se falhar, continua com dados padrão)
+      try {
+        if (db) {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            userData = { ...userData, ...userDoc.data() };
+          } else {
+            // Tentar salvar, mas não falhar se der erro de permissão
+            try {
+              await setDoc(userDocRef, userData);
+            } catch (saveError) {
+              // Ignora erros de permissão do Firestore
+              console.warn('Firestore permission warning (ignored):', saveError.code);
+            }
+          }
+        }
+      } catch (firestoreError) {
+        // Ignora erros do Firestore, continua com dados locais
+        console.warn('Firestore access warning (ignored):', firestoreError.code);
       }
       
       const userProfile = {
@@ -147,8 +156,14 @@ export const AuthProvider = ({ children }) => {
       return userProfile;
     } catch (error) {
       setLoading(false);
-      console.error('Login error:', error);
-      throw error;
+      // Apenas lançar erros de autenticação, não de Firestore
+      if (error.code && error.code.startsWith('auth/')) {
+        throw error;
+      }
+      // Para outros erros, criar erro genérico
+      const authError = new Error('Erro ao processar solicitação');
+      authError.code = 'auth/unknown';
+      throw authError;
     }
   };
 
@@ -196,8 +211,15 @@ export const AuthProvider = ({ children }) => {
         createdAt: new Date().toISOString(),
       };
       
-      // Save to Firestore
-      await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
+      // Tentar salvar no Firestore (se falhar, continua mesmo assim)
+      try {
+        if (db) {
+          await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
+        }
+      } catch (firestoreError) {
+        // Ignora erros do Firestore, continua com dados locais
+        console.warn('Firestore permission warning (ignored):', firestoreError.code);
+      }
       
       // Set local user state
       const fullUserProfile = {
@@ -213,8 +235,14 @@ export const AuthProvider = ({ children }) => {
       return fullUserProfile;
     } catch (error) {
       setLoading(false);
-      console.error('Register error:', error);
-      throw error;
+      // Apenas lançar erros de autenticação, não de Firestore
+      if (error.code && error.code.startsWith('auth/')) {
+        throw error;
+      }
+      // Para outros erros, criar erro genérico
+      const authError = new Error('Erro ao processar solicitação');
+      authError.code = 'auth/unknown';
+      throw authError;
     }
   };
 

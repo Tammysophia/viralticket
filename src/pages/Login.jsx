@@ -60,7 +60,7 @@ const Login = () => {
       }
     } catch (err) {
       // Mensagens simples e elegantes
-      let errorMessage = 'Erro ao processar solicitação';
+      let errorMessage = 'Erro ao processar solicitação. Tente novamente.';
       
       if (err.code === 'auth/user-not-found') {
         errorMessage = 'Email não encontrado. Crie sua conta!';
@@ -76,6 +76,10 @@ const Login = () => {
         errorMessage = 'Email ou senha incorretos';
       } else if (err.code === 'auth/too-many-requests') {
         errorMessage = 'Muitas tentativas. Aguarde alguns minutos.';
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = 'Sem conexão com a internet';
+      } else if (err.code === 'permission-denied') {
+        errorMessage = 'Erro de permissão. Tente novamente.';
       }
       
       showError(errorMessage);
