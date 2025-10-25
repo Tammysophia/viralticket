@@ -106,31 +106,49 @@ export const AuthProvider = ({ children }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       
+      const isAdmin = email === 'tamara14@gmail.com';
+      
       // Get user data from Firestore
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      let userData;
       
       if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const isAdmin = email === 'tamara14@gmail.com';
-        
-        const userProfile = {
-          id: firebaseUser.uid,
+        userData = userDoc.data();
+      } else {
+        // Se usuário existe no Auth mas não no Firestore, criar dados
+        console.log('⚠️ Usuário encontrado no Auth mas não no Firestore. Criando dados...');
+        userData = {
+          name: email.split('@')[0],
           email: firebaseUser.email,
-          name: userData.name || email.split('@')[0],
-          plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
-          isAdmin,
-          avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
-          dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
-          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+          plan: isAdmin ? 'ADMIN' : 'FREE',
+          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+          dailyUsage: { offers: 0, urls: 0 },
+          createdAt: new Date().toISOString(),
         };
         
-        setUser(userProfile);
-        localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
-        setLoading(false);
-        return userProfile;
-      } else {
-        throw new Error('User data not found');
+        // Salvar no Firestore
+        await setDoc(userDocRef, userData);
+        console.log('✅ Dados do usuário criados no Firestore');
       }
+      
+      const userProfile = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: userData.name || email.split('@')[0],
+        plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
+        isAdmin,
+        avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+        dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
+        limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+      };
+      
+      setUser(userProfile);
+      localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
+      setLoading(false);
+      console.log('✅ Login com Firebase bem-sucedido:', email);
+      return userProfile;
     } catch (error) {
       setLoading(false);
       console.error('Login error:', error);
@@ -168,8 +186,10 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Create user with Firebase Authentication
+      console.log('📝 Criando usuário no Firebase Auth...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
+      console.log('✅ Usuário criado no Auth:', firebaseUser.uid);
       
       const isAdmin = email === 'tamara14@gmail.com';
       
@@ -184,7 +204,9 @@ export const AuthProvider = ({ children }) => {
       };
       
       // Save to Firestore
+      console.log('📝 Salvando dados no Firestore...');
       await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
+      console.log('✅ Dados salvos no Firestore com sucesso');
       
       // Set local user state
       const fullUserProfile = {
@@ -197,6 +219,7 @@ export const AuthProvider = ({ children }) => {
       setUser(fullUserProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
       setLoading(false);
+      console.log('✅ Cadastro completo:', email);
       return fullUserProfile;
     } catch (error) {
       setLoading(false);
