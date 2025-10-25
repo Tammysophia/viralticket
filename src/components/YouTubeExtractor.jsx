@@ -13,7 +13,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
   const [urls, setUrls] = useState(['', '', '']);
   const [loading, setLoading] = useState(false);
   const [comments, setComments] = useState([]);
-  const [apiError, setApiError] = useState(false);
+  const [apiConnected, setApiConnected] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
