@@ -38,50 +38,32 @@ const Login = () => {
     
     // Validações básicas
     if (!email || !password) {
-      showError('Preencha email e senha');
+      toast.error('📝 Preencha email e senha');
       return;
     }
 
     if (password.length < 6) {
-      showError('Senha deve ter no mínimo 6 caracteres');
+      toast.error('🔐 Senha deve ter no mínimo 6 caracteres');
       return;
     }
 
     try {
       if (isLogin) {
         await login(email, password);
-        success('Login realizado com sucesso!');
-        navigate('/dashboard');
+        // Toast já é mostrado no AuthContext
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 500);
       } else {
         await register(email, password);
-        success('Cadastro realizado com sucesso!');
-        navigate('/dashboard');
+        // Toast já é mostrado no AuthContext
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 500);
       }
     } catch (err) {
-      // Mensagens simples e elegantes
-      let errorMessage = 'Erro ao processar solicitação. Tente novamente.';
-      
-      if (err.code === 'auth/user-not-found') {
-        errorMessage = 'Email não encontrado. Crie sua conta!';
-      } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Senha incorreta';
-      } else if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'Email já cadastrado. Faça login!';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido';
-      } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Senha deve ter no mínimo 6 caracteres';
-      } else if (err.code === 'auth/invalid-credential') {
-        errorMessage = 'Email ou senha incorretos';
-      } else if (err.code === 'auth/too-many-requests') {
-        errorMessage = 'Muitas tentativas. Aguarde alguns minutos.';
-      } else if (err.code === 'auth/network-request-failed') {
-        errorMessage = 'Sem conexão com a internet';
-      } else if (err.code === 'permission-denied') {
-        errorMessage = 'Erro de permissão. Tente novamente.';
-      }
-      
-      showError(errorMessage);
+      // Erros já tratados no AuthContext com toasts específicos
+      console.error('Auth error:', err);
     }
   };
 
