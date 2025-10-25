@@ -1,9 +1,22 @@
 // Serviço Firebase para gerenciamento de dados
-// Nota: Substituir por Firebase SDK em produção
+import { db } from '../config/firebase';
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  deleteDoc,
+  query,
+  where 
+} from 'firebase/firestore';
+
+// Flag para usar Firebase real ou simulação
+const USE_REAL_FIREBASE = true;
 
 /**
- * Simula Firestore para desenvolvimento
- * Em produção, usar Firebase Firestore
+ * Simula Firestore para desenvolvimento local (fallback)
+ * Em produção, usar Firebase Firestore real
  */
 class FirestoreSimulator {
   constructor() {
@@ -93,8 +106,8 @@ class FirestoreSimulator {
   }
 }
 
-// Exportar instância simulada
-export const db = new FirestoreSimulator();
+// Exportar instância simulada (fallback)
+const simulatedDb = new FirestoreSimulator();
 
 // Função helper para timestamp
 export const serverTimestamp = () => new Date().toISOString();
@@ -106,11 +119,21 @@ export const serverTimestamp = () => new Date().toISOString();
  */
 export const saveAPIKey = async (service, keyData) => {
   try {
-    await db.collection('apiKeys').doc(service).set({
-      ...keyData,
-      service,
-      lastUpdated: serverTimestamp(),
-    });
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      await setDoc(doc(db, 'apiKeys', service), {
+        ...keyData,
+        service,
+        lastUpdated: serverTimestamp(),
+      });
+    } else {
+      // Fallback para simulação
+      await simulatedDb.collection('apiKeys').doc(service).set({
+        ...keyData,
+        service,
+        lastUpdated: serverTimestamp(),
+      });
+    }
     return { success: true };
   } catch (error) {
     console.error('Erro ao salvar chave:', error);
@@ -124,11 +147,23 @@ export const saveAPIKey = async (service, keyData) => {
  */
 export const getAPIKey = async (service) => {
   try {
-    const doc = await db.collection('apiKeys').doc(service).get();
-    if (!doc.exists) {
-      return null;
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      const docRef = doc(db, 'apiKeys', service);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        return null;
+      }
+      return docSnap.data();
+    } else {
+      // Fallback para simulação
+      const docData = await simulatedDb.collection('apiKeys').doc(service).get();
+      if (!docData.exists) {
+        return null;
+      }
+      return docData.data();
     }
-    return doc.data();
   } catch (error) {
     console.error('Erro ao buscar chave:', error);
     return null;
@@ -140,15 +175,31 @@ export const getAPIKey = async (service) => {
  */
 export const getAllAPIKeys = async () => {
   try {
-    const snapshot = await db.collection('apiKeys').get();
-    const keys = {};
-    snapshot.docs.forEach((doc) => {
-      const data = doc.data();
-      if (data.status === 'active') {
-        keys[doc.id] = data;
-      }
-    });
-    return keys;
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      const keysRef = collection(db, 'apiKeys');
+      const snapshot = await getDocs(keysRef);
+      
+      const keys = {};
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.status === 'active') {
+          keys[docSnap.id] = data;
+        }
+      });
+      return keys;
+    } else {
+      // Fallback para simulação
+      const snapshot = await simulatedDb.collection('apiKeys').get();
+      const keys = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.status === 'active') {
+          keys[doc.id] = data;
+        }
+      });
+      return keys;
+    }
   } catch (error) {
     console.error('Erro ao buscar chaves:', error);
     return {};
@@ -161,7 +212,13 @@ export const getAllAPIKeys = async () => {
  */
 export const deleteAPIKey = async (service) => {
   try {
-    await db.collection('apiKeys').doc(service).delete();
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      await deleteDoc(doc(db, 'apiKeys', service));
+    } else {
+      // Fallback para simulação
+      await simulatedDb.collection('apiKeys').doc(service).delete();
+    }
     return { success: true };
   } catch (error) {
     console.error('Erro ao deletar chave:', error);
