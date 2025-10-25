@@ -143,6 +143,11 @@ export const AuthProvider = ({ children }) => {
     try {
       // Se Firebase não estiver configurado, usar modo local
       if (!isFirebaseConfigured || !auth) {
+        console.log('📝 Registro em modo local (Firebase não configurado)');
+        
+        // Simular delay de rede
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         // Modo simulado (fallback)
         const isAdmin = email === 'tamara14@gmail.com';
         const mockUser = {
