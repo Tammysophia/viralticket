@@ -16,50 +16,92 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen to Firebase auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // User is signed in, get additional data from Firestore
+    // Se Firebase não estiver configurado, usar localStorage
+    if (!isFirebaseConfigured || !auth) {
+      console.log('📝 Using localStorage authentication mode');
+      const savedUser = localStorage.getItem('viralticket_user');
+      if (savedUser) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            const isAdmin = firebaseUser.email === 'tamara14@gmail.com';
-            
-            const userProfile = {
-              id: firebaseUser.uid,
-              email: firebaseUser.email,
-              name: userData.name || firebaseUser.email.split('@')[0],
-              plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
-              isAdmin,
-              avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
-              dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
-              limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
-            };
-            
-            setUser(userProfile);
-            // Also save to localStorage as backup
-            localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
-          }
+          setUser(JSON.parse(savedUser));
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error('Error parsing saved user:', error);
         }
-      } else {
-        // User is signed out
-        setUser(null);
-        localStorage.removeItem('viralticket_user');
       }
       setLoading(false);
-    });
+      return;
+    }
 
-    // Cleanup subscription
-    return () => unsubscribe();
+    // Listen to Firebase auth state changes
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          // User is signed in, get additional data from Firestore
+          try {
+            if (db) {
+              const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+              
+              if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const isAdmin = firebaseUser.email === 'tamara14@gmail.com';
+                
+                const userProfile = {
+                  id: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  name: userData.name || firebaseUser.email.split('@')[0],
+                  plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
+                  isAdmin,
+                  avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
+                  dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
+                  limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+                };
+                
+                setUser(userProfile);
+                localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+          }
+        } else {
+          // User is signed out
+          setUser(null);
+          localStorage.removeItem('viralticket_user');
+        }
+        setLoading(false);
+      });
+
+      // Cleanup subscription
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Error setting up auth listener:', error);
+      setLoading(false);
+    }
   }, []);
 
   const login = async (email, password) => {
     setLoading(true);
     try {
+      // Se Firebase não estiver configurado, usar modo local
+      if (!isFirebaseConfigured || !auth) {
+        // Modo simulado (fallback)
+        const isAdmin = email === 'tamara14@gmail.com';
+        const mockUser = {
+          id: Date.now().toString(),
+          email,
+          name: email.split('@')[0],
+          plan: isAdmin ? 'ADMIN' : 'FREE',
+          isAdmin,
+          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+          dailyUsage: { offers: 0, urls: 0 },
+          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
+        };
+        
+        setUser(mockUser);
+        localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
+        setLoading(false);
+        return mockUser;
+      }
+
       // Sign in with Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
@@ -99,6 +141,27 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, password) => {
     setLoading(true);
     try {
+      // Se Firebase não estiver configurado, usar modo local
+      if (!isFirebaseConfigured || !auth) {
+        // Modo simulado (fallback)
+        const isAdmin = email === 'tamara14@gmail.com';
+        const mockUser = {
+          id: Date.now().toString(),
+          email,
+          name: email.split('@')[0],
+          plan: isAdmin ? 'ADMIN' : 'FREE',
+          isAdmin,
+          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+          dailyUsage: { offers: 0, urls: 0 },
+          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
+        };
+        
+        setUser(mockUser);
+        localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
+        setLoading(false);
+        return mockUser;
+      }
+
       // Create user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
@@ -139,12 +202,16 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await firebaseSignOut(auth);
+      if (isFirebaseConfigured && auth) {
+        await firebaseSignOut(auth);
+      }
       setUser(null);
       localStorage.removeItem('viralticket_user');
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
+      // Sempre limpar localmente mesmo se Firebase falhar
+      setUser(null);
+      localStorage.removeItem('viralticket_user');
     }
   };
 
@@ -152,19 +219,26 @@ export const AuthProvider = ({ children }) => {
     try {
       const updatedUser = { ...user, ...updates };
       
-      // Update Firestore if user is authenticated
-      if (user?.id) {
-        await setDoc(doc(db, 'users', user.id), {
-          ...updatedUser,
-          updatedAt: new Date().toISOString(),
-        }, { merge: true });
+      // Update Firestore if user is authenticated and Firebase is configured
+      if (isFirebaseConfigured && db && user?.id) {
+        try {
+          await setDoc(doc(db, 'users', user.id), {
+            ...updatedUser,
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+        } catch (error) {
+          console.warn('Error updating Firestore, using local only:', error);
+        }
       }
       
       setUser(updatedUser);
       localStorage.setItem('viralticket_user', JSON.stringify(updatedUser));
     } catch (error) {
       console.error('Update user error:', error);
-      throw error;
+      // Continuar mesmo se houver erro
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('viralticket_user', JSON.stringify(updatedUser));
     }
   };
 
