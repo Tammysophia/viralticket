@@ -39,8 +39,27 @@ export const getActiveAPIKeys = async () => {
  */
 export const getServiceAPIKey = async (service) => {
   try {
+    // PRIMEIRO: Buscar do localStorage (onde admin salvou)
+    const saved = localStorage.getItem('viralticket_api_keys');
+    if (saved) {
+      const allKeys = JSON.parse(saved);
+      const key = allKeys.find(k => k.type === service && k.status === 'active');
+      
+      if (key && key.key) {
+        // Descriptografar se necessário
+        const actualKey = isEncrypted(key.key) 
+          ? decrypt(key.key) 
+          : key.key;
+        
+        console.log(`✅ Chave ${service} encontrada no localStorage`);
+        return actualKey;
+      }
+    }
+    
+    // SEGUNDO: Tentar buscar do Firestore (fallback)
     const keyData = await getAPIKey(service);
     if (!keyData || keyData.status !== 'active') {
+      console.warn(`⚠️ Chave ${service} não encontrada`);
       return null;
     }
     
