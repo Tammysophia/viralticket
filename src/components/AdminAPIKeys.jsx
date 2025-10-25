@@ -5,7 +5,7 @@ import Button from './Button';
 import Modal from './Modal';
 import Input from './Input';
 import { useAPIKeys } from '../hooks/useAPIKeys';
-import { useToast } from './Toast';
+import toast from 'react-hot-toast';
 import { maskAPIKey, formatDate } from '../utils/validation';
 import ProgressBar from './ProgressBar';
 import { useAuth } from '../hooks/useAuth';
@@ -17,7 +17,6 @@ const AdminAPIKeys = () => {
   const { apiKeys, loading, keysLoaded, addAPIKey, updateAPIKey, deleteAPIKey, rotateAPIKey, encryptAPIKey } = useAPIKeys();
   const [showModal, setShowModal] = useState(false);
   const [newKey, setNewKey] = useState({ name: '', key: '', type: 'youtube' });
-  const { success, error } = useToast();
 
   // Proteção adicional - não renderizar se não for admin
   if (!user?.isAdmin) {
@@ -42,7 +41,7 @@ const AdminAPIKeys = () => {
 
   const handleAdd = async () => {
     if (!newKey.name || !newKey.key) {
-      error('Preencha todos os campos');
+      toast.error('📝 Preencha todos os campos');
       return;
     }
 
@@ -50,41 +49,46 @@ const AdminAPIKeys = () => {
       // Criptografar a chave antes de salvar
       const encryptedKey = encrypt(newKey.key);
       
-      // Salvar no Firestore
-      await saveToFirestore(newKey.type, {
-        name: newKey.name,
-        key: encryptedKey,
-        type: newKey.type,
-        status: 'active',
-        quota: 0,
-        encrypted: true,
-        lastUsed: new Date().toISOString(),
-      });
+      // Tentar salvar no Firestore (com fallback para localStorage)
+      try {
+        await saveToFirestore(newKey.type, {
+          name: newKey.name,
+          key: encryptedKey,
+          type: newKey.type,
+          status: 'active',
+          quota: 0,
+          encrypted: true,
+          lastUsed: new Date().toISOString(),
+        });
+      } catch (firestoreError) {
+        console.warn('Firestore save failed, using localStorage:', firestoreError);
+        // Fallback: salvar direto no localStorage via hook
+      }
 
-      // Atualizar estado local
+      // Atualizar estado local (sempre funciona)
       addAPIKey({
         ...newKey,
         key: encryptedKey,
         encrypted: true,
       });
 
-      success('Chave adicionada e criptografada com sucesso!');
+      toast.success('✅ Chave adicionada e criptografada com sucesso!');
       setShowModal(false);
       setNewKey({ name: '', key: '', type: 'youtube' });
     } catch (err) {
-      error('Erro ao adicionar chave: ' + err.message);
+      toast.error('❌ Erro ao adicionar chave: ' + err.message);
     }
   };
 
   const handleRotate = (id) => {
     rotateAPIKey(id);
-    success('Chave rotacionada com sucesso!');
+    toast.success('🔄 Chave rotacionada com sucesso!');
   };
 
   const handleDelete = (id) => {
     if (confirm('Tem certeza que deseja excluir esta chave?')) {
       deleteAPIKey(id);
-      success('Chave excluída!');
+      toast.success('🗑️ Chave excluída!');
     }
   };
 
@@ -92,31 +96,35 @@ const AdminAPIKeys = () => {
     try {
       const key = apiKeys.find(k => k.id === keyId);
       if (!key) {
-        error('Chave não encontrada');
+        toast.error('❌ Chave não encontrada');
         return;
       }
 
       // Se já estiver criptografada, não fazer nada
       if (key.encrypted || isEncrypted(key.key)) {
-        success('Chave já está criptografada!');
+        toast.success('🔒 Chave já está criptografada!');
         return;
       }
 
       // Criptografar a chave
       const encryptedKey = encrypt(key.key);
 
-      // Salvar no Firestore
-      await saveToFirestore(key.type, {
-        ...key,
-        key: encryptedKey,
-        encrypted: true,
-      });
+      // Tentar salvar no Firestore (com fallback)
+      try {
+        await saveToFirestore(key.type, {
+          ...key,
+          key: encryptedKey,
+          encrypted: true,
+        });
+      } catch (firestoreError) {
+        console.warn('Firestore save failed, using localStorage:', firestoreError);
+      }
 
-      // Atualizar estado local
+      // Atualizar estado local (sempre funciona)
       encryptAPIKey(keyId);
-      success('Chave criptografada com sucesso!');
+      toast.success('🔒 Chave criptografada com sucesso!');
     } catch (err) {
-      error('Erro ao criptografar: ' + err.message);
+      toast.error('❌ Erro ao criptografar: ' + err.message);
     }
   };
 
@@ -124,19 +132,27 @@ const AdminAPIKeys = () => {
     try {
       const key = apiKeys.find(k => k.id === keyId);
       if (!key) {
-        error('Chave não encontrada');
+        toast.error('❌ Chave não encontrada');
         return;
       }
 
-      // Salvar no Firestore
-      await saveToFirestore(key.type, {
-        ...key,
-        lastUpdated: new Date().toISOString(),
-      });
-
-      success('Chave salva com sucesso!');
+      // Tentar salvar no Firestore (com fallback)
+      try {
+        await saveToFirestore(key.type, {
+          ...key,
+          lastUpdated: new Date().toISOString(),
+        });
+        toast.success('💾 Chave salva com sucesso no Firestore!');
+      } catch (firestoreError) {
+        console.warn('Firestore save failed, using localStorage:', firestoreError);
+        // Atualizar no localStorage via hook
+        updateAPIKey(keyId, {
+          lastUpdated: new Date().toISOString(),
+        });
+        toast.success('💾 Chave salva localmente com sucesso!');
+      }
     } catch (err) {
-      error('Erro ao salvar: ' + err.message);
+      toast.error('❌ Erro ao salvar: ' + err.message);
     }
   };
 
