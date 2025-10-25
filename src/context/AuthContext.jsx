@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Se Firebase não estiver configurado, usar localStorage
     if (!isFirebaseConfigured || !auth) {
-      console.log('📝 Using localStorage authentication mode');
       const savedUser = localStorage.getItem('viralticket_user');
       if (savedUser) {
         try {
@@ -118,7 +117,6 @@ export const AuthProvider = ({ children }) => {
         userData = userDoc.data();
       } else {
         // Se usuário existe no Auth mas não no Firestore, criar dados
-        console.log('⚠️ Usuário encontrado no Auth mas não no Firestore. Criando dados...');
         userData = {
           name: email.split('@')[0],
           email: firebaseUser.email,
@@ -130,7 +128,6 @@ export const AuthProvider = ({ children }) => {
         
         // Salvar no Firestore
         await setDoc(userDocRef, userData);
-        console.log('✅ Dados do usuário criados no Firestore');
       }
       
       const userProfile = {
@@ -147,7 +144,6 @@ export const AuthProvider = ({ children }) => {
       setUser(userProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
       setLoading(false);
-      console.log('✅ Login com Firebase bem-sucedido:', email);
       return userProfile;
     } catch (error) {
       setLoading(false);
@@ -161,7 +157,6 @@ export const AuthProvider = ({ children }) => {
     try {
       // Se Firebase não estiver configurado, usar modo local
       if (!isFirebaseConfigured || !auth) {
-        console.log('📝 Registro em modo local (Firebase não configurado)');
         
         // Simular delay de rede
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -186,10 +181,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Create user with Firebase Authentication
-      console.log('📝 Criando usuário no Firebase Auth...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
-      console.log('✅ Usuário criado no Auth:', firebaseUser.uid);
       
       const isAdmin = email === 'tamara14@gmail.com';
       
@@ -204,9 +197,7 @@ export const AuthProvider = ({ children }) => {
       };
       
       // Save to Firestore
-      console.log('📝 Salvando dados no Firestore...');
       await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
-      console.log('✅ Dados salvos no Firestore com sucesso');
       
       // Set local user state
       const fullUserProfile = {
@@ -219,7 +210,6 @@ export const AuthProvider = ({ children }) => {
       setUser(fullUserProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
       setLoading(false);
-      console.log('✅ Cadastro completo:', email);
       return fullUserProfile;
     } catch (error) {
       setLoading(false);

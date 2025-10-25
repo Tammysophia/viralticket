@@ -27,13 +27,9 @@ try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
-    console.log('✅ Firebase initialized successfully');
-  } else {
-    console.warn('⚠️ Firebase not configured, using fallback mode');
   }
 } catch (error) {
-  console.error('❌ Error initializing Firebase:', error);
-  console.log('📝 Using fallback authentication mode');
+  console.error('System initialization error:', error);
 }
 
 // Export with null checks

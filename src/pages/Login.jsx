@@ -59,23 +59,23 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      console.error('Login/Register error:', err);
-      
-      // Mensagens de erro mais amigáveis
+      // Mensagens simples e elegantes
       let errorMessage = 'Erro ao processar solicitação';
       
       if (err.code === 'auth/user-not-found') {
-        errorMessage = 'Usuário não encontrado. Crie uma conta primeiro.';
+        errorMessage = 'Email não encontrado. Crie sua conta!';
       } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Senha incorreta. Tente novamente.';
+        errorMessage = 'Senha incorreta';
       } else if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este email já está cadastrado. Faça login.';
+        errorMessage = 'Email já cadastrado. Faça login!';
       } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido. Verifique o formato.';
+        errorMessage = 'Email inválido';
       } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Senha muito fraca. Use no mínimo 6 caracteres.';
-      } else if (err.message) {
-        errorMessage = err.message;
+        errorMessage = 'Senha deve ter no mínimo 6 caracteres';
+      } else if (err.code === 'auth/invalid-credential') {
+        errorMessage = 'Email ou senha incorretos';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMessage = 'Muitas tentativas. Aguarde alguns minutos.';
       }
       
       showError(errorMessage);
