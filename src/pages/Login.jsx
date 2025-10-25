@@ -4,7 +4,7 @@ import { Mail, Lock, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { useToast } from '../components/Toast';
+import toast, { Toaster } from 'react-hot-toast';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { validateEmail, validatePassword } from '../utils/validation';
@@ -16,7 +16,6 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const { login, register, loading } = useAuth();
   const { t } = useLanguage();
-  const { success, error: showError } = useToast();
   const navigate = useNavigate();
 
   const validate = () => {
@@ -88,6 +87,35 @@ const Login = () => {
 
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right" 
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'rgba(17, 17, 17, 0.95)',
+            color: '#fff',
+            border: '1px solid rgba(139, 92, 246, 0.3)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(10px)',
+            fontSize: '14px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#8B5CF6',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      
       {/* Background Animated Circles */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -155,8 +183,20 @@ const Login = () => {
             icon={Lock}
           />
 
-          <Button type="submit" loading={loading} className="w-full">
-            {isLogin ? t('login') : t('register')}
+          <Button 
+            type="submit" 
+            loading={loading} 
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                {isLogin ? 'Entrando...' : 'Cadastrando...'}
+              </span>
+            ) : (
+              isLogin ? t('login') : t('register')
+            )}
           </Button>
         </form>
 

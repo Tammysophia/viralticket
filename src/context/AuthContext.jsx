@@ -8,6 +8,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../config/firebase';
 import { PLANS } from '../utils/plans';
+import toast from 'react-hot-toast';
 
 export const AuthContext = createContext();
 
@@ -82,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Se Firebase não estiver configurado, usar modo local
       if (!isFirebaseConfigured || !auth) {
-        // Modo simulado (fallback)
+        await new Promise(resolve => setTimeout(resolve, 800));
         const isAdmin = email === 'tamara14@gmail.com';
         const mockUser = {
           id: Date.now().toString(),
@@ -98,6 +99,7 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
+        toast.success('🎉 Login efetuado com sucesso!');
         return mockUser;
       }
 
@@ -129,13 +131,11 @@ export const AuthProvider = ({ children }) => {
             try {
               await setDoc(userDocRef, userData);
             } catch (saveError) {
-              // Ignora erros de permissão do Firestore
               console.warn('Firestore permission warning (ignored):', saveError.code);
             }
           }
         }
       } catch (firestoreError) {
-        // Ignora erros do Firestore, continua com dados locais
         console.warn('Firestore access warning (ignored):', firestoreError.code);
       }
       
@@ -153,17 +153,29 @@ export const AuthProvider = ({ children }) => {
       setUser(userProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
       setLoading(false);
+      toast.success('🎉 Login efetuado com sucesso!');
       return userProfile;
     } catch (error) {
       setLoading(false);
-      // Apenas lançar erros de autenticação, não de Firestore
-      if (error.code && error.code.startsWith('auth/')) {
-        throw error;
+      
+      // Tratamento específico de erros Firebase
+      if (error.code === 'auth/user-not-found') {
+        toast.error('❌ Usuário não encontrado. Crie uma conta primeiro!');
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error('🔐 Senha incorreta. Tente novamente.');
+      } else if (error.code === 'auth/invalid-email') {
+        toast.error('📧 E-mail inválido. Verifique o formato.');
+      } else if (error.code === 'auth/invalid-credential') {
+        toast.error('❌ E-mail ou senha incorretos.');
+      } else if (error.code === 'auth/too-many-requests') {
+        toast.error('⚠️ Muitas tentativas. Aguarde alguns minutos.');
+      } else if (error.code === 'auth/network-request-failed') {
+        toast.error('📡 Sem conexão com a internet.');
+      } else {
+        toast.error('⚠️ Erro ao processar o login. Tente novamente.');
       }
-      // Para outros erros, criar erro genérico
-      const authError = new Error('Erro ao processar solicitação');
-      authError.code = 'auth/unknown';
-      throw authError;
+      
+      throw error;
     }
   };
 
@@ -172,11 +184,8 @@ export const AuthProvider = ({ children }) => {
     try {
       // Se Firebase não estiver configurado, usar modo local
       if (!isFirebaseConfigured || !auth) {
-        
-        // Simular delay de rede
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Modo simulado (fallback)
         const isAdmin = email === 'tamara14@gmail.com';
         const mockUser = {
           id: Date.now().toString(),
@@ -192,6 +201,7 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
+        toast.success('✅ Cadastro realizado com sucesso!');
         return mockUser;
       }
 
@@ -217,7 +227,6 @@ export const AuthProvider = ({ children }) => {
           await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
         }
       } catch (firestoreError) {
-        // Ignora erros do Firestore, continua com dados locais
         console.warn('Firestore permission warning (ignored):', firestoreError.code);
       }
       
@@ -232,17 +241,27 @@ export const AuthProvider = ({ children }) => {
       setUser(fullUserProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
       setLoading(false);
+      toast.success('✅ Cadastro realizado com sucesso!');
       return fullUserProfile;
     } catch (error) {
       setLoading(false);
-      // Apenas lançar erros de autenticação, não de Firestore
-      if (error.code && error.code.startsWith('auth/')) {
-        throw error;
+      
+      // Tratamento específico de erros Firebase
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('❌ Este e-mail já está em uso. Faça login!');
+      } else if (error.code === 'auth/invalid-email') {
+        toast.error('📧 E-mail inválido. Verifique o formato.');
+      } else if (error.code === 'auth/weak-password') {
+        toast.error('🔐 Senha muito fraca. Use pelo menos 6 caracteres.');
+      } else if (error.code === 'auth/operation-not-allowed') {
+        toast.error('⚠️ Cadastro desabilitado. Contate o suporte.');
+      } else if (error.code === 'auth/network-request-failed') {
+        toast.error('📡 Sem conexão com a internet.');
+      } else {
+        toast.error('⚠️ Erro ao cadastrar. Tente novamente.');
       }
-      // Para outros erros, criar erro genérico
-      const authError = new Error('Erro ao processar solicitação');
-      authError.code = 'auth/unknown';
-      throw authError;
+      
+      throw error;
     }
   };
 
