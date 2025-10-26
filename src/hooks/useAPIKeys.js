@@ -41,8 +41,14 @@ export const getServiceAPIKey = async (service) => {
   try {
     // PRIMEIRO: Buscar do localStorage (onde admin salvou)
     const saved = localStorage.getItem('viralticket_api_keys');
+    console.log('🔍 VT: Buscando chave para:', service);
+    console.log('🔍 VT: localStorage keys:', saved ? 'existe' : 'vazio');
+    
     if (saved) {
       const allKeys = JSON.parse(saved);
+      console.log('🔍 VT: Total de chaves:', allKeys.length);
+      console.log('🔍 VT: Chaves disponíveis:', allKeys.map(k => ({ type: k.type, status: k.status, hasKey: !!k.key })));
+      
       const key = allKeys.find(k => k.type === service && k.status === 'active');
       
       if (key && key.key) {
@@ -51,8 +57,11 @@ export const getServiceAPIKey = async (service) => {
           ? decrypt(key.key) 
           : key.key;
         
-        console.log(`✅ Chave ${service} encontrada no localStorage`);
+        console.log(`✅ VT: Chave ${service} encontrada no localStorage`);
+        console.log(`🔑 VT: Chave começa com:`, actualKey.substring(0, 10) + '...');
         return actualKey;
+      } else {
+        console.warn(`⚠️ VT: Chave ${service} não encontrada ou inativa no localStorage`);
       }
     }
     
