@@ -128,12 +128,7 @@ const AIChat = ({ initialText = '' }) => {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">Selecione a IA</h3>
-          {apiConnected && (
-            <span className="flex items-center gap-2 text-green-400 text-sm">
-              <CheckCircle className="w-4 h-4" />
-              API Conectada
-            </span>
-          )}
+          {/* VT: Badge "API Conectada" removido conforme solicitado */}
         </div>
         
         {user?.isAdmin && (

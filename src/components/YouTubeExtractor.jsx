@@ -127,12 +127,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
             <Youtube className="w-6 h-6 text-red-500" />
             URLs do YouTube
           </h3>
-          {apiConnected && (
-            <span className="flex items-center gap-2 text-green-400 text-sm">
-              <CheckCircle className="w-4 h-4" />
-              API Conectada
-            </span>
-          )}
+          {/* VT: Badge "API Conectada" removido conforme solicitado */}
         </div>
         
         {user?.isAdmin && (
