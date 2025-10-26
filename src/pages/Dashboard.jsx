@@ -7,15 +7,19 @@ import Tabs from '../components/Tabs';
 import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
+import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { getUserOffers } from '../services/offersService'; // VT: Buscar ofertas
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('youtube');
   const [aiInitialText, setAiInitialText] = useState('');
+  const [editingOffer, setEditingOffer] = useState(null); // VT: Oferta sendo editada
+  const [showOfferEditor, setShowOfferEditor] = useState(false); // VT: Modal de edição
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -28,6 +32,22 @@ const Dashboard = () => {
   const handleUseWithAI = (text) => {
     setAiInitialText(text);
     setActiveTab('ai');
+  };
+
+  // VT: Abrir editor de oferta
+  const handleEditOffer = async (offerId) => {
+    const offers = await getUserOffers(user.id);
+    const offer = offers.find(o => o.id === offerId);
+    if (offer) {
+      setEditingOffer(offer);
+      setShowOfferEditor(true);
+    }
+  };
+
+  // VT: Fechar editor
+  const handleCloseEditor = () => {
+    setShowOfferEditor(false);
+    setEditingOffer(null);
   };
 
   return (
@@ -96,10 +116,17 @@ const Dashboard = () => {
             {activeTab === 'ai' && (
               <AIChat initialText={aiInitialText} />
             )}
-            {activeTab === 'kanban' && <Kanban />}
+            {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
           </motion.div>
         </main>
       </div>
+
+      {/* VT: Modal de edição de oferta */}
+      <OfferEditor
+        isOpen={showOfferEditor}
+        onClose={handleCloseEditor}
+        offer={editingOffer}
+      />
     </div>
   );
 };
