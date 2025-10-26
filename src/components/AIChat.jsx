@@ -102,6 +102,27 @@ const AIChat = ({ initialText = '' }) => {
       });
       success('Oferta gerada com sucesso!');
       setApiConnected(true);
+
+      // VT: Salvar oferta automaticamente no Firestore
+      try {
+        const offerId = await createOfferFromAI({
+          userId: user.id,
+          title: offerData.title || 'Nova Oferta',
+          agent: selectedAgent,
+          copy: {
+            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
+            adPrimary: offerData.bullets.join(' '),
+            adHeadline: offerData.title,
+            adDescription: offerData.subtitle
+          },
+          youtubeLinks: []
+        });
+        console.log('VT: Oferta salva automaticamente:', offerId);
+        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+      } catch (saveError) {
+        console.error('VT: Erro ao salvar oferta:', saveError);
+        // VT: Não bloqueia o fluxo se falhar ao salvar
+      }
     } catch (err) {
       console.error('Erro ao gerar oferta:', err);
       if (user.isAdmin) {
