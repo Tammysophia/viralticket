@@ -45,104 +45,53 @@ export const verifyAPIConnection = async () => {
 
 /**
  * Gera uma oferta irresistível usando GPT
+ * ⚠️ DEPRECATED: Use runAgent() de agentsService.js
+ * Esta função ainda existe para compatibilidade, mas será removida
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
  * @returns {Promise<Object>} - Oferta gerada
  */
 export const generateOffer = async (comments, agent = 'sophia') => {
+  // VT: secure-agent - Migrar para usar agentsService.js
+  console.warn('⚠️ generateOffer() está deprecated. Use runAgent() de agentsService.js');
+  
   try {
-    const apiKey = await getServiceAPIKey('openai');
+    // Importar dinamicamente para evitar dependência circular
+    const { runAgent } = await import('./agentsService.js');
     
-    if (!apiKey) {
-      throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
-    }
-
-    const agentPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
-Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
-
-Comentários:
-${comments}
-
-Crie uma oferta com:
-1. Título impactante (emoji + frase poderosa)
-2. Subtítulo persuasivo
-3. 4 bullets de benefícios (começando com ✅)
-4. Call-to-action convincente
-5. Bônus irresistível
-
-Formato JSON:
-{
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
-}`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
-Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
-
-Comentários:
-${comments}
-
-Crie uma oferta completa com elementos persuasivos em formato JSON:
-{
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
-}`
+    // Mapear nomes antigos para novos IDs
+    const agentIdMap = {
+      'sophia': 'sophia-fenix',
+      'sofia': 'sophia-universal'
     };
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
-          },
-        ],
-        temperature: 0.8,
-        max_tokens: 1000,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao gerar oferta');
-    }
-
-    const data = await response.json();
-    const content = data.choices[0].message.content;
     
-    // Tentar parsear JSON da resposta
-    try {
-      const offerData = JSON.parse(content);
-      return offerData;
-    } catch (parseError) {
-      // Se não conseguir parsear, criar estrutura básica
-      return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
+    const agentId = agentIdMap[agent] || 'sophia-fenix';
+    
+    // Executar via Cloud Function (seguro)
+    const result = await runAgent(agentId, comments);
+    
+    // Retornar no formato antigo para compatibilidade
+    return {
+      title: result.result.title || '🎯 Oferta Especial para Você!',
+      subtitle: result.result.subtitle || 'Transforme sua realidade agora',
+      bullets: result.result.blocks
+        ?.filter(b => b.type === 'benefits')
+        ?.flatMap(b => b.data?.items || [])
+        || [
           '✅ Acesso imediato ao conteúdo',
           '✅ Suporte dedicado',
           '✅ Garantia de satisfação',
           '✅ Bônus exclusivos',
         ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
-      };
-    }
+      cta: result.result.blocks
+        ?.find(b => b.type === 'cta')?.data?.text
+        || '🚀 QUERO APROVEITAR AGORA!',
+      bonus: result.result.blocks
+        ?.find(b => b.type === 'bonus')?.data?.title
+        || '🎁 Bônus: Material complementar gratuito',
+    };
   } catch (error) {
-    console.error('Erro ao gerar oferta:', error);
+    console.error('Erro ao gerar oferta (via agentsService):', error);
     throw error;
   }
 };
