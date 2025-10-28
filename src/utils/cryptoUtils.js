@@ -39,13 +39,19 @@ export const encrypt = (text) => {
  * @returns {string} - Texto descriptografado
  */
 export const decrypt = (encryptedText) => {
-  if (!encryptedText) return '';
+  if (!encryptedText) {
+    console.warn('🔓 VT: Tentando descriptografar texto vazio');
+    return '';
+  }
   
   try {
     // Verificar se está criptografado
     if (!encryptedText.startsWith('enc_')) {
+      console.log('🔓 VT: Texto não criptografado, retornando original');
       return encryptedText;
     }
+    
+    console.log('🔓 VT: Descriptografando texto...');
     
     // Remover prefixo
     const encrypted = encryptedText.substring(4);
@@ -61,12 +67,18 @@ export const decrypt = (encryptedText) => {
     const decoded = atob(unrotated);
     
     // Remover salt
-    const [, text] = decoded.split(':');
+    const parts = decoded.split(':');
+    const text = parts.length > 1 ? parts[1] : decoded;
     
-    return text || decoded;
+    console.log('✅ VT: Descriptografia bem-sucedida!');
+    console.log('🔑 VT: Resultado começa com:', text.substring(0, 10) + '...');
+    
+    return text;
   } catch (error) {
-    console.error('Erro ao descriptografar:', error);
-    return encryptedText;
+    console.error('❌ VT: Erro ao descriptografar:', error);
+    console.error('❌ VT: Texto original:', encryptedText.substring(0, 20) + '...');
+    // Retornar string vazia em vez do texto criptografado
+    return '';
   }
 };
 

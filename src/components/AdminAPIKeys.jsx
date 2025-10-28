@@ -45,9 +45,24 @@ const AdminAPIKeys = () => {
       return;
     }
 
+    // Validar formato da chave ANTES de salvar
+    if (newKey.type === 'youtube' && !newKey.key.startsWith('AIza')) {
+      toast.error('❌ Chave do YouTube inválida! Deve começar com "AIza"');
+      return;
+    }
+
+    if (newKey.type === 'openai' && !newKey.key.startsWith('sk-')) {
+      toast.error('❌ Chave do OpenAI inválida! Deve começar com "sk-"');
+      return;
+    }
+
     try {
+      console.log('💾 VT: Salvando chave:', newKey.type);
+      console.log('💾 VT: Chave começa com:', newKey.key.substring(0, 10) + '...');
+      
       // Criptografar a chave antes de salvar
       const encryptedKey = encrypt(newKey.key);
+      console.log('🔒 VT: Chave criptografada:', encryptedKey.substring(0, 20) + '...');
       
       // Tentar salvar no Firestore (com fallback para localStorage)
       try {
@@ -60,8 +75,9 @@ const AdminAPIKeys = () => {
           encrypted: true,
           lastUsed: new Date().toISOString(),
         });
+        console.log('✅ VT: Salvo no Firestore');
       } catch (firestoreError) {
-        console.warn('Firestore save failed, using localStorage:', firestoreError);
+        console.warn('⚠️ VT: Firestore save failed, using localStorage:', firestoreError);
         // Fallback: salvar direto no localStorage via hook
       }
 
@@ -72,10 +88,12 @@ const AdminAPIKeys = () => {
         encrypted: true,
       });
 
+      console.log('✅ VT: Chave adicionada com sucesso!');
       toast.success('✅ Chave adicionada e criptografada com sucesso!');
       setShowModal(false);
       setNewKey({ name: '', key: '', type: 'youtube' });
     } catch (err) {
+      console.error('❌ VT: Erro ao adicionar chave:', err);
       toast.error('❌ Erro ao adicionar chave: ' + err.message);
     }
   };
