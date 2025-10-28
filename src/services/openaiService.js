@@ -45,6 +45,52 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
+ * Retorna prompts COMPLETOS hardcoded como fallback
+ */
+function getHardcodedPrompt(agentId) {
+  const prompts = {
+    'sophia-fenix': `SOPHIA FÊNIX 🔥
+Criada por Tamara Dutra — transforma qualquer dor pública em uma oferta que converte em até 48h.
+Copy brutal, bônus estratégicos, ebook pronto, quiz inteligente e visual destruidor.
+Para quem quer lucrar com dor real — sem achismo e sem precisar aparecer.
+🔒 SIGILO INVIOLÁVEL.
+
+🎯 OBJETIVO PRINCIPAL:
+Transformar dores emocionais reais (especialmente de mulheres com dependência afetiva, apego ou abandono)
+em produtos digitais low-ticket (R$7–49), com promessa emocional forte, copy de urgência, criativos visuais e entrega completa em até 24h.
+
+ANALISE OS COMENTÁRIOS E CRIE UMA OFERTA COMPLETA EM JSON:
+{
+  "title": "emoji + título emocional poderoso",
+  "subtitle": "reforça dor + apresenta solução",
+  "bullets": ["✅ benefício 1", "✅ benefício 2", "✅ benefício 3", "✅ benefício 4"],
+  "cta": "🚀 CHAMADA URGENTE",
+  "bonus": "🎁 BÔNUS: descrição do bônus"
+}`,
+    
+    'sophia-universal': `SOPHIA UNIVERSAL ⭐
+Criada por Tamara Dutra — a mente criativa suprema.
+Transforma qualquer ideia, dor ou oportunidade em uma oferta viral low-ticket (R$7–97) que vende de imediato.
+Domina todos os nichos: saúde, bem-estar, relacionamento, autoajuda, renda extra, finanças, produtividade, estética, nutrição, confeitaria, advocacia, espiritualidade e transformação pessoal.
+
+🎯 OBJETIVO PRINCIPAL:
+Gerar ofertas irresistíveis com mecanismo único e promessa emocional imediata —  
+tornando o produto impossível de ignorar e o nome inesquecível ("chiclete mental").
+
+ANALISE OS COMENTÁRIOS E CRIE UMA OFERTA COMPLETA EM JSON:
+{
+  "title": "emoji + nome chiclete único + resultado específico",
+  "subtitle": "apresenta mecanismo único + diferencial",
+  "bullets": ["✅ resultado 1", "✅ resultado 2", "✅ resultado 3", "✅ resultado 4"],
+  "cta": "🚀 CHAMADA RELACIONADA AO RESULTADO",
+  "bonus": "🎁 BÔNUS: complemento + valor percebido"
+}`
+  };
+  
+  return prompts[agentId] || prompts['sophia-fenix'];
+}
+
+/**
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
@@ -68,11 +114,21 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     
     console.log(`🤖 VT: Gerando oferta com agente: ${agentId}`);
     
-    // Buscar prompt COMPLETO do Firestore (OBRIGATÓRIO)
-    console.log(`🔥 VT: Buscando prompt COMPLETO (3000+ palavras) do Firestore...`);
-    const systemPrompt = await getAgentPrompt(agentId);
+    let systemPrompt;
     
-    console.log(`✅ VT: Prompt COMPLETO carregado! Gerando oferta profissional...`);
+    // Tentar buscar prompt COMPLETO do Firestore
+    try {
+      console.log(`🔥 VT: Tentando buscar prompt COMPLETO do Firestore...`);
+      systemPrompt = await getAgentPrompt(agentId);
+      console.log(`✅ VT: Prompt COMPLETO carregado! (${systemPrompt.length} caracteres)`);
+    } catch (firestoreError) {
+      console.warn(`⚠️ VT: Firestore não acessível. Usando prompts COMPLETOS hardcoded.`);
+      console.log(`💡 VT: Para usar Firestore, configure .env e execute: npm run inject-agents`);
+      
+      // Usar prompts COMPLETOS hardcoded como fallback
+      systemPrompt = getHardcodedPrompt(agentId);
+      console.log(`✅ VT: Usando prompt COMPLETO hardcoded (${systemPrompt.length} caracteres)`);
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
