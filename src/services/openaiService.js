@@ -1,5 +1,6 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { getAgentPrompt, injectPromptVariables } from './promptsService';
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -57,43 +58,11 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
-Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
-
-Comentários:
-${comments}
-
-Crie uma oferta com:
-1. Título impactante (emoji + frase poderosa)
-2. Subtítulo persuasivo
-3. 4 bullets de benefícios (começando com ✅)
-4. Call-to-action convincente
-5. Bônus irresistível
-
-Formato JSON:
-{
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
-}`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
-Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
-
-Comentários:
-${comments}
-
-Crie uma oferta completa com elementos persuasivos em formato JSON:
-{
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
-}`
-    };
+    // Carregar prompt do Firestore (com fallback automático para MVP)
+    const promptTemplate = await getAgentPrompt(agent);
+    
+    // Injetar comentários no prompt
+    const systemPrompt = injectPromptVariables(promptTemplate, { comments });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -106,7 +75,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: systemPrompt,
           },
         ],
         temperature: 0.8,

@@ -1,10 +1,19 @@
-import { TrendingUp, Users, Key, Activity } from 'lucide-react';
+import { TrendingUp, Users, Key, Activity, Database } from 'lucide-react';
 import Card from './Card';
+import Button from './Button';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from './Toast';
+import { initializePrompts, getPromptsInfo } from '../utils/initializePrompts';
+import { getAllPrompts } from '../services/promptsService';
+import { useState } from 'react';
 
 const AdminOverview = () => {
   const { user } = useAuth();
+  const { success, error } = useToast();
+  const [initializingPrompts, setInitializingPrompts] = useState(false);
+  const [checkingPrompts, setCheckingPrompts] = useState(false);
+  const [promptsStatus, setPromptsStatus] = useState(null);
 
   // Proteção adicional - não renderizar se não for admin
   if (!user?.isAdmin) {
@@ -14,6 +23,62 @@ const AdminOverview = () => {
       </Card>
     );
   }
+
+  const handleInitializePrompts = async () => {
+    setInitializingPrompts(true);
+    try {
+      const result = await initializePrompts();
+      if (result.success) {
+        success('✅ Prompts inicializados com sucesso!');
+        console.log('[ADMIN] Prompts inicializados:', result.details);
+        // Atualizar status
+        await handleCheckPrompts();
+      } else {
+        error(`❌ Erro ao inicializar prompts: ${result.message}`);
+      }
+    } catch (err) {
+      error(`❌ Erro: ${err.message}`);
+      console.error('[ADMIN] Erro ao inicializar prompts:', err);
+    } finally {
+      setInitializingPrompts(false);
+    }
+  };
+
+  const handleCheckPrompts = async () => {
+    setCheckingPrompts(true);
+    try {
+      const prompts = await getAllPrompts();
+      const info = getPromptsInfo();
+      
+      const status = {
+        sophia: {
+          loaded: prompts.sophia ? prompts.sophia.length : 0,
+          expected: info.sophia.charCount,
+          status: prompts.sophia ? '✅ Carregado' : '❌ Não encontrado',
+        },
+        sofia: {
+          loaded: prompts.sofia ? prompts.sofia.length : 0,
+          expected: info.sofia.charCount,
+          status: prompts.sofia ? '✅ Carregado' : '❌ Não encontrado',
+        }
+      };
+      
+      setPromptsStatus(status);
+      
+      if (prompts.sophia && prompts.sofia) {
+        success(`✅ Prompts OK: SOPHIA (${status.sophia.loaded} chars), SOFIA (${status.sofia.loaded} chars)`);
+      } else {
+        error('⚠️ Prompts não encontrados no Firestore. Clique em "Inicializar Prompts"');
+      }
+      
+      console.log('[ADMIN] Status dos prompts:', status);
+    } catch (err) {
+      error(`❌ Erro ao verificar prompts: ${err.message}`);
+      console.error('[ADMIN] Erro ao verificar prompts:', err);
+    } finally {
+      setCheckingPrompts(false);
+    }
+  };
   const stats = [
     {
       icon: Users,
@@ -116,6 +181,88 @@ const AdminOverview = () => {
           </div>
         </Card>
       </div>
+
+      {/* Prompts Management */}
+      <Card gradient>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Database className="w-6 h-6 text-purple-400" />
+            <h3 className="text-xl font-bold">Gerenciamento de Prompts de IA</h3>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <p className="text-sm text-gray-400">
+            Os prompts são carregados do Firestore em tempo real. Se ainda não foram inicializados, 
+            clique no botão abaixo para popular a coleção <code className="glass px-2 py-1 rounded text-purple-400">prompts</code> no Firestore.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button
+              onClick={handleInitializePrompts}
+              loading={initializingPrompts}
+              icon={Database}
+              variant="primary"
+              className="w-full"
+            >
+              🔄 Inicializar Prompts no Firestore
+            </Button>
+
+            <Button
+              onClick={handleCheckPrompts}
+              loading={checkingPrompts}
+              icon={Activity}
+              variant="secondary"
+              className="w-full"
+            >
+              🔍 Verificar Status dos Prompts
+            </Button>
+          </div>
+
+          {promptsStatus && (
+            <div className="glass border border-purple-500/30 rounded-lg p-4 space-y-3">
+              <h4 className="font-bold text-purple-400">Status dos Prompts</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* SOPHIA */}
+                <div className="glass border border-white/10 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">🔥 Sophia Fênix</span>
+                    <span className="text-sm">{promptsStatus.sophia.status}</span>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    <p>Carregado: {promptsStatus.sophia.loaded} chars</p>
+                    <p>Esperado: ~{promptsStatus.sophia.expected} chars</p>
+                  </div>
+                </div>
+
+                {/* SOFIA */}
+                <div className="glass border border-white/10 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">🌟 Sofia Universal</span>
+                    <span className="text-sm">{promptsStatus.sofia.status}</span>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    <p>Carregado: {promptsStatus.sofia.loaded} chars</p>
+                    <p>Esperado: ~{promptsStatus.sofia.expected} chars</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500 border-t border-white/10 pt-3">
+                ℹ️ Os prompts são carregados automaticamente quando um usuário gera uma oferta. 
+                Se houver erro de permissão no Firestore, o sistema usa fallback MVP hardcoded.
+              </div>
+            </div>
+          )}
+
+          <div className="text-xs text-gray-500 space-y-1">
+            <p>📝 <strong>Importante:</strong> As regras do Firestore devem permitir leitura da coleção <code className="text-purple-400">prompts</code> para todos os usuários autenticados.</p>
+            <p>🔒 <strong>Segurança:</strong> Apenas admins podem escrever/atualizar prompts.</p>
+            <p>📚 <strong>Documentação:</strong> Ver arquivo <code className="text-purple-400">FIRESTORE_RULES_SETUP.md</code> para mais detalhes.</p>
+          </div>
+        </div>
+      </Card>
 
       {/* Recent Activity */}
       <Card>

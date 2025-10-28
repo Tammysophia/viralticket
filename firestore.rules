@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: Verifica se é admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'tamara14@gmail.com';
+    }
+    
+    // Helper function: Verifica se usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Coleção: users
+    // Usuários podem ler/escrever apenas seus próprios dados
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Coleção: apiKeys
+    // Apenas admin pode gerenciar API Keys
+    match /apiKeys/{service} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Coleção: prompts
+    // TODOS podem ler (necessário para IA funcionar)
+    // Apenas admin pode escrever
+    match /prompts/{agentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Coleção: offers
+    // Usuários podem ler/escrever apenas suas ofertas
+    match /offers/{offerId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Coleção: webhooks
+    // Apenas admin pode gerenciar webhooks
+    match /webhooks/{webhookId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Coleção: analytics (opcional para futuro)
+    // Apenas admin pode ler analytics agregados
+    match /analytics/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Deny all por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
