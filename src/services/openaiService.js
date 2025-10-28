@@ -138,13 +138,13 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     console.log('📤 VT: Enviando requisição para OpenAI...');
     
     const requestBody = {
-      model: 'gpt-4',
+      model: 'gpt-4o-mini', // Modelo mais barato e com limite maior (128k tokens!)
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: comments }
       ],
       temperature: 0.7,
-      max_tokens: 4000
+      max_tokens: 2000 // Reduzido para caber no contexto
     };
     
     console.log('📋 VT: Payload:', {
