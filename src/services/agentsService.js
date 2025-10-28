@@ -200,8 +200,8 @@ export function validateUserInput(input) {
     throw new Error('Input muito curto. Mínimo 10 caracteres.');
   }
   
-  if (trimmed.length > 10000) {
-    throw new Error('Input muito longo. Máximo 10.000 caracteres.');
+  if (trimmed.length > 50000) {
+    throw new Error('Input muito longo. Máximo 50.000 caracteres.');
   }
   
   return true;

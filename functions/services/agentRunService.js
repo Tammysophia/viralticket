@@ -22,7 +22,7 @@ function sanitizeUserInput(input) {
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
     .trim()
-    .slice(0, 10000); // Limite de 10k caracteres
+    .slice(0, 50000); // Limite de 50k caracteres
 }
 
 /**

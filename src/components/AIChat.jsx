@@ -196,13 +196,18 @@ const AIChat = ({ initialText = '' }) => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Cole os comentários do vídeo ou descreva a dor/desejo do público..."
-          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+          placeholder="Cole os comentários do vídeo ou descreva a dor/desejo do público...&#10;&#10;💡 Dica: Você pode colar até 50.000 caracteres (aprox. 200 comentários)"
+          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-y"
           disabled={loading}
         />
         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-          <span>{inputText.length} / 10.000 caracteres</span>
-          <span>Mínimo 10 caracteres</span>
+          <span>{inputText.length.toLocaleString()} / 50.000 caracteres</span>
+          {inputText.length > 45000 && (
+            <span className="text-yellow-500">⚠️ Perto do limite</span>
+          )}
+          {inputText.length > 50000 && (
+            <span className="text-red-500">❌ Limite excedido</span>
+          )}
         </div>
         <Button
           onClick={handleGenerate}
