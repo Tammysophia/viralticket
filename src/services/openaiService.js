@@ -1,5 +1,6 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { getAgentPrompt } from './agentService';
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -44,6 +45,14 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
+ * Prompts fallback caso Firestore não esteja disponível
+ */
+const fallbackPrompts = {
+  sophia: `Você é Sophia Fênix, especialista em ofertas emocionais low-ticket. Analise os comentários e crie uma oferta poderosa em formato JSON com: title, subtitle, bullets (4 itens com ✅), cta e bonus.`,
+  sofia: `Você é Sofia Universal, especialista em ofertas virais para qualquer nicho. Analise os comentários e crie uma oferta com mecanismo único em formato JSON com: title, subtitle, bullets (4 itens com ✅), cta e bonus.`
+};
+
+/**
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
@@ -56,6 +65,30 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     if (!apiKey) {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
+
+    // Mapear nomes de agentes para IDs do Firestore
+    const agentIdMap = {
+      'sophia': 'sophia-fenix',
+      'sofia': 'sophia-universal'
+    };
+
+    const agentId = agentIdMap[agent] || 'sophia-fenix';
+    
+    console.log(`🤖 VT: Gerando oferta com agente: ${agentId}`);
+    
+    // Buscar prompt real do Firestore
+    let systemPrompt = await getAgentPrompt(agentId);
+    
+    // Se não conseguir buscar do Firestore, usar fallback
+    if (!systemPrompt) {
+      console.warn(`⚠️ VT: Usando prompt fallback para ${agentId}`);
+      systemPrompt = agentId === 'sophia-fenix' 
+        ? fallbackPrompts.sophia 
+        : fallbackPrompts.sofia;
+    }
+    
+    // Concatenar comentários do usuário ao prompt
+    const fullPrompt = `${systemPrompt}\n\nCOMENTÁRIOS PARA ANÁLISE:\n${comments}`;
 
     const agentPrompts = {
       sophia: `🔥 SOPHIA FÊNIX - ESPECIALISTA EM OFERTAS DE ALTO IMPACTO EMOCIONAL
@@ -214,11 +247,11 @@ ATENÇÃO: Retorne APENAS o JSON, sem texto adicional, sem markdown, sem explica
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: fullPrompt,
           },
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 2000,
       }),
     });
 
