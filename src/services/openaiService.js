@@ -52,22 +52,39 @@ export const verifyAPIConnection = async () => {
 async function buildSystemPrompt(agentId) {
   const systemPrompt = await getFullSystemPrompt(agentId);
   
-  console.info(`[OPENAI] 🔍 systemPrompt chars=${systemPrompt.length}`);
-  console.info(`[OPENAI] 🔍 systemPrompt preview: ${systemPrompt.substring(0, 150)}...`);
+  // LOGS SUPER VISÍVEIS
+  console.log('═══════════════════════════════════════════');
+  console.log('🔍 DIAGNÓSTICO DO PROMPT - LEIA ISTO:');
+  console.log('═══════════════════════════════════════════');
+  console.log(`📊 systemPrompt chars = ${systemPrompt.length}`);
+  console.log(`📝 systemPrompt preview = ${systemPrompt.substring(0, 200)}...`);
   
-  // Warning se estiver usando hardcoded (MVP)
+  // Diagnóstico detalhado
+  if (systemPrompt.length < 1000) {
+    console.error('❌ ERRO CRÍTICO: Prompt MUITO CURTO!');
+    console.error('❌ Esperado: 3500+ chars | Atual:', systemPrompt.length);
+  } else if (systemPrompt.length < 3000) {
+    console.warn('⚠️ WARNING: Prompt INCOMPLETO!');
+    console.warn('⚠️ Esperado: 3500+ chars | Atual:', systemPrompt.length);
+  } else {
+    console.log('✅ OK: Prompt COMPLETO carregado!');
+  }
+  
+  // Verificar fonte do prompt
   if (systemPrompt.includes('SOPHIA FÊNIX 🔥') || systemPrompt.includes('SOPHIA UNIVERSAL ⭐')) {
-    console.warn('[OPENAI][MVP] ⚠️ Usando prompts hardcoded. Configure Firestore para produção: npm run inject-agents');
+    console.log('📍 FONTE: Hardcoded MVP (fallback)');
   } else {
-    console.info('[OPENAI] ✅ Usando prompt do Firestore');
+    console.log('📍 FONTE: Firestore descriptografado');
   }
   
-  // Debug: Verificar se tem instruções JSON
+  // Verificar instruções JSON
   if (systemPrompt.includes('FORMATO DE RESPOSTA OBRIGATÓRIO')) {
-    console.info('[OPENAI] ✅ Instruções JSON encontradas no prompt');
+    console.log('✅ Instruções JSON: PRESENTES');
   } else {
-    console.error('[OPENAI] ❌ ERRO: Instruções JSON AUSENTES no prompt!');
+    console.error('❌ Instruções JSON: AUSENTES!');
   }
+  
+  console.log('═══════════════════════════════════════════');
   
   return systemPrompt;
 }
@@ -81,6 +98,11 @@ async function buildSystemPrompt(agentId) {
  */
 export const generateOffer = async (commentsOrParams, legacyAgent) => {
   try {
+    console.log('');
+    console.log('🚀🚀🚀 INÍCIO DA GERAÇÃO DE OFERTA 🚀🚀🚀');
+    console.log('Versão do código: BUILD-' + Date.now());
+    console.log('');
+    
     // Suporte a chamadas antigas: generateOffer(comments, agent)
     let agentId, userInput;
     if (typeof commentsOrParams === 'string') {
@@ -92,9 +114,9 @@ export const generateOffer = async (commentsOrParams, legacyAgent) => {
       userInput = commentsOrParams.userInput;
     }
 
-    console.info('[OPENAI] Starting offer generation...');
-    console.info(`[OPENAI] agentId=${agentId}`);
-    console.info(`[OPENAI] userInput length=${userInput.length} chars`);
+    console.log('[OPENAI] Starting offer generation...');
+    console.log(`[OPENAI] agentId=${agentId}`);
+    console.log(`[OPENAI] userInput length=${userInput.length} chars`);
     
     // 1. Buscar chave OpenAI
     const apiKey = await getServiceAPIKey('openai');
@@ -138,15 +160,26 @@ export const generateOffer = async (commentsOrParams, legacyAgent) => {
     }
 
     const data = await response.json();
-    console.info('[OPENAI] Response received:', {
-      id: data.id,
-      model: data.model,
-      usage: data.usage
-    });
-    
     const content = data.choices[0].message.content;
-    console.info(`[OPENAI] Response length: ${content.length} chars`);
-    console.info(`[OPENAI] Response preview: ${content.substring(0, 200)}...`);
+    
+    // LOGS SUPER VISÍVEIS DA RESPOSTA
+    console.log('═══════════════════════════════════════════');
+    console.log('📥 RESPOSTA DO OPENAI - LEIA ISTO:');
+    console.log('═══════════════════════════════════════════');
+    console.log(`📊 Response length = ${content.length} chars`);
+    console.log(`📊 Model usado = ${data.model}`);
+    console.log(`📊 Tokens = prompt:${data.usage.prompt_tokens} + completion:${data.usage.completion_tokens}`);
+    console.log(`📝 Response preview = ${content.substring(0, 300)}...`);
+    
+    if (content.length < 1000) {
+      console.error('❌ ERRO: Resposta MUITO CURTA!');
+      console.error('❌ OpenAI retornou resposta resumida/genérica');
+    } else if (content.length < 2000) {
+      console.warn('⚠️ WARNING: Resposta CURTA demais');
+    } else {
+      console.log('✅ OK: Resposta parece COMPLETA');
+    }
+    console.log('═══════════════════════════════════════════');
     
     // 5. Parsear resposta JSON
     console.info('[OPENAI] Parsing JSON response...');
