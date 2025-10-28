@@ -51,11 +51,22 @@ export const verifyAPIConnection = async () => {
  */
 async function buildSystemPrompt(agentId) {
   const systemPrompt = await getFullSystemPrompt(agentId);
-  console.info(`[OPENAI] systemPrompt chars=${systemPrompt.length}`);
+  
+  console.info(`[OPENAI] 🔍 systemPrompt chars=${systemPrompt.length}`);
+  console.info(`[OPENAI] 🔍 systemPrompt preview: ${systemPrompt.substring(0, 150)}...`);
   
   // Warning se estiver usando hardcoded (MVP)
   if (systemPrompt.includes('SOPHIA FÊNIX 🔥') || systemPrompt.includes('SOPHIA UNIVERSAL ⭐')) {
     console.warn('[OPENAI][MVP] ⚠️ Usando prompts hardcoded. Configure Firestore para produção: npm run inject-agents');
+  } else {
+    console.info('[OPENAI] ✅ Usando prompt do Firestore');
+  }
+  
+  // Debug: Verificar se tem instruções JSON
+  if (systemPrompt.includes('FORMATO DE RESPOSTA OBRIGATÓRIO')) {
+    console.info('[OPENAI] ✅ Instruções JSON encontradas no prompt');
+  } else {
+    console.error('[OPENAI] ❌ ERRO: Instruções JSON AUSENTES no prompt!');
   }
   
   return systemPrompt;
