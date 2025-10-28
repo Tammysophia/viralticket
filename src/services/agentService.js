@@ -1,45 +1,16 @@
-// Serviço para buscar e descriptografar prompts de agentes do Firestore
+// Serviço para buscar prompts de agentes do Firestore
+// NOTA: Descriptografia acontece no BACKEND apenas (/api/agents/run)
 import { db } from '../config/firebase';
 import { collection, doc, getDoc } from 'firebase/firestore';
-import crypto from 'crypto-js';
 
 /**
- * Descriptografa prompt criptografado com AES-256-GCM
- * @param {string} encryptedText - Texto no formato "iv:tag:encrypted"
- * @returns {string} - Texto descriptografado
- */
-function decrypt(encryptedText) {
-  try {
-    const [ivHex, tagHex, encrypted] = encryptedText.split(':');
-    
-    // Em ambiente de produção, usar variável de ambiente
-    const AGENT_MASTER_KEY = import.meta.env.VITE_AGENT_MASTER_KEY || '0'.repeat(64);
-    
-    // Descriptografar usando crypto-js (compatível com Node crypto)
-    const key = crypto.enc.Hex.parse(AGENT_MASTER_KEY);
-    const iv = crypto.enc.Hex.parse(ivHex);
-    const tag = crypto.enc.Hex.parse(tagHex);
-    
-    // crypto-js não tem suporte direto a GCM no browser
-    // Usar AES-CTR como fallback ou implementar via Web Crypto API
-    console.warn('⚠️ VT: Descriptografia AES-GCM no browser não implementada. Usando fallback simples.');
-    
-    // FALLBACK: retornar texto base64 decodificado (temporário)
-    return atob(encrypted);
-  } catch (error) {
-    console.error('❌ VT: Erro ao descriptografar prompt:', error);
-    return null;
-  }
-}
-
-/**
- * Busca prompt de agente do Firestore e descriptografa
+ * Verifica se agente existe e está ativa no Firestore
  * @param {string} agentId - ID da agente (sophia-fenix ou sophia-universal)
- * @returns {Promise<string|null>} - Prompt descriptografado ou null
+ * @returns {Promise<boolean>} - True se agente existe e está ativa
  */
 export async function getAgentPrompt(agentId) {
   try {
-    console.log(`🔍 VT: Buscando prompt da agente: ${agentId}`);
+    console.log(`🔍 VT: Verificando agente: ${agentId}`);
     
     const agentRef = doc(db, 'agent_templates', agentId);
     const agentSnap = await getDoc(agentRef);
@@ -47,7 +18,7 @@ export async function getAgentPrompt(agentId) {
     // OBRIGATÓRIO: Agente deve existir
     if (!agentSnap.exists()) {
       console.error(`❌ VT: Agente ${agentId} não encontrada no Firestore`);
-      throw new Error(`Agent not found: ${agentId}`);
+      throw new Error(`Agent not found: ${agentId}. Execute 'npm run inject-agents' para configurar.`);
     }
     
     const data = agentSnap.data();
@@ -64,19 +35,12 @@ export async function getAgentPrompt(agentId) {
       throw new Error(`Agent prompt missing: ${agentId}`);
     }
     
-    console.log(`🔓 VT: Descriptografando prompt da agente ${agentId}...`);
-    const decryptedPrompt = decrypt(data.prompt_enc);
+    console.log(`✅ VT: Agente ${agentId} existe e está ativa`);
     
-    // OBRIGATÓRIO: Descriptografia deve funcionar
-    if (!decryptedPrompt) {
-      console.error(`❌ VT: Falha ao descriptografar prompt de ${agentId}`);
-      throw new Error(`Failed to decrypt agent prompt: ${agentId}`);
-    }
-    
-    console.log(`✅ VT: Prompt da agente ${agentId} descriptografado com sucesso (${decryptedPrompt.length} caracteres)`);
-    return decryptedPrompt;
+    // Retornar true - descriptografia acontece no backend
+    return true;
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar prompt da agente ${agentId}:`, error);
+    console.error(`❌ VT: Erro ao verificar agente ${agentId}:`, error);
     throw error; // Re-throw para forçar tratamento acima
   }
 }
