@@ -1,146 +1,142 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { Sparkles, Copy, Loader2, Lock, Shield } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { useAgents } from '../hooks/useAgents';
+import { runAgent, validateUserInput } from '../services/agentsService';
+import { createOffer } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
-  const [selectedAgent, setSelectedAgent] = useState('sophia');
+  const [selectedAgentId, setSelectedAgentId] = useState('sophia-fenix');
   const [inputText, setInputText] = useState(initialText);
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [apiConnected, setApiConnected] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [runId, setRunId] = useState(null);
   const { user, updateUser } = useAuth();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
   const { t } = useLanguage();
-
-  const agents = [
-    {
-      id: 'sophia',
-      name: 'Sophia Fênix',
-      emoji: '🔥',
-      description: 'Especialista em ofertas de alto impacto',
-      color: 'from-orange-500 to-red-600',
-    },
-    {
-      id: 'sofia',
-      name: 'Sofia Universal',
-      emoji: '🌟',
-      description: 'IA versátil para todos os nichos',
-      color: 'from-purple-500 to-pink-600',
-    },
-  ];
-
-  const handleVerifyConnection = async () => {
-    setVerifying(true);
-    try {
-      const result = await verifyAPIConnection();
-      
-      if (result.success) {
-        setApiConnected(true);
-        success('✅ Conexão com OpenAI API estabelecida!');
-      } else {
-        setApiConnected(false);
-        if (user.isAdmin) {
-          error(`⚠️ ${result.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Tente novamente!');
-        }
-      }
-    } catch (err) {
-      setApiConnected(false);
-      if (user.isAdmin) {
-        error(`⚠️ Erro: ${err.message}`);
-      } else {
-        error('🎯 Erro ao conectar. Tente novamente!');
-      }
-    } finally {
-      setVerifying(false);
-    }
-  };
+  const { agents, loading: loadingAgents } = useAgents();
 
   const handleGenerate = async () => {
+    // Validações básicas
     if (!inputText.trim()) {
-      error('Digite um comentário ou texto');
+      showError('Digite um comentário ou texto');
       return;
     }
 
+    // VT: secure-agent - Validar input
+    try {
+      validateUserInput(inputText);
+    } catch (validationError) {
+      showError(validationError.message);
+      return;
+    }
+
+    // Verificar limites
     if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('Limite diário de ofertas atingido');
+      showError('Limite diário de ofertas atingido');
       return;
     }
 
     setLoading(true);
+    setOutput(null);
+    setRunId(null);
+
+    const selectedAgent = agents.find(a => a.id === selectedAgentId);
+    const agentName = selectedAgent?.name || 'Sophia';
 
     try {
-      // Verificar conexão antes de gerar
-      const connectionCheck = await verifyAPIConnection();
+      console.log('VT: Executando agente:', selectedAgentId);
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Gerar oferta com OpenAI
-      const offerData = await generateOffer(inputText, selectedAgent);
-
-      setOutput(offerData);
+      // VT: secure-agent - Executar via Cloud Function (seguro)
+      const result = await runAgent(selectedAgentId, inputText);
+      
+      console.log('VT: Resultado recebido:', result.runId);
+      
+      setOutput(result.result);
+      setRunId(result.runId);
+      
+      // Atualizar usage
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('Oferta gerada com sucesso!');
-      setApiConnected(true);
+      
+      success(`✨ ${agentName} gerou sua oferta com sucesso!`);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      // VT: Salvar oferta automaticamente no Kanban
       try {
-        const offerId = await createOfferFromAI({
-          userId: user.id,
-          title: offerData.title || 'Nova Oferta',
-          agent: selectedAgent,
+        const offerData = {
+          userId: user.uid,
+          title: result.result.title || 'Nova Oferta IA',
+          description: result.result.subtitle || result.result.description || '',
+          status: 'execucao', // Status inicial no Kanban
+          agent: selectedAgentId,
+          aiRunId: result.runId,
           copy: {
-            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
-            adPrimary: offerData.bullets.join(' '),
-            adHeadline: offerData.title,
-            adDescription: offerData.subtitle
+            page: formatOfferCopy(result.result),
+            adHeadline: result.result.title,
+            adDescription: result.result.subtitle || result.result.description
           },
+          createdAt: new Date(),
           youtubeLinks: []
-        });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        };
+        
+        const offerId = await createOffer(offerData);
+        console.log('VT: Oferta salva no Kanban:', offerId);
+        success('📝 Oferta salva no Kanban automaticamente!');
+        
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        console.error('VT: Erro ao salvar oferta no Kanban:', saveError);
+        // Não bloqueia o fluxo principal
       }
+      
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
+      console.error('VT: Erro ao gerar oferta:', err);
+      
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        showError(`⚠️ Erro: ${err.message}`);
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        showError('🎯 Erro ao gerar oferta. Tente novamente!');
       }
     } finally {
       setLoading(false);
     }
   };
+  
+  // Helper para formatar copy da oferta
+  const formatOfferCopy = (result) => {
+    let copy = `${result.title || ''}\n\n${result.subtitle || ''}\n\n`;
+    
+    if (result.description) {
+      copy += `${result.description}\n\n`;
+    }
+    
+    if (result.blocks && result.blocks.length > 0) {
+      result.blocks.forEach(block => {
+        if (block.content) {
+          copy += `${block.content}\n\n`;
+        }
+        if (block.data?.items) {
+          copy += block.data.items.join('\n') + '\n\n';
+        }
+      });
+    }
+    
+    return copy.trim();
+  };
 
   const handleCopy = () => {
     if (!output) return;
     
-    const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
+    const text = formatOfferCopy(output);
     navigator.clipboard.writeText(text);
-    success('Oferta copiada!');
+    success('✅ Oferta copiada!');
   };
 
   return (
@@ -148,39 +144,53 @@ const AIChat = ({ initialText = '' }) => {
       {/* Agent Selection */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">Selecione a IA</h3>
-          {/* VT: Badge "API Conectada" removido conforme solicitado */}
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            Selecione a IA
+            <Shield className="w-5 h-5 text-purple-400" />
+          </h3>
+          {/* VT: Badge de segurança */}
+          <span className="text-xs px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full flex items-center gap-1">
+            <Lock className="w-3 h-3" />
+            IA Exclusiva
+          </span>
         </div>
         
-        {user?.isAdmin && (
-          <div className="mb-4">
-            <Button
-              onClick={handleVerifyConnection}
-              loading={verifying}
-              variant="secondary"
-              className="w-full"
-            >
-              {apiConnected ? '✅ Reconectar API' : '🔌 Verificar Conexão API'}
-            </Button>
+        {loadingAgents ? (
+          <div className="text-center py-8 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+            Carregando agentes...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {agents.map((agent) => (
+              <button
+                key={agent.id}
+                onClick={() => setSelectedAgentId(agent.id)}
+                className={`p-4 rounded-xl border-2 transition-all relative ${
+                  selectedAgentId === agent.id
+                    ? 'border-purple-500 bg-purple-500/10'
+                    : 'border-white/10 glass-hover'
+                }`}
+              >
+                {/* Badge IA Exclusiva */}
+                <div className="absolute top-2 right-2">
+                  <Lock className="w-4 h-4 text-purple-400" />
+                </div>
+                
+                <div className="text-4xl mb-2">{agent.emoji || '🤖'}</div>
+                <h4 className="font-bold mb-1">{agent.name}</h4>
+                <p className="text-sm text-gray-400">{agent.description}</p>
+                
+                {/* Indicador de versão */}
+                {agent.version && (
+                  <span className="text-xs text-gray-500 mt-2 block">
+                    v{agent.version}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {agents.map((agent) => (
-            <button
-              key={agent.id}
-              onClick={() => setSelectedAgent(agent.id)}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                selectedAgent === agent.id
-                  ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-white/10 glass-hover'
-              }`}
-            >
-              <div className="text-4xl mb-2">{agent.emoji}</div>
-              <h4 className="font-bold mb-1">{agent.name}</h4>
-              <p className="text-sm text-gray-400">{agent.description}</p>
-            </button>
-          ))}
-        </div>
       </Card>
 
       {/* Input */}
@@ -189,16 +199,29 @@ const AIChat = ({ initialText = '' }) => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder={t('enterText')}
-          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+          placeholder="Cole os comentários do vídeo ou descreva a dor/desejo do público..."
+          className="w-full glass border border-white/10 rounded-lg px-4 py-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+          disabled={loading}
         />
+        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+          <span>{inputText.length} / 10.000 caracteres</span>
+          <span>Mínimo 10 caracteres</span>
+        </div>
         <Button
           onClick={handleGenerate}
           loading={loading}
+          disabled={loadingAgents}
           className="w-full mt-4"
           icon={Sparkles}
         >
-          {t('generate')}
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {agents.find(a => a.id === selectedAgentId)?.name || 'Sophia'} está gerando sua oferta...
+            </>
+          ) : (
+            t('generate')
+          )}
         </Button>
       </Card>
 
@@ -206,33 +229,100 @@ const AIChat = ({ initialText = '' }) => {
       {output && (
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Oferta Gerada</h3>
+            <div>
+              <h3 className="text-xl font-bold">✨ Oferta Gerada</h3>
+              {runId && (
+                <p className="text-xs text-gray-400 mt-1">ID: {runId.slice(0, 8)}...</p>
+              )}
+            </div>
             <Button variant="secondary" onClick={handleCopy} icon={Copy}>
               {t('copy')}
             </Button>
           </div>
 
+          {/* Notice de segurança */}
+          <div className="mb-4 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+            <p className="text-xs text-purple-300 flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Resultado gerado por IA proprietária - template protegido com criptografia
+            </p>
+          </div>
+
           <div className="space-y-4">
-            <div>
-              <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                {output.title}
-              </h2>
-              <p className="text-lg text-gray-300 mt-2">{output.subtitle}</p>
-            </div>
+            {/* Title */}
+            {output.title && (
+              <div>
+                <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  {output.title}
+                </h2>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              {output.bullets.map((bullet, index) => (
-                <p key={index} className="text-gray-300">{bullet}</p>
-              ))}
-            </div>
+            {/* Subtitle */}
+            {output.subtitle && (
+              <p className="text-lg text-gray-300">{output.subtitle}</p>
+            )}
 
-            <div className="glass border border-purple-500/30 rounded-lg p-4 text-center">
-              <p className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
-                {output.cta}
-              </p>
-            </div>
+            {/* Description */}
+            {output.description && (
+              <p className="text-gray-400">{output.description}</p>
+            )}
 
-            <p className="text-center text-yellow-400">{output.bonus}</p>
+            {/* Blocks */}
+            {output.blocks && output.blocks.length > 0 && (
+              <div className="space-y-3">
+                {output.blocks.map((block, index) => (
+                  <div key={index} className="glass border border-white/10 rounded-lg p-4">
+                    <span className="text-xs font-medium text-purple-400 uppercase block mb-2">
+                      {block.type}
+                    </span>
+                    <p className="text-gray-300 whitespace-pre-wrap">{block.content}</p>
+                    
+                    {/* Items (benefícios, bônus, etc) */}
+                    {block.data?.items && (
+                      <div className="mt-2 space-y-1">
+                        {block.data.items.map((item, i) => (
+                          <p key={i} className="text-gray-300">{item}</p>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* CTA especial */}
+                    {block.type === 'cta' && block.data?.text && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg text-center">
+                        <p className="font-bold text-lg gradient-primary bg-clip-text text-transparent">
+                          {block.data.text}
+                        </p>
+                        {block.data.urgency && (
+                          <p className="text-sm text-yellow-400 mt-1">{block.data.urgency}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Legacy format support (bullets, cta, bonus) */}
+            {output.bullets && output.bullets.length > 0 && (
+              <div className="space-y-2">
+                {output.bullets.map((bullet, index) => (
+                  <p key={index} className="text-gray-300">{bullet}</p>
+                ))}
+              </div>
+            )}
+
+            {output.cta && (
+              <div className="glass border border-purple-500/30 rounded-lg p-4 text-center">
+                <p className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
+                  {output.cta}
+                </p>
+              </div>
+            )}
+
+            {output.bonus && (
+              <p className="text-center text-yellow-400">{output.bonus}</p>
+            )}
           </div>
         </Card>
       )}
