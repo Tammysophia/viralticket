@@ -194,7 +194,7 @@ const AdminOverview = () => {
         <div className="space-y-4">
           <p className="text-sm text-gray-400">
             Os prompts são carregados do Firestore em tempo real. Se ainda não foram inicializados, 
-            clique no botão abaixo para popular a coleção <code className="glass px-2 py-1 rounded text-purple-400">prompts</code> no Firestore.
+            clique no botão abaixo para popular a coleção <code className="glass px-2 py-1 rounded text-purple-400">agent_templates</code> no Firestore.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,9 +257,10 @@ const AdminOverview = () => {
           )}
 
           <div className="text-xs text-gray-500 space-y-1">
-            <p>📝 <strong>Importante:</strong> As regras do Firestore devem permitir leitura da coleção <code className="text-purple-400">prompts</code> para todos os usuários autenticados.</p>
+            <p>📝 <strong>Importante:</strong> As regras do Firestore devem permitir leitura da coleção <code className="text-purple-400">agent_templates</code> para todos os usuários autenticados.</p>
             <p>🔒 <strong>Segurança:</strong> Apenas admins podem escrever/atualizar prompts.</p>
-            <p>📚 <strong>Documentação:</strong> Ver arquivo <code className="text-purple-400">FIRESTORE_RULES_SETUP.md</code> para mais detalhes.</p>
+            <p>⚠️ <strong>Crítico:</strong> Prompts devem ter 3500+ caracteres para funcionar corretamente.</p>
+            <p>📚 <strong>Documentação:</strong> Ver arquivo <code className="text-purple-400">CORREÇÃO_CRÍTICA_FIRESTORE.md</code> para mais detalhes.</p>
           </div>
         </div>
       </Card>

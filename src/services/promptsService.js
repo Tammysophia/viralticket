@@ -68,8 +68,8 @@ export const getAgentPrompt = async (agentId = 'sophia') => {
       return MVP_PROMPTS[agentId] || MVP_PROMPTS.sophia;
     }
 
-    // Buscar do Firestore
-    const promptRef = doc(db, 'prompts', agentId);
+    // Buscar do Firestore (coleção agent_templates)
+    const promptRef = doc(db, 'agent_templates', agentId);
     const promptSnap = await getDoc(promptRef);
 
     if (promptSnap.exists()) {
@@ -121,8 +121,8 @@ export const getAllPrompts = async () => {
       return MVP_PROMPTS;
     }
 
-    // Buscar do Firestore
-    const promptsRef = collection(db, 'prompts');
+    // Buscar do Firestore (coleção agent_templates)
+    const promptsRef = collection(db, 'agent_templates');
     const snapshot = await getDocs(promptsRef);
 
     if (!snapshot.empty) {
@@ -163,7 +163,7 @@ export const saveAgentPrompt = async (agentId, content, metadata = {}) => {
       throw new Error('Firebase não configurado');
     }
 
-    const promptRef = doc(db, 'prompts', agentId);
+    const promptRef = doc(db, 'agent_templates', agentId);
     await setDoc(promptRef, {
       content,
       agentId,

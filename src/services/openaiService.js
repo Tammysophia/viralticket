@@ -63,6 +63,9 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     
     // Injetar comentários no prompt
     const systemPrompt = injectPromptVariables(promptTemplate, { comments });
+    
+    // Log detalhado para debug
+    console.log(`[AGENTS][DEBUG] systemPrompt chars=${systemPrompt.length} agent=${agent}`);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
