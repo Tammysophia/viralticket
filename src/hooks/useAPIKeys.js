@@ -39,16 +39,13 @@ export const getActiveAPIKeys = async () => {
  */
 export const getServiceAPIKey = async (service) => {
   try {
-    // PRIMEIRO: Buscar do localStorage (onde admin salvou)
-    const saved = localStorage.getItem('viralticket_api_keys');
     console.log('🔍 VT: Buscando chave para:', service);
-    console.log('🔍 VT: localStorage keys:', saved ? 'existe' : 'vazio');
+    
+    // PRIMEIRO: Buscar do localStorage (onde admin salvou - mais rápido)
+    const saved = localStorage.getItem('viralticket_api_keys');
     
     if (saved) {
       const allKeys = JSON.parse(saved);
-      console.log('🔍 VT: Total de chaves:', allKeys.length);
-      console.log('🔍 VT: Chaves disponíveis:', allKeys.map(k => ({ type: k.type, status: k.status, hasKey: !!k.key })));
-      
       const key = allKeys.find(k => k.type === service && k.status === 'active');
       
       if (key && key.key) {
@@ -58,28 +55,32 @@ export const getServiceAPIKey = async (service) => {
           : key.key;
         
         console.log(`✅ VT: Chave ${service} encontrada no localStorage`);
-        console.log(`🔑 VT: Chave começa com:`, actualKey.substring(0, 10) + '...');
         return actualKey;
-      } else {
-        console.warn(`⚠️ VT: Chave ${service} não encontrada ou inativa no localStorage`);
       }
     }
     
+    console.log('⚠️ VT: Chave não encontrada no localStorage, tentando Firestore...');
+    
     // SEGUNDO: Tentar buscar do Firestore (fallback)
-    const keyData = await getAPIKey(service);
-    if (!keyData || keyData.status !== 'active') {
-      console.warn(`⚠️ Chave ${service} não encontrada`);
-      return null;
+    try {
+      const keyData = await getAPIKey(service);
+      if (keyData && keyData.status === 'active' && keyData.key) {
+        const actualKey = isEncrypted(keyData.key) 
+          ? decrypt(keyData.key) 
+          : keyData.key;
+        
+        console.log(`✅ VT: Chave ${service} encontrada no Firestore`);
+        return actualKey;
+      }
+    } catch (firestoreError) {
+      console.warn('⚠️ VT: Erro ao buscar do Firestore:', firestoreError.message);
     }
     
-    // Descriptografar se necessário
-    const actualKey = isEncrypted(keyData.key) 
-      ? decrypt(keyData.key) 
-      : keyData.key;
+    console.warn(`❌ VT: Chave ${service} não encontrada em nenhum lugar`);
+    return null;
     
-    return actualKey;
   } catch (error) {
-    console.error(`Erro ao buscar chave ${service}:`, error);
+    console.error(`❌ VT: Erro ao buscar chave ${service}:`, error);
     return null;
   }
 };
