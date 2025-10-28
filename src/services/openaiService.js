@@ -245,10 +245,30 @@ export const generateOffer = async (comments, agent = 'sophia') => {
         jsonContent = content.split('```')[1].split('```')[0];
       }
       
-      const offerData = JSON.parse(jsonContent.trim());
-      console.log('✅ VT: JSON parseado com sucesso!', offerData);
+      const fullResponse = JSON.parse(jsonContent.trim());
+      console.log('✅ VT: JSON parseado com sucesso!');
+      console.log('📊 VT: Estrutura completa recebida:', Object.keys(fullResponse));
+      
+      // Se vier com estrutura completa (microOfertas, top3, etc), extrair ofertaCampea
+      if (fullResponse.ofertaCampea) {
+        console.log('🎯 VT: Oferta COMPLETA detectada!');
+        console.log('📋 VT: Micro-ofertas:', fullResponse.microOfertas?.length || 0);
+        console.log('🏆 VT: Top 3 ofertas:', fullResponse.top3Ofertas?.length || 0);
+        console.log('📘 VT: Ebook capítulos:', fullResponse.ebookCapitulos?.length || 0);
+        console.log('❓ VT: Quiz perguntas:', fullResponse.quiz15Perguntas?.length || 0);
+        console.log('💰 VT: Order bumps:', fullResponse.orderBumps?.length || 0);
+        
+        // Retornar estrutura completa MAS manter compatibilidade com UI
+        return {
+          ...fullResponse.ofertaCampea,
+          // Dados extras para exibição futura
+          _fullData: fullResponse
+        };
+      }
+      
+      // Se vier só com title, subtitle, bullets, retornar direto
       console.log('🎉 VT: OFERTA GERADA COM SUCESSO!');
-      return offerData;
+      return fullResponse;
     } catch (parseError) {
       console.error('⚠️ VT: Erro ao parsear JSON:', parseError);
       console.log('📄 VT: Conteúdo completo que tentou parsear:', content);
