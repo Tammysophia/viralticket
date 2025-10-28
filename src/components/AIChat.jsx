@@ -69,9 +69,7 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
-    // VT: SEM LIMITES - usuários podem gerar quantas ofertas quiserem
-    console.log('🚀 VT: Gerando oferta sem limites!');
-
+    console.info('[AIChat] Starting offer generation...');
     setLoading(true);
 
     try {
@@ -79,22 +77,21 @@ const AIChat = ({ initialText = '' }) => {
       const connectionCheck = await verifyAPIConnection();
       
       if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
+        error(`⚠️ ${connectionCheck.message}`);
         setLoading(false);
         return;
       }
 
+      console.info('[AIChat] Generating offer with agent:', selectedAgent);
+      
       // Gerar oferta com OpenAI
       const offerData = await generateOffer(inputText, selectedAgent);
 
       setOutput(offerData);
-      // VT: SEM ATUALIZAR contador (sem limites)
-      success('✅ Oferta gerada com sucesso!');
+      success('✅ Oferta completa gerada com sucesso!');
       setApiConnected(true);
+
+      console.info('[AIChat] Offer generated successfully');
 
       // VT: Salvar oferta automaticamente no Firestore (opcional)
       try {
@@ -110,17 +107,34 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('✅ VT: Oferta salva automaticamente no Kanban:', offerId);
+        console.info('[AIChat] Offer saved to Kanban:', offerId);
       } catch (saveError) {
-        console.warn('⚠️ VT: Não foi possível salvar oferta no Kanban:', saveError.message);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        console.warn('[AIChat] Failed to save offer to Kanban:', saveError.message);
+        // Não bloqueia o fluxo se falhar ao salvar
       }
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
-      if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+      console.error('[AIChat][ERR]', err);
+      
+      // Tratamento por código de erro
+      if (err?.code === 'AGENT_NOT_FOUND') {
+        if (user?.isAdmin) {
+          error('❌ Agente não encontrada no Firestore. Execute: npm run inject-agents');
+        } else {
+          error('⚠️ Sistema em configuração. Tente novamente em alguns minutos.');
+        }
+      } else if (err?.code === 'AGENT_DECRYPT_FAIL' || err?.code === 'AGENT_KEY_INVALID') {
+        if (user?.isAdmin) {
+          error('❌ Chave mestre inválida ou ausente. Verifique VITE_AGENT_MASTER_KEY e faça redeploy.');
+        } else {
+          error('⚠️ Configuração pendente. Aguarde alguns instantes.');
+        }
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        // Erro genérico
+        if (user?.isAdmin) {
+          error(`❌ Erro: ${err.message || 'Erro desconhecido'}`);
+        } else {
+          error('❌ Não foi possível gerar a oferta. Tente novamente.');
+        }
       }
     } finally {
       setLoading(false);

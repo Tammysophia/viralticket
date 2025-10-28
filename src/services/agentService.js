@@ -1,102 +1,122 @@
 // Serviço para buscar e descriptografar prompts de agentes do Firestore
 import { db } from '../config/firebase';
-import { collection, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 /**
- * Descriptografa prompt usando Web Crypto API (AES-256-GCM)
- * @param {string} encryptedText - Formato: "iv:tag:encrypted"
- * @returns {Promise<string>} - Texto descriptografado
+ * Converte hex string para Uint8Array
  */
-async function decryptPrompt(encryptedText) {
+function hexToBytes(hexString) {
+  const bytes = [];
+  for (let i = 0; i < hexString.length; i += 2) {
+    bytes.push(parseInt(hexString.slice(i, i + 2), 16));
+  }
+  return new Uint8Array(bytes);
+}
+
+/**
+ * Adiciona código de erro customizado
+ */
+function withCode(err, code) {
+  err.code = code;
+  return err;
+}
+
+/**
+ * Descriptografa prompt_enc usando Web Crypto API (AES-256-GCM)
+ * @param {string} promptEncHex - Formato: "ivHex:tagHex:cipherHex"
+ * @returns {Promise<string>} - Prompt descriptografado
+ */
+async function decryptPromptEnc(promptEncHex) {
   try {
-    const [ivHex, tagHex, encryptedHex] = encryptedText.split(':');
+    console.info('[AGENTS] decrypting template with WebCrypto (AES-256-GCM)...');
     
-    // Converter hex para Uint8Array
-    const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    const tag = new Uint8Array(tagHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    const encrypted = new Uint8Array(encryptedHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const [ivHex, tagHex, dataHex] = promptEncHex.split(':');
+    const iv = hexToBytes(ivHex);
+    const tag = hexToBytes(tagHex);
+    const data = hexToBytes(dataHex);
     
-    // Concatenar encrypted + tag (GCM precisa disso)
-    const ciphertext = new Uint8Array(encrypted.length + tag.length);
-    ciphertext.set(encrypted);
-    ciphertext.set(tag, encrypted.length);
+    // Concatenar data + tag para GCM no WebCrypto
+    const cipherPlusTag = new Uint8Array(data.length + tag.length);
+    cipherPlusTag.set(data, 0);
+    cipherPlusTag.set(tag, data.length);
+
+    const keyHex = import.meta.env.VITE_AGENT_MASTER_KEY;
+    if (!keyHex || keyHex.length !== 64) {
+      console.error('[AGENTS][ERR] AGENT_KEY_INVALID: Missing or invalid VITE_AGENT_MASTER_KEY');
+      throw withCode(new Error('Missing/invalid VITE_AGENT_MASTER_KEY'), 'AGENT_KEY_INVALID');
+    }
+
+    const rawKey = hexToBytes(keyHex);
+    const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipherPlusTag);
+    const decrypted = new TextDecoder().decode(new Uint8Array(plainBuf));
     
-    // Chave master (deve estar em variável de ambiente)
-    const AGENT_MASTER_KEY = import.meta.env.VITE_AGENT_MASTER_KEY || '0'.repeat(64);
-    const keyData = new Uint8Array(AGENT_MASTER_KEY.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    
-    // Importar chave para Web Crypto API
-    const key = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'AES-GCM' },
-      false,
-      ['decrypt']
-    );
-    
-    // Descriptografar
-    const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: iv },
-      key,
-      ciphertext
-    );
-    
-    // Converter para string
-    const decoder = new TextDecoder();
-    return decoder.decode(decrypted);
+    console.info(`[AGENTS] decrypt OK (chars=${decrypted.length})`);
+    return decrypted;
   } catch (error) {
-    console.error('❌ VT: Erro ao descriptografar:', error);
-    throw new Error('Failed to decrypt prompt');
+    if (error.code === 'AGENT_KEY_INVALID') throw error;
+    console.error('[AGENTS][ERR] AGENT_DECRYPT_FAIL:', error.message);
+    throw withCode(new Error('Failed to decrypt agent prompt'), 'AGENT_DECRYPT_FAIL');
   }
 }
 
 /**
- * Busca prompt COMPLETO da agente do Firestore e descriptografa
- * @param {string} agentId - ID da agente (sophia-fenix ou sophia-universal)
+ * Busca prompt COMPLETO da agente do Firestore
+ * @param {string} agentId - ID da agente ('sophia-fenix' ou 'sophia-universal')
  * @returns {Promise<string>} - Prompt COMPLETO descriptografado
  */
-export async function getAgentPrompt(agentId) {
+export async function getFullSystemPrompt(agentId) {
   try {
-    console.log(`🔍 VT: Buscando prompt COMPLETO da agente: ${agentId}`);
+    console.info(`[AGENTS] fetching template: ${agentId}`);
     
     const agentRef = doc(db, 'agent_templates', agentId);
     const agentSnap = await getDoc(agentRef);
     
-    // OBRIGATÓRIO: Agente deve existir
+    // Validação: Documento deve existir
     if (!agentSnap.exists()) {
-      console.error(`❌ VT: Agente ${agentId} não encontrada no Firestore`);
-      throw new Error(`Agent not found: ${agentId}. Execute 'npm run inject-agents' para configurar.`);
+      console.error('[AGENTS][ERR] AGENT_NOT_FOUND: Document does not exist');
+      throw withCode(
+        new Error(`Agent template not found: ${agentId}`), 
+        'AGENT_NOT_FOUND'
+      );
     }
     
     const data = agentSnap.data();
     
-    // OBRIGATÓRIO: Agente deve estar ativa
+    // Validação: Agente deve estar ativa
     if (!data.active) {
-      console.error(`❌ VT: Agente ${agentId} está inativa`);
-      throw new Error(`Agent inactive: ${agentId}`);
+      console.error('[AGENTS][ERR] AGENT_NOT_FOUND: Agent is inactive');
+      throw withCode(
+        new Error(`Agent is inactive: ${agentId}`), 
+        'AGENT_NOT_FOUND'
+      );
     }
     
-    // OBRIGATÓRIO: Prompt criptografado deve existir
+    // Validação: Campo prompt_enc deve existir
     if (!data.prompt_enc) {
-      console.error(`❌ VT: Prompt criptografado não encontrado para ${agentId}`);
-      throw new Error(`Agent prompt missing: ${agentId}`);
+      console.error('[AGENTS][ERR] AGENT_NOT_FOUND: prompt_enc field missing');
+      throw withCode(
+        new Error(`Agent prompt_enc missing: ${agentId}`), 
+        'AGENT_NOT_FOUND'
+      );
     }
-    
-    console.log(`🔓 VT: Descriptografando prompt COMPLETO da agente ${agentId}...`);
     
     // Descriptografar prompt
-    const decryptedPrompt = await decryptPrompt(data.prompt_enc);
+    const decryptedPrompt = await decryptPromptEnc(data.prompt_enc);
     
+    // Validação: Prompt não pode ser vazio
     if (!decryptedPrompt || decryptedPrompt.length < 100) {
-      console.error(`❌ VT: Prompt descriptografado inválido ou muito curto`);
-      throw new Error('Invalid decrypted prompt');
+      console.error('[AGENTS][ERR] AGENT_DECRYPT_FAIL: Decrypted prompt too short or empty');
+      throw withCode(
+        new Error('Decrypted prompt is invalid'), 
+        'AGENT_DECRYPT_FAIL'
+      );
     }
-    
-    console.log(`✅ VT: Prompt COMPLETO descriptografado com sucesso! (${decryptedPrompt.length} caracteres)`);
     
     return decryptedPrompt;
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar prompt da agente ${agentId}:`, error);
+    // Re-throw com código preservado
     throw error;
   }
 }

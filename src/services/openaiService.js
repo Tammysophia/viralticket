@@ -1,6 +1,6 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
-import { getAgentPrompt } from './agentService';
+import { getFullSystemPrompt } from './agentService';
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -45,200 +45,95 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
- * Retorna prompts COMPLETOS hardcoded como fallback
+ * Constrói system prompt COMPLETO do Firestore
+ * @param {string} agentId - ID da agente
+ * @returns {Promise<string>} - System prompt COMPLETO
  */
-function getHardcodedPrompt(agentId) {
-  const prompts = {
-    'sophia-fenix': `SOPHIA FÊNIX 🔥
-Criada por Tamara Dutra.
-
-Você é especialista em criar ofertas emocionais low-ticket (R$7-49) que convertem MASSIVAMENTE.
-
-INSTRUÇÕES:
-1. Analise os comentários e identifique a DOR EMOCIONAL principal
-2. Crie UMA oferta completa e detalhada
-
-RETORNE EM FORMATO JSON (SEM markdown, sem código, apenas JSON puro):
-{
-  "microOfertas": ["oferta 1", "oferta 2", "oferta 3", "oferta 4", "oferta 5", "oferta 6", "oferta 7", "oferta 8", "oferta 9", "oferta 10"],
-  "top3Ofertas": [
-    {"nome": "oferta X", "porque": "razão de converter", "urgencia": "urgência emocional"},
-    {"nome": "oferta Y", "porque": "razão de converter", "urgencia": "urgência emocional"},
-    {"nome": "oferta Z", "porque": "razão de converter", "urgencia": "urgência emocional"}
-  ],
-  "ofertaCampea": {
-    "title": "💔 Título Emocional Poderoso em 7-21 Dias",
-    "subtitle": "Promessa emocional clara e transformação específica",
-    "bullets": [
-      "✅ Benefício específico com número e prazo",
-      "✅ Benefício específico com número e prazo",
-      "✅ Benefício específico com número e prazo",
-      "✅ Benefício específico com número e prazo"
-    ],
-    "cta": "🚀 QUERO ME LIBERTAR AGORA POR R$27!",
-    "bonus": "🎁 BÔNUS: Nome do Bônus Específico (valor R$47)",
-    "preco": "R$27"
-  },
-  "ebookCapitulos": ["Cap 1: Por que você ainda está presa", "Cap 2: A Ilusão do Ele Vai Mudar", "Cap 3: O Vício Emocional", "Cap 4: Tipos de Apego Tóxico", "Cap 5: A Dor do Silêncio", "Cap 6-20: mais capítulos..."],
-  "quiz15Perguntas": ["P1: Como você se sente quando...", "P2: Qual sua reação quando...", "P3-15: mais perguntas..."],
-  "orderBumps": [
-    {"nome": "Frases Anti-Sabotagem", "preco": "R$5", "descricao": "20 respostas prontas"},
-    {"nome": "Guia Superação Rápida", "preco": "R$8", "descricao": "Passo a passo completo"},
-    {"nome": "Rotina Autodesbloqueio", "preco": "R$15", "descricao": "3 dias intensivos"}
-  ],
-  "paginaVendas17Blocos": ["Bloco 1: Headline impactante", "Bloco 2: Subheadline", "Bloco 3: Apresentação da oferta", "Bloco 4-17: mais blocos..."],
-  "mockupSugerido": "Mulher quebrando correntes invisíveis, ou mulher com asas",
-  "paletaCores": {"primaria": "#8B5CF6 (Roxo)", "secundaria": "#EC4899 (Rosa)", "terciaria": "#10B981 (Verde)"}
-}`,
-    
-    'sophia-universal': `SOPHIA UNIVERSAL ⭐
-Criada por Tamara Dutra.
-
-Você cria ofertas VIRAIS para qualquer nicho com MECANISMO ÚNICO e nome CHICLETE.
-
-INSTRUÇÕES:
-1. Identifique o NICHO dos comentários
-2. Crie um MECANISMO ÚNICO (método proprietário)
-3. Crie UMA oferta viral completa
-
-RETORNE EM FORMATO JSON (SEM markdown, sem código, apenas JSON puro):
-{
-  "nicho": "saúde/renda/relacionamento/etc",
-  "mecanismoUnico": "Nome do Método Proprietário Único",
-  "microOfertas": ["oferta 1", "oferta 2", "oferta 3", "oferta 4", "oferta 5", "oferta 6", "oferta 7", "oferta 8", "oferta 9", "oferta 10"],
-  "top3Ofertas": [
-    {"nome": "oferta X", "porque": "razão de converter", "mercado": "tamanho"},
-    {"nome": "oferta Y", "porque": "razão de converter", "mercado": "tamanho"},
-    {"nome": "oferta Z", "porque": "razão de converter", "mercado": "tamanho"}
-  ],
-  "ofertaCampea": {
-    "title": "🔥 Nome Chiclete: Resultado Específico em X Dias",
-    "subtitle": "Apresenta o mecanismo único e diferencial claro",
-    "bullets": [
-      "✅ Resultado mensurável + número + prazo",
-      "✅ Resultado mensurável + número + prazo",
-      "✅ Resultado mensurável + número + prazo",
-      "✅ Resultado mensurável + número + prazo"
-    ],
-    "cta": "🚀 QUERO [RESULTADO PRINCIPAL] AGORA!",
-    "bonus": "🎁 BÔNUS: Complemento Estratégico (valor R$97)",
-    "preco": "R$47"
-  },
-  "entregaveis": ["Ebook", "Planner", "Planilha", "Quiz", "Templates"],
-  "quiz15Perguntas": ["P1: Qual seu maior desafio com...", "P2: Você já tentou...", "P3-15: mais perguntas..."],
-  "orderBumps": [
-    {"nome": "Kit Frases Instantâneas", "preco": "R$7", "descricao": "30 frases prontas"},
-    {"nome": "Pack Scripts Reels", "preco": "R$12", "descricao": "50 roteiros virais"},
-    {"nome": "Rotina Resultado Rápido", "preco": "R$27", "descricao": "7 dias acelerados"}
-  ],
-  "paginaVendas17Blocos": ["Bloco 1: Headline com nome chiclete", "Bloco 2: Subheadline mecanismo", "Bloco 3-17: mais blocos..."],
-  "mockupSugerido": "Visual específico do nicho identificado",
-  "paletaCores": {"primaria": "#8B5CF6 (Roxo)", "secundaria": "#3B82F6 (Azul)", "terciaria": "#FACC15 (Dourado)"}
-}`
-  };
-  
-  return prompts[agentId] || prompts['sophia-fenix'];
+async function buildSystemPrompt(agentId) {
+  // SEMPRE buscar do Firestore - SEM fallback
+  const systemPrompt = await getFullSystemPrompt(agentId);
+  console.info(`[OPENAI] systemPrompt chars=${systemPrompt.length}`);
+  return systemPrompt;
 }
 
 /**
  * Gera uma oferta irresistível usando GPT
- * @param {string} comments - Comentários para análise
- * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {Object} params - Parâmetros
+ * @param {string} params.agentId - ID da agente ('sophia-fenix' ou 'sophia-universal')
+ * @param {string} params.userInput - Comentários para análise
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia') => {
+export const generateOffer = async (commentsOrParams, legacyAgent) => {
   try {
-    console.log('🚀 VT: INÍCIO - Gerando oferta...');
-    console.log('📝 VT: Comentários recebidos:', comments.substring(0, 100) + '...');
+    // Suporte a chamadas antigas: generateOffer(comments, agent)
+    let agentId, userInput;
+    if (typeof commentsOrParams === 'string') {
+      const agentIdMap = { 'sophia': 'sophia-fenix', 'sofia': 'sophia-universal' };
+      agentId = agentIdMap[legacyAgent] || 'sophia-fenix';
+      userInput = commentsOrParams;
+    } else {
+      agentId = commentsOrParams.agentId;
+      userInput = commentsOrParams.userInput;
+    }
+
+    console.info('[OPENAI] Starting offer generation...');
+    console.info(`[OPENAI] agentId=${agentId}`);
+    console.info(`[OPENAI] userInput length=${userInput.length} chars`);
     
     // 1. Buscar chave OpenAI
-    console.log('🔑 VT: Buscando chave OpenAI...');
     const apiKey = await getServiceAPIKey('openai');
-    
     if (!apiKey) {
-      console.error('❌ VT: Chave OpenAI não encontrada!');
-      throw new Error('❌ Chave da API do OpenAI não configurada no painel administrativo. Vá em Admin → API Keys e adicione sua chave que começa com "sk-"');
-    }
-    
-    console.log('✅ VT: Chave OpenAI encontrada:', apiKey.substring(0, 10) + '...');
-
-    // 2. Mapear agente
-    const agentIdMap = {
-      'sophia': 'sophia-fenix',
-      'sofia': 'sophia-universal'
-    };
-
-    const agentId = agentIdMap[agent] || 'sophia-fenix';
-    console.log(`🤖 VT: Agente selecionada: ${agentId}`);
-    
-    let systemPrompt;
-    
-    // 3. Buscar prompt
-    try {
-      console.log(`🔥 VT: Tentando buscar prompt do Firestore...`);
-      systemPrompt = await getAgentPrompt(agentId);
-      console.log(`✅ VT: Prompt do Firestore carregado! (${systemPrompt.length} chars)`);
-    } catch (firestoreError) {
-      console.warn(`⚠️ VT: Firestore indisponível:`, firestoreError.message);
-      systemPrompt = getHardcodedPrompt(agentId);
-      console.log(`✅ VT: Usando prompt hardcoded (${systemPrompt.length} chars)`);
+      throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    // 4. Preparar requisição OpenAI
-    console.log('📤 VT: Enviando requisição para OpenAI...');
-    
-    const requestBody = {
-      model: 'gpt-4o-mini', // Modelo mais barato e com limite maior (128k tokens!)
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: comments }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000 // Reduzido para caber no contexto
-    };
-    
-    console.log('📋 VT: Payload:', {
-      model: requestBody.model,
-      systemPromptLength: systemPrompt.length,
-      userContentLength: comments.length,
-      temperature: requestBody.temperature,
-      max_tokens: requestBody.max_tokens
-    });
+    // 2. Buscar system prompt COMPLETO (SEM fallback - lança erro se falhar)
+    const systemPrompt = await buildSystemPrompt(agentId);
 
+    // 3. Preparar mensagens
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userInput }
+    ];
+
+    // 4. Chamar OpenAI
+
+    console.info('[OPENAI] Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+        temperature: 0.7,
+        max_tokens: 4000
+      }),
     });
 
-    console.log('📥 VT: Resposta recebida. Status:', response.status);
+    console.info(`[OPENAI] Response status=${response.status}`);
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('❌ VT: Erro OpenAI:', error);
-      throw new Error(`❌ OpenAI API Error: ${error.error?.message || 'Erro desconhecido'}. Status: ${response.status}`);
+      console.error('[OPENAI][ERR] API error:', error);
+      throw new Error(`OpenAI API Error: ${error.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
-    console.log('✅ VT: Dados recebidos do OpenAI:', {
+    console.info('[OPENAI] Response received:', {
       id: data.id,
       model: data.model,
       usage: data.usage
     });
     
     const content = data.choices[0].message.content;
-    console.log('📄 VT: Conteúdo gerado (primeiros 200 chars):', content.substring(0, 200));
     
-    // 5. Parsear resposta
-    console.log('🔍 VT: Tentando parsear JSON...');
+    // 5. Parsear resposta JSON
+    console.info('[OPENAI] Parsing JSON response...');
     try {
-      // Tentar extrair JSON do conteúdo (pode vir com markdown)
-      let jsonContent = content;
-      
       // Remover markdown code blocks se existir
+      let jsonContent = content;
       if (content.includes('```json')) {
         jsonContent = content.split('```json')[1].split('```')[0];
       } else if (content.includes('```')) {
@@ -246,51 +141,45 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       }
       
       const fullResponse = JSON.parse(jsonContent.trim());
-      console.log('✅ VT: JSON parseado com sucesso!');
-      console.log('📊 VT: Estrutura completa recebida:', Object.keys(fullResponse));
+      console.info('[OPENAI] JSON parsed successfully');
       
-      // Se vier com estrutura completa (microOfertas, top3, etc), extrair ofertaCampea
+      if (import.meta.env.VITE_VT_DEBUG) {
+        console.info('[OPENAI][DEBUG] Full response structure:', Object.keys(fullResponse));
+      }
+      
+      // Se vier com estrutura completa, extrair ofertaCampea
       if (fullResponse.ofertaCampea) {
-        console.log('🎯 VT: Oferta COMPLETA detectada!');
-        console.log('📋 VT: Micro-ofertas:', fullResponse.microOfertas?.length || 0);
-        console.log('🏆 VT: Top 3 ofertas:', fullResponse.top3Ofertas?.length || 0);
-        console.log('📘 VT: Ebook capítulos:', fullResponse.ebookCapitulos?.length || 0);
-        console.log('❓ VT: Quiz perguntas:', fullResponse.quiz15Perguntas?.length || 0);
-        console.log('💰 VT: Order bumps:', fullResponse.orderBumps?.length || 0);
-        
-        // Retornar estrutura completa MAS manter compatibilidade com UI
+        console.info('[OPENAI] Complete offer structure detected');
         return {
           ...fullResponse.ofertaCampea,
-          // Dados extras para exibição futura
           _fullData: fullResponse
         };
       }
       
-      // Se vier só com title, subtitle, bullets, retornar direto
-      console.log('🎉 VT: OFERTA GERADA COM SUCESSO!');
+      console.info('[OPENAI] Offer generated successfully');
       return fullResponse;
     } catch (parseError) {
-      console.error('⚠️ VT: Erro ao parsear JSON:', parseError);
-      console.log('📄 VT: Conteúdo completo que tentou parsear:', content);
+      console.error('[OPENAI][ERR] JSON parse failed:', parseError.message);
+      if (import.meta.env.VITE_VT_DEBUG) {
+        console.error('[OPENAI][DEBUG] Raw content:', content);
+      }
       
-      // Fallback: criar estrutura básica
-      console.warn('⚠️ VT: Usando estrutura fallback');
+      // Retornar o conteúdo bruto como fallback de parse apenas
       return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
-          '✅ Acesso imediato ao conteúdo',
-          '✅ Suporte dedicado',
-          '✅ Garantia de satisfação',
-          '✅ Bônus exclusivos',
-        ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
+        title: '🎯 Oferta Gerada',
+        subtitle: content.substring(0, 200),
+        bullets: ['✅ Ver console para conteúdo completo'],
+        cta: '🚀 CONFERIR OFERTA',
+        bonus: '🎁 Conteúdo disponível no console',
+        _rawContent: content
       };
     }
   } catch (error) {
-    console.error('❌ VT: ERRO FATAL ao gerar oferta:', error);
-    console.error('❌ VT: Stack trace:', error.stack);
+    console.error('[OPENAI][ERR] Fatal error:', error);
+    if (import.meta.env.VITE_VT_DEBUG) {
+      console.error('[OPENAI][DEBUG] Stack:', error.stack);
+    }
+    // Propagar erro com código preservado
     throw error;
   }
 };
