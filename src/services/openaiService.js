@@ -45,14 +45,19 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
- * Constrói system prompt COMPLETO do Firestore
+ * Constrói system prompt COMPLETO do Firestore (com fallback MVP)
  * @param {string} agentId - ID da agente
  * @returns {Promise<string>} - System prompt COMPLETO
  */
 async function buildSystemPrompt(agentId) {
-  // SEMPRE buscar do Firestore - SEM fallback
   const systemPrompt = await getFullSystemPrompt(agentId);
   console.info(`[OPENAI] systemPrompt chars=${systemPrompt.length}`);
+  
+  // Warning se estiver usando hardcoded (MVP)
+  if (systemPrompt.includes('SOPHIA FÊNIX 🔥') || systemPrompt.includes('SOPHIA UNIVERSAL ⭐')) {
+    console.warn('[OPENAI][MVP] ⚠️ Usando prompts hardcoded. Configure Firestore para produção: npm run inject-agents');
+  }
+  
   return systemPrompt;
 }
 

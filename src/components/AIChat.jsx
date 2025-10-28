@@ -115,26 +115,11 @@ const AIChat = ({ initialText = '' }) => {
     } catch (err) {
       console.error('[AIChat][ERR]', err);
       
-      // Tratamento por código de erro
-      if (err?.code === 'AGENT_NOT_FOUND') {
-        if (user?.isAdmin) {
-          error('❌ Agente não encontrada no Firestore. Execute: npm run inject-agents');
-        } else {
-          error('⚠️ Sistema em configuração. Tente novamente em alguns minutos.');
-        }
-      } else if (err?.code === 'AGENT_DECRYPT_FAIL' || err?.code === 'AGENT_KEY_INVALID') {
-        if (user?.isAdmin) {
-          error('❌ Chave mestre inválida ou ausente. Verifique VITE_AGENT_MASTER_KEY e faça redeploy.');
-        } else {
-          error('⚠️ Configuração pendente. Aguarde alguns instantes.');
-        }
+      // Erro genérico (fallback MVP já está ativo)
+      if (user?.isAdmin) {
+        error(`❌ Erro: ${err.message || 'Erro desconhecido'}`);
       } else {
-        // Erro genérico
-        if (user?.isAdmin) {
-          error(`❌ Erro: ${err.message || 'Erro desconhecido'}`);
-        } else {
-          error('❌ Não foi possível gerar a oferta. Tente novamente.');
-        }
+        error('❌ Não foi possível gerar a oferta. Tente novamente.');
       }
     } finally {
       setLoading(false);
