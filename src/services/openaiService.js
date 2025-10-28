@@ -68,10 +68,14 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     
     console.log(`🤖 VT: Gerando oferta com agente: ${agentId}`);
     
-    // Verificar se agente existe no Firestore (OBRIGATÓRIO)
-    await getAgentPrompt(agentId); // Lança exceção se não existir
-    
-    console.log(`✅ VT: Agente ${agentId} verificada, usando API backend para descriptografia`);
+    // Tentar verificar se agente existe no Firestore (opcional por enquanto)
+    try {
+      await getAgentPrompt(agentId);
+      console.log(`✅ VT: Agente ${agentId} encontrada no Firestore`);
+    } catch (firestoreError) {
+      console.warn(`⚠️ VT: Agente não encontrada no Firestore, usando modo simplificado:`, firestoreError.message);
+      console.warn(`💡 VT: Para usar prompts completos, execute: npm run inject-agents`);
+    }
 
     // Usar API backend que faz a descriptografia (mais seguro)
     // Por enquanto, fazer chamada direta ao OpenAI (frontend)
@@ -79,7 +83,7 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     
     // IMPORTANTE: Em produção, este código não deve estar aqui
     // Deve usar /api/agents/run que descriptografa no backend
-    console.warn('⚠️ VT: Usando chamada direta ao OpenAI. Em produção, usar /api/agents/run');
+    console.warn('⚠️ VT: Usando chamada direta ao OpenAI com prompt simplificado');
     
     // Prompt simplificado para JSON - backend terá o prompt completo
     const simplePrompt = `Você é ${agentId === 'sophia-fenix' ? 'Sophia Fênix, especialista em ofertas emocionais' : 'Sofia Universal, especialista em ofertas virais'}. Analise os comentários e crie uma oferta irresistível em formato JSON com: title, subtitle, bullets (4 itens começando com ✅), cta e bonus.`;
