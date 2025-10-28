@@ -201,8 +201,9 @@ Crie 3 order bumps:
 
 ---
 
-📋 FORMATO DE RESPOSTA (JSON):
-SEMPRE retorne em formato JSON puro, sem markdown:
+📋 FORMATO DE RESPOSTA OBRIGATÓRIO:
+Você DEVE retornar APENAS um objeto JSON válido, sem texto adicional, sem markdown, sem explicações.
+Formato exato:
 {
   "microOfertas": ["oferta 1", "oferta 2", ... "oferta 10"],
   "top3Ofertas": [
@@ -300,8 +301,9 @@ Cada mecanismo deve parecer novo, poderoso e cientificamente plausível, mas fá
 
 ---
 
-📋 FORMATO DE RESPOSTA (JSON):
-SEMPRE retorne em formato JSON puro, sem markdown:
+📋 FORMATO DE RESPOSTA OBRIGATÓRIO:
+Você DEVE retornar APENAS um objeto JSON válido, sem texto adicional, sem markdown, sem explicações.
+Formato exato:
 {
   "nicho": "identificado",
   "mecanismoUnico": "Nome do Método Proprietário",

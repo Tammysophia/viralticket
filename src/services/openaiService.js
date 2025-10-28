@@ -113,7 +113,8 @@ export const generateOffer = async (commentsOrParams, legacyAgent) => {
         model: 'gpt-4o-mini',
         messages,
         temperature: 0.7,
-        max_tokens: 4000
+        max_tokens: 4000,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -133,6 +134,8 @@ export const generateOffer = async (commentsOrParams, legacyAgent) => {
     });
     
     const content = data.choices[0].message.content;
+    console.info(`[OPENAI] Response length: ${content.length} chars`);
+    console.info(`[OPENAI] Response preview: ${content.substring(0, 200)}...`);
     
     // 5. Parsear resposta JSON
     console.info('[OPENAI] Parsing JSON response...');
