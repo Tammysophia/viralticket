@@ -98,37 +98,62 @@ ANALISE OS COMENTÁRIOS E CRIE UMA OFERTA COMPLETA EM JSON:
  */
 export const generateOffer = async (comments, agent = 'sophia') => {
   try {
+    console.log('🚀 VT: INÍCIO - Gerando oferta...');
+    console.log('📝 VT: Comentários recebidos:', comments.substring(0, 100) + '...');
+    
+    // 1. Buscar chave OpenAI
+    console.log('🔑 VT: Buscando chave OpenAI...');
     const apiKey = await getServiceAPIKey('openai');
     
     if (!apiKey) {
-      throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
+      console.error('❌ VT: Chave OpenAI não encontrada!');
+      throw new Error('❌ Chave da API do OpenAI não configurada no painel administrativo. Vá em Admin → API Keys e adicione sua chave que começa com "sk-"');
     }
+    
+    console.log('✅ VT: Chave OpenAI encontrada:', apiKey.substring(0, 10) + '...');
 
-    // Mapear nomes de agentes para IDs do Firestore
+    // 2. Mapear agente
     const agentIdMap = {
       'sophia': 'sophia-fenix',
       'sofia': 'sophia-universal'
     };
 
     const agentId = agentIdMap[agent] || 'sophia-fenix';
-    
-    console.log(`🤖 VT: Gerando oferta com agente: ${agentId}`);
+    console.log(`🤖 VT: Agente selecionada: ${agentId}`);
     
     let systemPrompt;
     
-    // Tentar buscar prompt COMPLETO do Firestore
+    // 3. Buscar prompt
     try {
-      console.log(`🔥 VT: Tentando buscar prompt COMPLETO do Firestore...`);
+      console.log(`🔥 VT: Tentando buscar prompt do Firestore...`);
       systemPrompt = await getAgentPrompt(agentId);
-      console.log(`✅ VT: Prompt COMPLETO carregado! (${systemPrompt.length} caracteres)`);
+      console.log(`✅ VT: Prompt do Firestore carregado! (${systemPrompt.length} chars)`);
     } catch (firestoreError) {
-      console.warn(`⚠️ VT: Firestore não acessível. Usando prompts COMPLETOS hardcoded.`);
-      console.log(`💡 VT: Para usar Firestore, configure .env e execute: npm run inject-agents`);
-      
-      // Usar prompts COMPLETOS hardcoded como fallback
+      console.warn(`⚠️ VT: Firestore indisponível:`, firestoreError.message);
       systemPrompt = getHardcodedPrompt(agentId);
-      console.log(`✅ VT: Usando prompt COMPLETO hardcoded (${systemPrompt.length} caracteres)`);
+      console.log(`✅ VT: Usando prompt hardcoded (${systemPrompt.length} chars)`);
     }
+
+    // 4. Preparar requisição OpenAI
+    console.log('📤 VT: Enviando requisição para OpenAI...');
+    
+    const requestBody = {
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: comments }
+      ],
+      temperature: 0.7,
+      max_tokens: 4000
+    };
+    
+    console.log('📋 VT: Payload:', {
+      model: requestBody.model,
+      systemPromptLength: systemPrompt.length,
+      userContentLength: comments.length,
+      temperature: requestBody.temperature,
+      max_tokens: requestBody.max_tokens
+    });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -136,37 +161,50 @@ export const generateOffer = async (comments, agent = 'sophia') => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt, // PROMPT COMPLETO de 3000+ palavras!
-          },
-          {
-            role: 'user',
-            content: comments,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000, // Aumentado para comportar resposta completa
-      }),
+      body: JSON.stringify(requestBody),
     });
+
+    console.log('📥 VT: Resposta recebida. Status:', response.status);
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao gerar oferta');
+      console.error('❌ VT: Erro OpenAI:', error);
+      throw new Error(`❌ OpenAI API Error: ${error.error?.message || 'Erro desconhecido'}. Status: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    console.log('✅ VT: Dados recebidos do OpenAI:', {
+      id: data.id,
+      model: data.model,
+      usage: data.usage
+    });
     
-    // Tentar parsear JSON da resposta
+    const content = data.choices[0].message.content;
+    console.log('📄 VT: Conteúdo gerado (primeiros 200 chars):', content.substring(0, 200));
+    
+    // 5. Parsear resposta
+    console.log('🔍 VT: Tentando parsear JSON...');
     try {
-      const offerData = JSON.parse(content);
+      // Tentar extrair JSON do conteúdo (pode vir com markdown)
+      let jsonContent = content;
+      
+      // Remover markdown code blocks se existir
+      if (content.includes('```json')) {
+        jsonContent = content.split('```json')[1].split('```')[0];
+      } else if (content.includes('```')) {
+        jsonContent = content.split('```')[1].split('```')[0];
+      }
+      
+      const offerData = JSON.parse(jsonContent.trim());
+      console.log('✅ VT: JSON parseado com sucesso!', offerData);
+      console.log('🎉 VT: OFERTA GERADA COM SUCESSO!');
       return offerData;
     } catch (parseError) {
-      // Se não conseguir parsear, criar estrutura básica
+      console.error('⚠️ VT: Erro ao parsear JSON:', parseError);
+      console.log('📄 VT: Conteúdo completo que tentou parsear:', content);
+      
+      // Fallback: criar estrutura básica
+      console.warn('⚠️ VT: Usando estrutura fallback');
       return {
         title: '🎯 Oferta Especial para Você!',
         subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
@@ -181,7 +219,8 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       };
     }
   } catch (error) {
-    console.error('Erro ao gerar oferta:', error);
+    console.error('❌ VT: ERRO FATAL ao gerar oferta:', error);
+    console.error('❌ VT: Stack trace:', error.stack);
     throw error;
   }
 };
