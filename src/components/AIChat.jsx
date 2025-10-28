@@ -69,10 +69,8 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
-    if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('Limite diário de ofertas atingido');
-      return;
-    }
+    // VT: SEM LIMITES - usuários podem gerar quantas ofertas quiserem
+    console.log('🚀 VT: Gerando oferta sem limites!');
 
     setLoading(true);
 
@@ -94,16 +92,11 @@ const AIChat = ({ initialText = '' }) => {
       const offerData = await generateOffer(inputText, selectedAgent);
 
       setOutput(offerData);
-      updateUser({
-        dailyUsage: {
-          ...user.dailyUsage,
-          offers: user.dailyUsage.offers + 1,
-        },
-      });
-      success('Oferta gerada com sucesso!');
+      // VT: SEM ATUALIZAR contador (sem limites)
+      success('✅ Oferta gerada com sucesso!');
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      // VT: Salvar oferta automaticamente no Firestore (opcional)
       try {
         const offerId = await createOfferFromAI({
           userId: user.id,
@@ -117,10 +110,9 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        console.log('✅ VT: Oferta salva automaticamente no Kanban:', offerId);
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
+        console.warn('⚠️ VT: Não foi possível salvar oferta no Kanban:', saveError.message);
         // VT: Não bloqueia o fluxo se falhar ao salvar
       }
     } catch (err) {

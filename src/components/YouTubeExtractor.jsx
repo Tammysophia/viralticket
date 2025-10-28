@@ -48,10 +48,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       return;
     }
 
-    if (user.dailyUsage.urls >= user.limits.urls && user.limits.urls !== 'unlimited') {
-      error('Limite diário de URLs atingido');
-      return;
-    }
+    // VT: SEM LIMITES - usuários podem extrair quantos comentários quiserem
+    console.log('🚀 VT: Extraindo comentários sem limites!');
 
     setLoading(true);
     
@@ -75,13 +73,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       }
 
       setComments(fetchedComments);
-      updateUser({
-        dailyUsage: {
-          ...user.dailyUsage,
-          urls: user.dailyUsage.urls + validUrls.length,
-        },
-      });
-      success(`${fetchedComments.length} comentários extraídos com sucesso!`);
+      // VT: SEM ATUALIZAR contador (sem limites)
+      success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
     } catch (err) {
       console.error('Erro ao extrair comentários:', err);
