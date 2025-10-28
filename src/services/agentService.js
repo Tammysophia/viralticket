@@ -44,36 +44,40 @@ export async function getAgentPrompt(agentId) {
     const agentRef = doc(db, 'agent_templates', agentId);
     const agentSnap = await getDoc(agentRef);
     
+    // OBRIGATÓRIO: Agente deve existir
     if (!agentSnap.exists()) {
-      console.warn(`⚠️ VT: Agente ${agentId} não encontrada no Firestore`);
-      return null;
+      console.error(`❌ VT: Agente ${agentId} não encontrada no Firestore`);
+      throw new Error(`Agent not found: ${agentId}`);
     }
     
     const data = agentSnap.data();
     
+    // OBRIGATÓRIO: Agente deve estar ativa
     if (!data.active) {
-      console.warn(`⚠️ VT: Agente ${agentId} está inativa`);
-      return null;
+      console.error(`❌ VT: Agente ${agentId} está inativa`);
+      throw new Error(`Agent inactive: ${agentId}`);
     }
     
+    // OBRIGATÓRIO: Prompt criptografado deve existir
     if (!data.prompt_enc) {
       console.error(`❌ VT: Prompt criptografado não encontrado para ${agentId}`);
-      return null;
+      throw new Error(`Agent prompt missing: ${agentId}`);
     }
     
     console.log(`🔓 VT: Descriptografando prompt da agente ${agentId}...`);
     const decryptedPrompt = decrypt(data.prompt_enc);
     
+    // OBRIGATÓRIO: Descriptografia deve funcionar
     if (!decryptedPrompt) {
       console.error(`❌ VT: Falha ao descriptografar prompt de ${agentId}`);
-      return null;
+      throw new Error(`Failed to decrypt agent prompt: ${agentId}`);
     }
     
-    console.log(`✅ VT: Prompt da agente ${agentId} descriptografado com sucesso`);
+    console.log(`✅ VT: Prompt da agente ${agentId} descriptografado com sucesso (${decryptedPrompt.length} caracteres)`);
     return decryptedPrompt;
   } catch (error) {
     console.error(`❌ VT: Erro ao buscar prompt da agente ${agentId}:`, error);
-    return null;
+    throw error; // Re-throw para forçar tratamento acima
   }
 }
 
