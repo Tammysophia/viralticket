@@ -2,7 +2,8 @@
 import { db } from '../config/firebase';
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 
-// Prompts MVP hardcoded como fallback
+// ⚠️ TAMARA: COLE SEU PROMPT REAL AQUI ⬇️
+// Substitua todo o texto entre as aspas invertidas por seu prompt completo
 const MVP_PROMPTS = {
   sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
@@ -40,6 +41,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
   "bonus": ""
 }`
 };
+// ⚠️ TAMARA: COLE SEU PROMPT REAL ACIMA ⬆️
 
 // Cache de prompts para evitar múltiplas requisições
 let promptsCache = null;
@@ -53,6 +55,12 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
  */
 export const getAgentPrompt = async (agentId = 'sophia') => {
   try {
+    // 🚀 MODO EMERGÊNCIA: Usar prompt do código diretamente
+    const hardcodedPrompt = MVP_PROMPTS[agentId] || MVP_PROMPTS.sophia;
+    console.log(`[AGENTS][SUCCESS] Usando prompt do código para ${agentId} (${hardcodedPrompt.length} chars)`);
+    return hardcodedPrompt;
+    
+    /* DESABILITADO TEMPORARIAMENTE - Firestore
     // Verificar cache
     if (promptsCache && lastCacheTime && (Date.now() - lastCacheTime < CACHE_DURATION)) {
       const cachedPrompt = promptsCache[agentId];
@@ -90,14 +98,9 @@ export const getAgentPrompt = async (agentId = 'sophia') => {
     // Fallback para MVP
     console.warn(`[AGENTS][WARN] Prompt não encontrado no Firestore para ${agentId}, usando MVP hardcoded`);
     return MVP_PROMPTS[agentId] || MVP_PROMPTS.sophia;
+    */
 
   } catch (error) {
-    // Log detalhado do erro apenas uma vez
-    if (!window.__promptErrorLogged) {
-      console.warn(`[AGENTS][WARN] Firestore error, using MVP hardcoded prompt: ${error.message}`);
-      window.__promptErrorLogged = true;
-    }
-    
     // Fallback silencioso para MVP
     return MVP_PROMPTS[agentId] || MVP_PROMPTS.sophia;
   }

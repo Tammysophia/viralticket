@@ -40,6 +40,33 @@ const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
  * @returns {Promise<string>} - ID da oferta criada
  */
 export const createOfferFromAI = async (data) => {
+  // 🚀 MODO EMERGÊNCIA: Sempre usar localStorage (não depende do Firestore)
+  console.log('VT: Salvando oferta no localStorage (modo emergência)');
+  const offerId = `offer_${Date.now()}`;
+  const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+  offers.push({
+    id: offerId,
+    ...data,
+    status: 'execucao',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    modeling: {
+      fanpageUrl: '',
+      salesPageUrl: '',
+      checkoutUrl: '',
+      creativesCount: 0,
+      monitorStart: null,
+      monitorDays: 7,
+      trend: null,
+      modelavel: false
+    },
+    attachments: { files: [] }
+  });
+  localStorage.setItem('vt_offers', JSON.stringify(offers));
+  console.log('VT: ✅ Oferta salva com sucesso:', offerId);
+  return offerId;
+  
+  /* DESABILITADO TEMPORARIAMENTE - Firestore
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Criando oferta:', data);
     const mockId = `mock_${Date.now()}`;
@@ -95,6 +122,7 @@ export const createOfferFromAI = async (data) => {
     console.error('VT: Erro ao criar oferta:', error);
     throw error;
   }
+  */
 };
 
 /**
