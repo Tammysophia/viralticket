@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAgents } from '../hooks/useAgents';
 import { runAgent, validateUserInput } from '../services/agentsService';
-import { createOffer } from '../services/offersService';
+import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgentId, setSelectedAgentId] = useState('sophia-fenix');
@@ -74,20 +74,17 @@ const AIChat = ({ initialText = '' }) => {
         const offerData = {
           userId: user.uid,
           title: result.result.title || 'Nova Oferta IA',
-          description: result.result.subtitle || result.result.description || '',
-          status: 'execucao', // Status inicial no Kanban
           agent: selectedAgentId,
-          aiRunId: result.runId,
           copy: {
             page: formatOfferCopy(result.result),
+            adPrimary: result.result.subtitle || '',
             adHeadline: result.result.title,
-            adDescription: result.result.subtitle || result.result.description
+            adDescription: result.result.subtitle || result.result.description || ''
           },
-          createdAt: new Date(),
           youtubeLinks: []
         };
         
-        const offerId = await createOffer(offerData);
+        const offerId = await createOfferFromAI(offerData);
         console.log('VT: Oferta salva no Kanban:', offerId);
         success('📝 Oferta salva no Kanban automaticamente!');
         
