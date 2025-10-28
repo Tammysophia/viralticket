@@ -103,38 +103,52 @@ export const useAPIKeys = () => {
     setLoading(true);
     setKeysLoaded(false);
     
-    // Simular carregamento de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const saved = localStorage.getItem('viralticket_api_keys');
-    if (saved) {
-      setApiKeys(JSON.parse(saved));
-    } else {
-      // Mock data - apenas para admin
-      const mockKeys = [
-        {
-          id: '1',
-          name: 'YouTube Data API',
-          key: 'AIza************************',
-          type: 'youtube',
-          status: 'active',
-          quota: 85,
-          lastUsed: new Date().toISOString(),
-          encrypted: true,
-        },
-        {
-          id: '2',
-          name: 'OpenAI API',
-          key: 'sk-••••••••••••••••••••••••',
-          type: 'openai',
-          status: 'active',
-          quota: 60,
-          lastUsed: new Date().toISOString(),
-          encrypted: true,
-        },
-      ];
-      setApiKeys(mockKeys);
-      localStorage.setItem('viralticket_api_keys', JSON.stringify(mockKeys));
+    try {
+      // VT: Tentar carregar do Firestore PRIMEIRO (persistente)
+      console.log('🔍 VT: Carregando chaves do Firestore...');
+      const firestoreKeys = await getAllAPIKeys();
+      
+      if (firestoreKeys && Object.keys(firestoreKeys).length > 0) {
+        // Converter formato Firestore para array
+        const keysArray = Object.entries(firestoreKeys).map(([service, data]) => ({
+          id: data.id || service,
+          name: data.name || service,
+          key: data.key,
+          type: service,
+          status: data.status || 'active',
+          quota: data.quota || 0,
+          lastUsed: data.lastUsed || new Date().toISOString(),
+          encrypted: data.encrypted || false,
+        }));
+        
+        console.log('✅ VT: Chaves carregadas do Firestore:', keysArray.length);
+        setApiKeys(keysArray);
+        
+        // Salvar no localStorage para cache rápido
+        localStorage.setItem('viralticket_api_keys', JSON.stringify(keysArray));
+      } else {
+        // Fallback para localStorage se Firestore vazio
+        console.log('⚠️ VT: Firestore vazio, tentando localStorage...');
+        const saved = localStorage.getItem('viralticket_api_keys');
+        if (saved) {
+          const parsedKeys = JSON.parse(saved);
+          console.log('✅ VT: Chaves carregadas do localStorage:', parsedKeys.length);
+          setApiKeys(parsedKeys);
+        } else {
+          console.log('⚠️ VT: Nenhuma chave encontrada');
+          setApiKeys([]);
+        }
+      }
+    } catch (error) {
+      console.error('❌ VT: Erro ao carregar chaves:', error);
+      
+      // Fallback final para localStorage
+      const saved = localStorage.getItem('viralticket_api_keys');
+      if (saved) {
+        setApiKeys(JSON.parse(saved));
+      } else {
+        setApiKeys([]);
+      }
     }
     
     setLoading(false);

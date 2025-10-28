@@ -51,13 +51,46 @@ const AIChat = ({ initialText = '' }) => {
     try {
       console.log('VT: Executando agente:', selectedAgentId);
       
-      // VT: secure-agent - Executar via Cloud Function (seguro)
-      const result = await runAgent(selectedAgentId, inputText);
+      let result;
+      let isLegacyMode = false;
       
-      console.log('VT: Resultado recebido:', result.runId);
-      
-      setOutput(result.result);
-      setRunId(result.runId);
+      // VT: secure-agent - Tentar Cloud Function primeiro (seguro)
+      try {
+        result = await runAgent(selectedAgentId, inputText);
+        console.log('VT: Resultado recebido via Cloud Function:', result.runId);
+        setOutput(result.result);
+        setRunId(result.runId);
+      } catch (cloudFunctionError) {
+        console.warn('VT: Cloud Functions não disponíveis, usando modo legado:', cloudFunctionError.message);
+        
+        // Fallback: Usar sistema antigo (OpenAI direto)
+        isLegacyMode = true;
+        const { generateOffer } = await import('../services/openaiService');
+        
+        // Mapear IDs novos para antigos
+        const legacyAgentMap = {
+          'sophia-fenix': 'sophia',
+          'sophia-universal': 'sofia'
+        };
+        const legacyAgentId = legacyAgentMap[selectedAgentId] || 'sophia';
+        
+        const offerData = await generateOffer(inputText, legacyAgentId);
+        
+        // Converter formato antigo para novo
+        result = {
+          runId: `legacy_${Date.now()}`,
+          result: offerData,
+          metadata: {
+            agentName: selectedAgent?.name || 'Sophia',
+            executionTime: 0,
+            tokensUsed: 0
+          }
+        };
+        
+        console.log('VT: Resultado recebido via modo legado');
+        setOutput(result.result);
+        setRunId(result.runId);
+      }
       
       // Atualizar usage
       updateUser({
@@ -67,7 +100,7 @@ const AIChat = ({ initialText = '' }) => {
         },
       });
       
-      success(`✨ ${agentName} gerou sua oferta com sucesso!`);
+      success(`✨ ${agentName} gerou sua oferta com sucesso!${isLegacyMode ? ' (modo compatibilidade)' : ''}`);
 
       // VT: Salvar oferta automaticamente no Kanban
       try {
@@ -77,7 +110,7 @@ const AIChat = ({ initialText = '' }) => {
           agent: selectedAgentId,
           copy: {
             page: formatOfferCopy(result.result),
-            adPrimary: result.result.subtitle || '',
+            adPrimary: result.result.subtitle || (result.result.bullets ? result.result.bullets.join(' ') : ''),
             adHeadline: result.result.title,
             adDescription: result.result.subtitle || result.result.description || ''
           },
