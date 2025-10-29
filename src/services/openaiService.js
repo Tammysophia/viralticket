@@ -172,40 +172,37 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         agentPrompt = agentPrompt + `\n\n---\n\n`;
       }
       
-      // Adicionar instrução clara para retornar JSON direto
-      agentPrompt = `
-VOCÊ É UMA IA ESPECIALISTA EM CRIAR OFERTAS IRRESISTÍVEIS.
+      // Adicionar comentários do usuário e instrução JSON ao prompt completo
+      agentPrompt = `${agentPrompt}
 
-CONTEXTO DA SUA PERSONALIDADE:
-${agentPrompt.substring(0, 2000)}
+===========================================
+AGORA EXECUTE A TAREFA:
+===========================================
 
-TAREFA ÚNICA E URGENTE:
-Analise este comentário/texto do cliente e crie UMA oferta de produto digital low-ticket (R$7-97) que converta imediatamente.
-
-COMENTÁRIO DO CLIENTE:
+COMENTÁRIO/TEXTO DO CLIENTE PARA ANÁLISE:
 ${comments}
 
-INSTRUÇÕES CRÍTICAS:
-1. Use o estilo e personalidade do contexto acima
-2. Crie uma oferta com mecanismo único e nome "chiclete"
-3. RETORNE APENAS JSON VÁLIDO (sem texto antes ou depois)
-4. NÃO pergunte nada, NÃO explique nada, APENAS RETORNE O JSON
+INSTRUÇÕES FINAIS OBRIGATÓRIAS:
+- Siga TODAS as diretrizes acima
+- Crie UMA oferta completa agora
+- Use seu estilo brutal e mecanismo único
+- RETORNE APENAS UM JSON VÁLIDO (sem perguntas, sem explicações)
 
-FORMATO OBRIGATÓRIO:
+FORMATO JSON OBRIGATÓRIO:
 {
-  "title": "🔥 [Nome Chiclete da Oferta]",
-  "subtitle": "[Promessa emocional clara em 1 frase]",
+  "title": "🔥 [Nome Chiclete + Promessa]",
+  "subtitle": "[Sub-promessa brutal e emocional]",
   "bullets": [
     "✅ [Benefício transformador 1]",
-    "✅ [Benefício transformador 2]", 
+    "✅ [Benefício transformador 2]",
     "✅ [Benefício transformador 3]",
     "✅ [Benefício transformador 4]"
   ],
-  "cta": "👉 [Call-to-action urgente]",
-  "bonus": "🎁 [Bônus exclusivo que aumenta valor]"
+  "cta": "👉 [CTA urgente e emocional]",
+  "bonus": "🎁 [Bônus irresistível com ancoragem de valor]"
 }
 
-RETORNE O JSON AGORA:`;
+RETORNE O JSON AGORA (sem ```json ou qualquer texto extra):`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
