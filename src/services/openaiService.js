@@ -172,37 +172,18 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         agentPrompt = agentPrompt + `\n\n---\n\n`;
       }
       
-      // Adicionar comentários do usuário e instrução JSON ao prompt completo
+      // Adicionar comentários do usuário ao prompt completo
       agentPrompt = `${agentPrompt}
 
-===========================================
-AGORA EXECUTE A TAREFA:
-===========================================
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💬 COMENTÁRIO/TEXTO DO CLIENTE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-COMENTÁRIO/TEXTO DO CLIENTE PARA ANÁLISE:
 ${comments}
 
-INSTRUÇÕES FINAIS OBRIGATÓRIAS:
-- Siga TODAS as diretrizes acima
-- Crie UMA oferta completa agora
-- Use seu estilo brutal e mecanismo único
-- RETORNE APENAS UM JSON VÁLIDO (sem perguntas, sem explicações)
-
-FORMATO JSON OBRIGATÓRIO:
-{
-  "title": "🔥 [Nome Chiclete + Promessa]",
-  "subtitle": "[Sub-promessa brutal e emocional]",
-  "bullets": [
-    "✅ [Benefício transformador 1]",
-    "✅ [Benefício transformador 2]",
-    "✅ [Benefício transformador 3]",
-    "✅ [Benefício transformador 4]"
-  ],
-  "cta": "👉 [CTA urgente e emocional]",
-  "bonus": "🎁 [Bônus irresistível com ancoragem de valor]"
-}
-
-RETORNE O JSON AGORA (sem ```json ou qualquer texto extra):`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ EXECUTE AGORA SEGUINDO TODO O SEU PROTOCOLO ACIMA!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
