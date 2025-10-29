@@ -57,8 +57,15 @@ const getAgentTemplate = async (agentId) => {
     
     if (docSnap.exists()) {
       const data = docSnap.data();
-      console.log(`✅ Template da agente ${agentId} carregado do Firestore`);
-      return data.prompt || data.systemPrompt || null;
+      const prompt = data.prompt || data.systemPrompt || null;
+      
+      if (prompt && prompt.trim().length > 0) {
+        console.log(`✅ Template da agente ${agentId} carregado do Firestore (${prompt.length} caracteres)`);
+        return prompt;
+      } else {
+        console.warn(`⚠️ Template da agente ${agentId} está vazio no Firestore`);
+        return null;
+      }
     }
     
     console.warn(`⚠️ Template da agente ${agentId} não encontrado no Firestore`);
@@ -85,6 +92,8 @@ export const generateOffer = async (comments, agent = 'sophia') => {
 
     // Buscar prompt do Firestore primeiro
     let agentPrompt = await getAgentTemplate(agent);
+    
+    console.log(`🔍 Debug: agentPrompt tipo=${typeof agentPrompt}, vazio=${!agentPrompt}, length=${agentPrompt?.length || 0}`);
     
     // Se não encontrar no Firestore, usar prompts fixos como fallback
     if (!agentPrompt) {
