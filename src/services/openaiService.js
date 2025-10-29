@@ -152,7 +152,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o', // Modelo com 128K tokens de contexto
         messages: [
           {
             role: 'system',
@@ -160,7 +160,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
           },
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 2000,
       }),
     });
 
