@@ -15,9 +15,7 @@ const AIChat = ({ initialText = '' }) => {
   const [loading, setLoading] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [chatMode, setChatMode] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
-  const [chatInput, setChatInput] = useState('');
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
@@ -164,27 +162,27 @@ const AIChat = ({ initialText = '' }) => {
     success(output.fullContent ? 'Resposta completa copiada!' : 'Oferta copiada!');
   };
 
-  const handleChatWithAI = async () => {
-    if (!chatInput.trim() || !output) return;
+  const handleChatWithAI = async (choice) => {
+    if (!output) return;
 
-    const userMessage = chatInput;
-    setChatInput('');
-    setChatHistory([...chatHistory, { role: 'user', content: userMessage }]);
-
+    setLoading(true);
     try {
-      // Fazer pergunta à IA sobre a oferta gerada
+      // IA responde com base na escolha
       const response = await generateOffer(
-        `Contexto: Você gerou esta oferta:\n\n${output.fullContent.substring(0, 2000)}...\n\nPergunta do usuário: ${userMessage}`,
+        `Você perguntou ao usuário sobre como construir a página. Ele escolheu: ${choice}. Agora gere APENAS o conteúdo específico dessa opção (sem perguntas, direto ao ponto).`,
         selectedAgent
       );
 
       setChatHistory([
-        ...chatHistory,
-        { role: 'user', content: userMessage },
+        { role: 'user', content: `Escolhi: ${choice}` },
         { role: 'assistant', content: response.fullContent || 'Resposta gerada' }
       ]);
+      
+      success(`✅ ${choice} gerado!`);
     } catch (err) {
-      error('Erro ao conversar com a IA');
+      error('Erro ao gerar resposta');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,49 +277,39 @@ const AIChat = ({ initialText = '' }) => {
 
             <p className="text-center text-yellow-400">{output.bonus}</p>
 
-            {/* Modo Chat Interativo */}
-            {output.fullContent && (
+            {/* Responder escolha da IA (quando ela perguntar algo) */}
+            {output.fullContent && output.fullContent.includes('Pergunte:') && (
               <div className="mt-6 pt-6 border-t border-white/10">
-                <button
-                  onClick={() => setChatMode(!chatMode)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 transition-colors mb-4"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {chatMode ? 'Fechar Chat' : '💬 Conversar sobre a Oferta'}
-                </button>
-
-                {chatMode && (
-                  <div className="glass border border-purple-500/30 rounded-lg p-4 mb-4">
-                    <h4 className="font-bold mb-3">Chat com a IA sobre sua Oferta</h4>
-                    
-                    {/* Histórico do chat */}
-                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                      {chatHistory.map((msg, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-600/20 ml-8' : 'bg-purple-600/20 mr-8'}`}>
-                          <p className="text-sm">{msg.content}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Input do chat */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleChatWithAI()}
-                        placeholder="Ex: Me dê o prompt para Lovable"
-                        className="flex-1 glass border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                      />
-                      <button
-                        onClick={handleChatWithAI}
-                        className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
-                      >
-                        Enviar
-                      </button>
-                    </div>
+                <div className="glass border border-purple-500/30 rounded-lg p-4">
+                  <h4 className="font-bold mb-3 text-purple-300">💬 A IA fez uma pergunta. Escolha uma opção:</h4>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => handleChatWithAI('WordPress')}
+                      className="px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-white transition-colors"
+                    >
+                      🔧 WordPress (manual)
+                    </button>
+                    <button
+                      onClick={() => handleChatWithAI('Quiz')}
+                      className="px-4 py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-white transition-colors"
+                    >
+                      🎯 Quiz
+                    </button>
+                    <button
+                      onClick={() => handleChatWithAI('Lovable')}
+                      className="px-4 py-2 rounded-lg bg-pink-600/20 hover:bg-pink-600/30 text-white transition-colors"
+                    >
+                      🤖 Lovable/Builder AI
+                    </button>
                   </div>
-                )}
+
+                  {chatHistory.length > 0 && (
+                    <div className="mt-4 p-3 rounded-lg bg-green-600/20">
+                      <p className="text-sm text-white">{chatHistory[chatHistory.length - 1]?.content}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -385,14 +373,16 @@ const AIChat = ({ initialText = '' }) => {
 
                 <div className="glass border border-white/10 rounded-lg p-6 max-h-[600px] overflow-y-auto">
                   <div 
-                    className="prose prose-invert prose-sm max-w-none"
+                    className="text-white leading-relaxed"
+                    style={{ fontSize: '15px', lineHeight: '1.8' }}
                     dangerouslySetInnerHTML={{
                       __html: output.fullContent
-                        .replace(/### (.*)/g, '<h3 class="text-xl font-bold text-purple-400 mt-6 mb-3">$1</h3>')
-                        .replace(/#### (.*)/g, '<h4 class="text-lg font-semibold text-blue-400 mt-4 mb-2">$1</h4>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                        .replace(/\n\n/g, '<br/><br/>')
-                        .replace(/• /g, '• ')
+                        // Remover símbolos ### e #### mas manter formatação
+                        .replace(/###\s*(.*)/g, '<h3 style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 24px; margin-bottom: 12px;">$1</h3>')
+                        .replace(/####\s*(.*)/g, '<h4 style="font-size: 16px; font-weight: 600; color: #f0f0f0; margin-top: 16px; margin-bottom: 8px;">$1</h4>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff; font-weight: 600;">$1</strong>')
+                        .replace(/\n\n/g, '<div style="margin: 12px 0;"></div>')
+                        .replace(/• /g, '<span style="color: #a78bfa;">•</span> ')
                         .replace(/\n/g, '<br/>')
                     }}
                   />
