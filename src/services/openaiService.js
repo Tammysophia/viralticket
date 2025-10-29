@@ -173,21 +173,39 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
       }
       
       // Adicionar instrução clara para retornar JSON direto
-      agentPrompt = agentPrompt + `
+      agentPrompt = `
+VOCÊ É UMA IA ESPECIALISTA EM CRIAR OFERTAS IRRESISTÍVEIS.
 
-IMPORTANTE: Com base no contexto acima, analise estes comentários e crie UMA oferta irresistível AGORA:
+CONTEXTO DA SUA PERSONALIDADE:
+${agentPrompt.substring(0, 2000)}
 
-Comentários do cliente:
+TAREFA ÚNICA E URGENTE:
+Analise este comentário/texto do cliente e crie UMA oferta de produto digital low-ticket (R$7-97) que converta imediatamente.
+
+COMENTÁRIO DO CLIENTE:
 ${comments}
 
-RETORNE APENAS UM JSON válido neste formato exato (sem texto adicional, sem explicações, sem markdown):
+INSTRUÇÕES CRÍTICAS:
+1. Use o estilo e personalidade do contexto acima
+2. Crie uma oferta com mecanismo único e nome "chiclete"
+3. RETORNE APENAS JSON VÁLIDO (sem texto antes ou depois)
+4. NÃO pergunte nada, NÃO explique nada, APENAS RETORNE O JSON
+
+FORMATO OBRIGATÓRIO:
 {
-  "title": "Título impactante com emoji",
-  "subtitle": "Subtítulo persuasivo",
-  "bullets": ["Benefício 1", "Benefício 2", "Benefício 3", "Benefício 4"],
-  "cta": "Call-to-action convincente",
-  "bonus": "Bônus irresistível"
-}`;
+  "title": "🔥 [Nome Chiclete da Oferta]",
+  "subtitle": "[Promessa emocional clara em 1 frase]",
+  "bullets": [
+    "✅ [Benefício transformador 1]",
+    "✅ [Benefício transformador 2]", 
+    "✅ [Benefício transformador 3]",
+    "✅ [Benefício transformador 4]"
+  ],
+  "cta": "👉 [Call-to-action urgente]",
+  "bonus": "🎁 [Bônus exclusivo que aumenta valor]"
+}
+
+RETORNE O JSON AGORA:`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
