@@ -163,29 +163,10 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
 }`
       };
       agentPrompt = agentPrompts[agent] || agentPrompts.sophia;
-    } else {
-      // Adicionar os comentários ao prompt do Firestore
-      agentPrompt = agentPrompt.replace('${comments}', comments).replace('{comments}', comments);
-      
-      // Se não tiver placeholder, adicionar os comentários
-      if (!agentPrompt.includes(comments)) {
-        agentPrompt = agentPrompt + `\n\n---\n\n`;
-      }
-      
-      // Adicionar comentários do usuário ao prompt completo do Firestore
-      agentPrompt = `${agentPrompt}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 COMENTÁRIO/DOR/IDEIA DO CLIENTE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${comments}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔥 EXECUTE AGORA! Siga TODO o seu protocolo acima passo a passo!
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     }
 
+    // IMPORTANTE: Usar role "system" para o prompt (oculto) e "user" para os comentários
+    // O prompt da IA NUNCA aparece na tela - apenas a resposta gerada
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -196,8 +177,12 @@ ${comments}
         model: 'gpt-4o', // Modelo com 128K tokens de contexto
         messages: [
           {
+            role: 'system',
+            content: agentPrompt, // Prompt completo da IA do Firestore (OCULTO, base fixa)
+          },
+          {
             role: 'user',
-            content: agentPrompt,
+            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}`, // Comentários do usuário
           },
         ],
         temperature: 0.9,
@@ -215,21 +200,24 @@ ${comments}
     
     console.log('📥 Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
     console.log('📊 Resposta completa tem', content.length, 'caracteres');
+    console.log('🔥 Agente utilizada:', agent);
     
-    // Retornar TODA a resposta como texto formatado
-    // A oferta será exibida completa na tela para o usuário ver tudo
+    // Retornar TODA a resposta gerada pela IA
+    // O prompt da IA está OCULTO (foi enviado como "system")
+    // Apenas a resposta completa aparece na tela
     return {
-      title: '🔥 Oferta Completa Gerada',
+      title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
       subtitle: 'Veja abaixo o resultado completo da análise',
       bullets: [
-        '✅ Resposta gerada seguindo todo o protocolo',
-        '✅ Role para baixo para ver tudo',
+        '✅ Oferta gerada seguindo todo o protocolo da IA',
+        '✅ Role para baixo para ver tudo (10 ofertas, ebook, quiz, página)',
         '✅ Copie o conteúdo que precisar',
-        '✅ Use as 10 ofertas, ebook, quiz e página'
+        '✅ Material completo pronto para usar'
       ],
       cta: '👉 Veja o conteúdo completo abaixo',
-      bonus: '🎁 Todo o material foi gerado conforme seu prompt',
-      fullContent: content // Conteúdo completo para exibir
+      bonus: '🎁 Todo o material foi gerado conforme o protocolo',
+      fullContent: content, // Conteúdo completo para exibir
+      agentId: agent // Salvar qual IA gerou
     };
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
