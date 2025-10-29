@@ -1,5 +1,7 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -44,6 +46,30 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
+ * Busca o template da agente do Firestore
+ * @param {string} agentId - ID da agente (sophia ou sofia)
+ * @returns {Promise<string|null>} - Prompt da agente ou null
+ */
+const getAgentTemplate = async (agentId) => {
+  try {
+    const docRef = doc(db, 'agent_templates', agentId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log(`✅ Template da agente ${agentId} carregado do Firestore`);
+      return data.prompt || data.systemPrompt || null;
+    }
+    
+    console.warn(`⚠️ Template da agente ${agentId} não encontrado no Firestore`);
+    return null;
+  } catch (error) {
+    console.error(`❌ Erro ao buscar template da agente ${agentId}:`, error);
+    return null;
+  }
+};
+
+/**
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
@@ -57,8 +83,14 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
+    // Buscar prompt do Firestore primeiro
+    let agentPrompt = await getAgentTemplate(agent);
+    
+    // Se não encontrar no Firestore, usar prompts fixos como fallback
+    if (!agentPrompt) {
+      console.log(`📝 Usando prompt fixo para ${agent} (fallback)`);
+      const agentPrompts = {
+        sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
 
 Comentários:
@@ -79,7 +111,7 @@ Formato JSON:
   "cta": "",
   "bonus": ""
 }`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
+        sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
 Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
 
 Comentários:
@@ -93,7 +125,16 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
   "cta": "",
   "bonus": ""
 }`
-    };
+      };
+      agentPrompt = agentPrompts[agent] || agentPrompts.sophia;
+    } else {
+      // Adicionar os comentários ao prompt do Firestore
+      agentPrompt = agentPrompt.replace('${comments}', comments).replace('{comments}', comments);
+      // Se não tiver placeholder, adicionar os comentários
+      if (!agentPrompt.includes(comments)) {
+        agentPrompt = agentPrompt + `\n\nComentários:\n${comments}`;
+      }
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -106,7 +147,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: agentPrompt,
           },
         ],
         temperature: 0.8,
