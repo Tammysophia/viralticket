@@ -46,6 +46,33 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
+ * Função auxiliar para parsear resposta da oferta
+ */
+const parseOfferResponse = (content) => {
+  try {
+    let jsonContent = content;
+    
+    if (content.includes('```json')) {
+      const match = content.match(/```json\s*([\s\S]*?)\s*```/);
+      if (match) jsonContent = match[1];
+    } else if (content.includes('```')) {
+      const match = content.match(/```\s*([\s\S]*?)\s*```/);
+      if (match) jsonContent = match[1];
+    }
+    
+    const jsonRegex = /\{[\s\S]*"title"[\s\S]*"subtitle"[\s\S]*"bullets"[\s\S]*"cta"[\s\S]*"bonus"[\s\S]*\}/;
+    const jsonMatch = content.match(jsonRegex);
+    if (jsonMatch && !jsonContent.includes('{')) {
+      jsonContent = jsonMatch[0];
+    }
+    
+    return JSON.parse(jsonContent.trim());
+  } catch (e) {
+    throw e;
+  }
+};
+
+/**
  * Busca o template da agente do Firestore
  * @param {string} agentId - ID da agente (sophia ou sofia)
  * @returns {Promise<string|null>} - Prompt da agente ou null
@@ -190,37 +217,69 @@ RETORNE APENAS UM JSON válido neste formato exato (sem texto adicional, sem exp
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('📥 Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
+    console.log('📥 Resposta da OpenAI:', content.substring(0, 200));
+    
+    // Detectar recusas da OpenAI
+    const refusalPatterns = [
+      'lo siento',
+      'i cannot',
+      'i can\'t',
+      'não posso',
+      'desculpe',
+      'sorry',
+      'against my',
+      'violate',
+      'programming'
+    ];
+    
+    const isRefusal = refusalPatterns.some(pattern => 
+      content.toLowerCase().includes(pattern)
+    );
+    
+    if (isRefusal && content.length < 200) {
+      console.warn('⚠️ OpenAI recusou o prompt! Usando versão simplificada...');
+      
+      // Usar prompt simplificado sem frases problemáticas
+      const simplePrompt = `Você é ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}, especialista em criar ofertas persuasivas.
+
+Analise estes comentários e crie uma oferta irresistível:
+
+${comments}
+
+Retorne APENAS um JSON válido:
+{
+  "title": "Título impactante com emoji",
+  "subtitle": "Subtítulo persuasivo",
+  "bullets": ["Benefício 1", "Benefício 2", "Benefício 3", "Benefício 4"],
+  "cta": "Call-to-action",
+  "bonus": "Bônus exclusivo"
+}`;
+
+      const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{ role: 'system', content: simplePrompt }],
+          temperature: 0.8,
+          max_tokens: 2000,
+        }),
+      });
+      
+      if (retryResponse.ok) {
+        const retryData = await retryResponse.json();
+        const retryContent = retryData.choices[0].message.content;
+        console.log('🔄 Segunda tentativa com prompt simplificado:', retryContent.substring(0, 200));
+        return parseOfferResponse(retryContent);
+      }
+    }
     
     // Tentar parsear JSON da resposta
     try {
-      // Tentar extrair JSON se estiver envolto em markdown
-      let jsonContent = content;
-      
-      // Se a resposta vier com ```json ... ```, extrair o conteúdo
-      if (content.includes('```json')) {
-        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-          jsonContent = jsonMatch[1];
-          console.log('📦 JSON extraído do markdown json');
-        }
-      } else if (content.includes('```')) {
-        const jsonMatch = content.match(/```\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-          jsonContent = jsonMatch[1];
-          console.log('📦 JSON extraído de code block');
-        }
-      }
-      
-      // Tentar encontrar JSON em qualquer lugar do texto
-      const jsonRegex = /\{[\s\S]*"title"[\s\S]*"subtitle"[\s\S]*"bullets"[\s\S]*"cta"[\s\S]*"bonus"[\s\S]*\}/;
-      const jsonMatch = content.match(jsonRegex);
-      if (jsonMatch && !jsonContent.includes('{')) {
-        jsonContent = jsonMatch[0];
-        console.log('📦 JSON encontrado no meio do texto');
-      }
-      
-      const offerData = JSON.parse(jsonContent.trim());
+      const offerData = parseOfferResponse(content);
       console.log('✅ JSON parseado com sucesso:', offerData);
       return offerData;
     } catch (parseError) {
