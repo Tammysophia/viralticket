@@ -172,11 +172,35 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     const data = await response.json();
     const content = data.choices[0].message.content;
     
+    console.log('📥 Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
+    
     // Tentar parsear JSON da resposta
     try {
-      const offerData = JSON.parse(content);
+      // Tentar extrair JSON se estiver envolto em markdown
+      let jsonContent = content;
+      
+      // Se a resposta vier com ```json ... ```, extrair o conteúdo
+      if (content.includes('```json')) {
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonContent = jsonMatch[1];
+          console.log('📦 JSON extraído do markdown');
+        }
+      } else if (content.includes('```')) {
+        const jsonMatch = content.match(/```\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonContent = jsonMatch[1];
+          console.log('📦 JSON extraído de code block');
+        }
+      }
+      
+      const offerData = JSON.parse(jsonContent.trim());
+      console.log('✅ JSON parseado com sucesso:', offerData);
       return offerData;
     } catch (parseError) {
+      console.error('❌ Erro ao parsear JSON:', parseError);
+      console.log('📄 Conteúdo completo da resposta:', content);
+      
       // Se não conseguir parsear, criar estrutura básica
       return {
         title: '🎯 Oferta Especial para Você!',
