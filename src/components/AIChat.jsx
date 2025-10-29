@@ -70,8 +70,20 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
-    if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('Limite diário de ofertas atingido');
+    // Verificar e resetar limite diário se necessário
+    const today = new Date().toISOString().split('T')[0]; // "2025-10-29"
+    let currentOffers = user.dailyUsage.offers;
+    let lastOfferDate = user.lastOfferDate || null;
+
+    // Se é um novo dia, resetar contador
+    if (lastOfferDate !== today) {
+      currentOffers = 0;
+      console.log('🔄 Novo dia detectado! Resetando contador de ofertas.');
+    }
+
+    // Verificar limite (admins não têm limite)
+    if (user.limits.offers !== 'unlimited' && currentOffers >= user.limits.offers) {
+      error(`⏰ Limite diário de ${user.limits.offers} ofertas atingido. Tente novamente amanhã!`);
       return;
     }
 
@@ -95,13 +107,17 @@ const AIChat = ({ initialText = '' }) => {
       const offerData = await generateOffer(inputText, selectedAgent);
 
       setOutput(offerData);
+      
+      // Atualizar contador e data
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
-          offers: user.dailyUsage.offers + 1,
+          offers: currentOffers + 1,
         },
+        lastOfferDate: today,
       });
-      success('Oferta gerada com sucesso!');
+      
+      success(`✅ Oferta gerada! (${currentOffers + 1}/${user.limits.offers === 'unlimited' ? '∞' : user.limits.offers} hoje)`);
       setApiConnected(true);
 
       // VT: Salvar oferta automaticamente no Firestore
