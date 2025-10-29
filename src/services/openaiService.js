@@ -139,10 +139,28 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     } else {
       // Adicionar os comentários ao prompt do Firestore
       agentPrompt = agentPrompt.replace('${comments}', comments).replace('{comments}', comments);
+      
       // Se não tiver placeholder, adicionar os comentários
       if (!agentPrompt.includes(comments)) {
-        agentPrompt = agentPrompt + `\n\nComentários:\n${comments}`;
+        agentPrompt = agentPrompt + `\n\n---\n\n`;
       }
+      
+      // Adicionar instrução clara para retornar JSON direto
+      agentPrompt = agentPrompt + `
+
+IMPORTANTE: Com base no contexto acima, analise estes comentários e crie UMA oferta irresistível AGORA:
+
+Comentários do cliente:
+${comments}
+
+RETORNE APENAS UM JSON válido neste formato exato (sem texto adicional, sem explicações, sem markdown):
+{
+  "title": "Título impactante com emoji",
+  "subtitle": "Subtítulo persuasivo",
+  "bullets": ["Benefício 1", "Benefício 2", "Benefício 3", "Benefício 4"],
+  "cta": "Call-to-action convincente",
+  "bonus": "Bônus irresistível"
+}`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -184,7 +202,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           jsonContent = jsonMatch[1];
-          console.log('📦 JSON extraído do markdown');
+          console.log('📦 JSON extraído do markdown json');
         }
       } else if (content.includes('```')) {
         const jsonMatch = content.match(/```\s*([\s\S]*?)\s*```/);
@@ -192,6 +210,14 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
           jsonContent = jsonMatch[1];
           console.log('📦 JSON extraído de code block');
         }
+      }
+      
+      // Tentar encontrar JSON em qualquer lugar do texto
+      const jsonRegex = /\{[\s\S]*"title"[\s\S]*"subtitle"[\s\S]*"bullets"[\s\S]*"cta"[\s\S]*"bonus"[\s\S]*\}/;
+      const jsonMatch = content.match(jsonRegex);
+      if (jsonMatch && !jsonContent.includes('{')) {
+        jsonContent = jsonMatch[0];
+        console.log('📦 JSON encontrado no meio do texto');
       }
       
       const offerData = JSON.parse(jsonContent.trim());
