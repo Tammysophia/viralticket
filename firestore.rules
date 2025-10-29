@@ -1,115 +1,51 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ========================================
-    // FUNÇÕES AUXILIARES
-    // ========================================
-    
-    // Verifica se o usuário está autenticado
+    // Função: Verifica se usuário está autenticado
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Verifica se o usuário é o dono do recurso
+    // Função: Verifica se é o dono do recurso
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Verifica se o usuário é admin
+    // Função: Verifica se é admin
     function isAdmin() {
       return isAuthenticated() && 
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Verifica limites de plano do usuário
-    function checkUserLimits() {
-      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      let userPlan = userData.plan;
-      let dailyUsage = userData.dailyUsage;
-      
-      // Admins não têm limite
-      if (userData.isAdmin == true) {
-        return true;
-      }
-      
-      // Verificar limites por plano
-      return true; // Simplificado - validação completa seria mais complexa
-    }
-    
-    // ========================================
     // COLEÇÃO: users
-    // ========================================
     match /users/{userId} {
-      // Leitura: Apenas o próprio usuário ou admin
       allow read: if isOwner(userId) || isAdmin();
-      
-      // Criação: Apenas durante registro (auth.uid = userId)
-      allow create: if isAuthenticated() && 
-                      request.auth.uid == userId &&
-                      request.resource.data.keys().hasAll(['email', 'plan', 'createdAt']);
-      
-      // Atualização: Apenas o próprio usuário (sem mudar isAdmin ou plan por conta própria)
-      allow update: if isOwner(userId) && 
-                      (
-                        // Usuário normal não pode alterar isAdmin ou plan
-                        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'plan'])) ||
-                        // Ou é admin fazendo a alteração
-                        isAdmin()
-                      );
-      
-      // Deleção: Apenas o próprio usuário ou admin
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }
     
-    // ========================================
     // COLEÇÃO: apiKeys (APENAS ADMIN)
-    // ========================================
     match /apiKeys/{service} {
-      // Apenas admins podem acessar chaves de API
       allow read, write: if isAdmin();
     }
     
-    // ========================================
     // COLEÇÃO: offers
-    // ========================================
     match /offers/{offerId} {
-      // Leitura: Apenas o dono da oferta ou admin
-      allow read: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
-      
-      // Criação: Usuário autenticado, respeitando limites
-      allow create: if isAuthenticated() && 
-                      request.resource.data.userId == request.auth.uid &&
-                      request.resource.data.keys().hasAll([
-                        'userId', 'title', 'status', 'createdAt', 'updatedAt'
-                      ]) &&
-                      request.resource.data.status in ['pendente', 'execucao', 'modelando', 'concluido'] &&
-                      checkUserLimits();
-      
-      // Atualização: Apenas o dono da oferta ou admin
-      allow update: if isAuthenticated() && 
-                      (resource.data.userId == request.auth.uid || isAdmin()) &&
-                      request.resource.data.userId == resource.data.userId && // Não pode mudar o dono
-                      request.resource.data.status in ['pendente', 'execucao', 'modelando', 'concluido'];
-      
-      // Deleção: Apenas o dono da oferta ou admin
-      allow delete: if isAuthenticated() && 
-                      (resource.data.userId == request.auth.uid || isAdmin());
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
-    // ========================================
-    // COLEÇÃO: webhooks (futura - apenas admin)
-    // ========================================
+    // COLEÇÃO: webhooks (APENAS ADMIN)
     match /webhooks/{webhookId} {
       allow read, write: if isAdmin();
     }
     
-    // ========================================
     // BLOQUEAR TODO O RESTO
-    // ========================================
     match /{document=**} {
       allow read, write: if false;
     }
