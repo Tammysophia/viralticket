@@ -172,18 +172,18 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         agentPrompt = agentPrompt + `\n\n---\n\n`;
       }
       
-      // Adicionar comentários do usuário ao prompt completo
+      // Adicionar comentários do usuário ao prompt completo do Firestore
       agentPrompt = `${agentPrompt}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💬 COMENTÁRIO/TEXTO DO CLIENTE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 COMENTÁRIO/DOR/IDEIA DO CLIENTE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${comments}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ EXECUTE AGORA SEGUINDO TODO O SEU PROTOCOLO ACIMA!
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔥 EXECUTE AGORA! Siga TODO o seu protocolo acima passo a passo!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -196,12 +196,12 @@ ${comments}
         model: 'gpt-4o', // Modelo com 128K tokens de contexto
         messages: [
           {
-            role: 'system',
+            role: 'user',
             content: agentPrompt,
           },
         ],
-        temperature: 0.8,
-        max_tokens: 2000,
+        temperature: 0.9,
+        max_tokens: 16000, // Muito maior para gerar resposta completa
       }),
     });
 
@@ -213,89 +213,24 @@ ${comments}
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('📥 Resposta da OpenAI:', content.substring(0, 200));
+    console.log('📥 Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
+    console.log('📊 Resposta completa tem', content.length, 'caracteres');
     
-    // Detectar recusas da OpenAI
-    const refusalPatterns = [
-      'lo siento',
-      'i cannot',
-      'i can\'t',
-      'não posso',
-      'desculpe',
-      'sorry',
-      'against my',
-      'violate',
-      'programming'
-    ];
-    
-    const isRefusal = refusalPatterns.some(pattern => 
-      content.toLowerCase().includes(pattern)
-    );
-    
-    if (isRefusal && content.length < 200) {
-      console.warn('⚠️ OpenAI recusou o prompt! Usando versão simplificada...');
-      
-      // Usar prompt simplificado sem frases problemáticas
-      const simplePrompt = `Você é ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}, especialista em criar ofertas persuasivas.
-
-Analise estes comentários e crie uma oferta irresistível:
-
-${comments}
-
-Retorne APENAS um JSON válido:
-{
-  "title": "Título impactante com emoji",
-  "subtitle": "Subtítulo persuasivo",
-  "bullets": ["Benefício 1", "Benefício 2", "Benefício 3", "Benefício 4"],
-  "cta": "Call-to-action",
-  "bonus": "Bônus exclusivo"
-}`;
-
-      const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'system', content: simplePrompt }],
-          temperature: 0.8,
-          max_tokens: 2000,
-        }),
-      });
-      
-      if (retryResponse.ok) {
-        const retryData = await retryResponse.json();
-        const retryContent = retryData.choices[0].message.content;
-        console.log('🔄 Segunda tentativa com prompt simplificado:', retryContent.substring(0, 200));
-        return parseOfferResponse(retryContent);
-      }
-    }
-    
-    // Tentar parsear JSON da resposta
-    try {
-      const offerData = parseOfferResponse(content);
-      console.log('✅ JSON parseado com sucesso:', offerData);
-      return offerData;
-    } catch (parseError) {
-      console.error('❌ Erro ao parsear JSON:', parseError);
-      console.log('📄 Conteúdo completo da resposta:', content);
-      
-      // Se não conseguir parsear, criar estrutura básica
-      return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
-          '✅ Acesso imediato ao conteúdo',
-          '✅ Suporte dedicado',
-          '✅ Garantia de satisfação',
-          '✅ Bônus exclusivos',
-        ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
-      };
-    }
+    // Retornar TODA a resposta como texto formatado
+    // A oferta será exibida completa na tela para o usuário ver tudo
+    return {
+      title: '🔥 Oferta Completa Gerada',
+      subtitle: 'Veja abaixo o resultado completo da análise',
+      bullets: [
+        '✅ Resposta gerada seguindo todo o protocolo',
+        '✅ Role para baixo para ver tudo',
+        '✅ Copie o conteúdo que precisar',
+        '✅ Use as 10 ofertas, ebook, quiz e página'
+      ],
+      cta: '👉 Veja o conteúdo completo abaixo',
+      bonus: '🎁 Todo o material foi gerado conforme seu prompt',
+      fullContent: content // Conteúdo completo para exibir
+    };
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
     throw error;

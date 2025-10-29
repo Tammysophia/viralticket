@@ -139,9 +139,10 @@ const AIChat = ({ initialText = '' }) => {
   const handleCopy = () => {
     if (!output) return;
     
-    const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
+    // Se tiver conteúdo completo, copiar ele todo
+    const text = output.fullContent || `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
-    success('Oferta copiada!');
+    success(output.fullContent ? 'Resposta completa copiada!' : 'Oferta copiada!');
   };
 
   return (
@@ -234,6 +235,21 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <p className="text-center text-yellow-400">{output.bonus}</p>
+
+            {/* Conteúdo completo gerado pela IA */}
+            {output.fullContent && (
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  Resposta Completa da IA
+                </h3>
+                <div className="glass border border-white/10 rounded-lg p-6 max-h-[600px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-sans text-sm text-gray-300 leading-relaxed">
+                    {output.fullContent}
+                  </pre>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       )}
