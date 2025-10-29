@@ -1,0 +1,94 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ========================================
+    // FUNÇÕES AUXILIARES
+    // ========================================
+    
+    // Verifica se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica se o usuário é admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.admin == true;
+    }
+    
+    // Valida tipo de arquivo (imagens e vídeos)
+    function isValidFileType() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType.matches('video/.*') ||
+             request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('text/.*');
+    }
+    
+    // Valida tamanho do arquivo (máximo 100MB)
+    function isValidFileSize() {
+      return request.resource.size <= 100 * 1024 * 1024;
+    }
+    
+    // ========================================
+    // UPLOADS DE USUÁRIOS
+    // ========================================
+    // Estrutura: users/{userId}/offers/{offerId}/{fileName}
+    match /users/{userId}/offers/{offerId}/{fileName} {
+      // Leitura: Apenas o dono ou admin
+      allow read: if isAuthenticated() && 
+                    (request.auth.uid == userId || isAdmin());
+      
+      // Upload: Apenas o dono, com validações
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == userId &&
+                      isValidFileType() &&
+                      isValidFileSize();
+      
+      // Atualização: Apenas o dono ou admin
+      allow update: if isAuthenticated() && 
+                      (request.auth.uid == userId || isAdmin()) &&
+                      isValidFileType() &&
+                      isValidFileSize();
+      
+      // Deleção: Apenas o dono ou admin
+      allow delete: if isAuthenticated() && 
+                      (request.auth.uid == userId || isAdmin());
+    }
+    
+    // ========================================
+    // AVATARES DE PERFIL
+    // ========================================
+    // Estrutura: users/{userId}/avatar/{fileName}
+    match /users/{userId}/avatar/{fileName} {
+      // Leitura: Qualquer usuário autenticado (para ver avatares)
+      allow read: if isAuthenticated();
+      
+      // Upload/Update: Apenas o dono, apenas imagens, máximo 5MB
+      allow create, update: if isAuthenticated() && 
+                              request.auth.uid == userId &&
+                              request.resource.contentType.matches('image/.*') &&
+                              request.resource.size <= 5 * 1024 * 1024;
+      
+      // Deleção: Apenas o dono ou admin
+      allow delete: if isAuthenticated() && 
+                      (request.auth.uid == userId || isAdmin());
+    }
+    
+    // ========================================
+    // ARQUIVOS ADMIN
+    // ========================================
+    // Estrutura: admin/{fileName}
+    match /admin/{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ========================================
+    // BLOQUEAR TODO O RESTO
+    // ========================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
