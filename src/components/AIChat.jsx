@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { Sparkles, Copy, Save } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -103,26 +104,6 @@ const AIChat = ({ initialText = '' }) => {
       success('Oferta gerada com sucesso!');
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
-      try {
-        const offerId = await createOfferFromAI({
-          userId: user.id,
-          title: offerData.title || 'Nova Oferta',
-          agent: selectedAgent,
-          copy: {
-            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
-            adPrimary: offerData.bullets.join(' '),
-            adHeadline: offerData.title,
-            adDescription: offerData.subtitle
-          },
-          youtubeLinks: []
-        });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
-      } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
-      }
     } catch (err) {
       console.error('Erro ao gerar oferta:', err);
       if (user.isAdmin) {
@@ -132,6 +113,29 @@ const AIChat = ({ initialText = '' }) => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToKanban = async () => {
+    if (!output) return;
+    try {
+      const offerId = await createOfferFromAI({
+        userId: user.id,
+        title: output.title || 'Nova Oferta',
+        agent: selectedAgent,
+        copy: {
+          page: `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`,
+          adPrimary: output.bullets.join(' '),
+          adHeadline: output.title,
+          adDescription: output.subtitle,
+        },
+        youtubeLinks: [],
+      });
+      console.log('VT: Oferta salva pelo usuário:', offerId);
+      success('📝 Oferecida ao Kanban!');
+    } catch (saveError) {
+      console.error('VT: Erro ao salvar oferta:', saveError);
+      error('❌ Erro ao salvar no Kanban');
     }
   };
 
@@ -207,9 +211,14 @@ const AIChat = ({ initialText = '' }) => {
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-              {t('copy')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={handleSaveToKanban} icon={Save}>
+                Adicionar ao Kanban
+              </Button>
+              <Button variant="secondary" onClick={handleCopy} icon={Copy}>
+                {t('copy')}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
