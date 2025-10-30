@@ -163,50 +163,93 @@ const AIChat = ({ initialText = '' }) => {
     success('Oferta copiada!');
   };
 
-  // VT: Gerar oferta alternativa (1, 2 ou 3)
-  const handleGenerateAlternativeOffer = async (offerNumber) => {
+  // VT: Gerar formato específico da Página de Vendas
+  const handleGeneratePageFormat = async (format) => {
     if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original ou digite novamente');
+      error('Por favor, mantenha o texto original');
       return;
     }
 
     setLoading(true);
 
     try {
-      console.log(`🎯 VT: Gerando oferta alternativa #${offerNumber}...`);
+      console.log(`📄 VT: Gerando página de vendas em formato ${format}...`);
 
-      // Criar prompt específico para gerar a oferta escolhida
-      const specificPrompt = `${inputText}\n\n---\n\nVocê já analisou esses comentários e apresentou 3 ofertas. Agora gere TODA a estrutura completa (ebook, página de vendas, criativos, order bumps, quiz) da OFERTA ${offerNumber} que você identificou. Siga o protocolo completo do item 5 ao 10 do seu prompt.`;
+      const formatNames = {
+        'wordpress': 'WordPress (manual/Elementor)',
+        'quiz': 'Quiz (funil diagnóstico)',
+        'ia-builder': 'IA Builder (Lovable/Gama)'
+      };
+
+      // Criar prompt específico para gerar apenas a página no formato escolhido
+      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA a PÁGINA DE VENDAS completa em formato ${formatNames[format]}.
+
+Siga a estrutura de 17 blocos do seu protocolo (item 7 do prompt), incluindo:
+- Cores do nicho emocional
+- Headline e sub-headline
+- Todos os 17 blocos estruturados
+- Layout e visual
+- Instruções específicas para ${formatNames[format]}
+
+${format === 'ia-builder' ? 'Inclua o prompt completo para IA construtora gerar automaticamente.' : ''}
+${format === 'quiz' ? 'Inclua as 15 perguntas do quiz diagnóstico com lógica emocional.' : ''}
+${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no WordPress ou Elementor.' : ''}`;
 
       const offerData = await generateOffer(specificPrompt, selectedAgent);
 
-      setOutput(offerData);
-      success(`✅ Oferta ${offerNumber} gerada com sucesso!`);
+      // Adicionar ao output existente
+      setOutput(prev => ({
+        ...prev,
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+      }));
 
-      // Salvar no Kanban
-      try {
-        const copyContent = offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}`;
-        
-        const offerId = await createOfferFromAI({
-          userId: user.id,
-          title: `${offerData.title} (Alternativa ${offerNumber})`,
-          agent: selectedAgent,
-          copy: {
-            page: copyContent,
-            adPrimary: offerData.bullets?.join(' ') || '',
-            adHeadline: offerData.title,
-            adDescription: offerData.subtitle
-          },
-          youtubeLinks: []
-        });
-        console.log('VT: Oferta alternativa salva:', offerId);
-        success('📝 Oferta salva no Kanban!');
-      } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta alternativa:', saveError);
-      }
+      success(`✅ Página de vendas (${formatNames[format]}) gerada!`);
     } catch (err) {
-      console.error(`❌ VT: Erro ao gerar oferta alternativa ${offerNumber}:`, err);
-      error(`Erro ao gerar oferta ${offerNumber}`);
+      console.error(`❌ VT: Erro ao gerar página formato ${format}:`, err);
+      error(`Erro ao gerar página ${format}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // VT: Gerar formato específico do Ebook
+  const handleGenerateEbookFormat = async (format) => {
+    if (!inputText.trim()) {
+      error('Por favor, mantenha o texto original');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log(`📘 VT: Gerando ebook em formato ${format}...`);
+
+      const formatNames = {
+        'canva': 'Canva (design visual simples)',
+        'gama': 'Gama (estrutura completa)'
+      };
+
+      // Criar prompt específico para gerar apenas o ebook no formato escolhido
+      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA o EBOOK COMPLETO em formato ${formatNames[format]}.
+
+${format === 'gama' ? 'Inclua:\n- Sumário completo com todos os módulos e capítulos\n- Descrição detalhada dos capítulos principais\n- Tom e posicionamento\n- Blocos prontos para exportar no Gama\n- Estrutura modular completa' : ''}
+
+${format === 'canva' ? 'Inclua:\n- Estrutura visual dividida por blocos\n- Cada página/slide como bloco separado\n- Textos prontos para copiar e colar no Canva\n- Sugestões de layout e elementos visuais\n- Dicas de design para cada seção' : ''}
+
+Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
+
+      const offerData = await generateOffer(specificPrompt, selectedAgent);
+
+      // Adicionar ao output existente
+      setOutput(prev => ({
+        ...prev,
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+      }));
+
+      success(`✅ Ebook (${formatNames[format]}) gerado!`);
+    } catch (err) {
+      console.error(`❌ VT: Erro ao gerar ebook formato ${format}:`, err);
+      error(`Erro ao gerar ebook ${format}`);
     } finally {
       setLoading(false);
     }
@@ -348,7 +391,7 @@ const AIChat = ({ initialText = '' }) => {
                   </div>
 
                   {/* Botões de ação */}
-                  <div className="mt-8 pt-6 border-t border-purple-500/30 space-y-4">
+                  <div className="mt-8 pt-6 border-t border-purple-500/30 space-y-6">
                     {/* Botão de copiar */}
                     <button
                       onClick={() => {
@@ -361,34 +404,70 @@ const AIChat = ({ initialText = '' }) => {
                       Copiar Análise Completa
                     </button>
 
-                    {/* VT: Botões para gerar ofertas alternativas */}
-                    {output.fullResponse && output.fullResponse.includes('💥 As 3 Ofertas Assassinas') && (
-                      <div className="space-y-3">
-                        <p className="text-center text-sm text-gray-400">
-                          💡 Quer gerar outra oferta completa?
-                        </p>
-                        <div className="grid grid-cols-3 gap-3">
-                          <button
-                            onClick={() => handleGenerateAlternativeOffer(1)}
-                            disabled={loading}
-                            className="glass border border-green-500/50 hover:border-green-400 rounded-lg px-4 py-3 font-semibold text-green-300 hover:text-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            🥇 Oferta 1
-                          </button>
-                          <button
-                            onClick={() => handleGenerateAlternativeOffer(2)}
-                            disabled={loading}
-                            className="glass border border-blue-500/50 hover:border-blue-400 rounded-lg px-4 py-3 font-semibold text-blue-300 hover:text-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            🥈 Oferta 2
-                          </button>
-                          <button
-                            onClick={() => handleGenerateAlternativeOffer(3)}
-                            disabled={loading}
-                            className="glass border border-orange-500/50 hover:border-orange-400 rounded-lg px-4 py-3 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            🥉 Oferta 3
-                          </button>
+                    {/* VT: Perguntas finais - Formato da Página de Vendas */}
+                    {output.fullResponse && output.fullResponse.includes('🔥 Oferta Campeã') && (
+                      <div className="space-y-6">
+                        {/* Pergunta 1: Página de Vendas */}
+                        <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                          <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                            📄 Como você deseja construir sua Página de Vendas?
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button
+                              onClick={() => handleGeneratePageFormat('wordpress')}
+                              disabled={loading}
+                              className="glass border-2 border-blue-500/50 hover:border-blue-400 hover:bg-blue-500/10 rounded-lg p-4 font-semibold text-blue-300 hover:text-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🔧</div>
+                              <div className="font-bold">WordPress</div>
+                              <div className="text-xs text-gray-400 mt-1">Manual/Elementor</div>
+                            </button>
+                            <button
+                              onClick={() => handleGeneratePageFormat('quiz')}
+                              disabled={loading}
+                              className="glass border-2 border-green-500/50 hover:border-green-400 hover:bg-green-500/10 rounded-lg p-4 font-semibold text-green-300 hover:text-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🎯</div>
+                              <div className="font-bold">Quiz</div>
+                              <div className="text-xs text-gray-400 mt-1">Funil Diagnóstico</div>
+                            </button>
+                            <button
+                              onClick={() => handleGeneratePageFormat('ia-builder')}
+                              disabled={loading}
+                              className="glass border-2 border-pink-500/50 hover:border-pink-400 hover:bg-pink-500/10 rounded-lg p-4 font-semibold text-pink-300 hover:text-pink-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🤖</div>
+                              <div className="font-bold">IA Builder</div>
+                              <div className="text-xs text-gray-400 mt-1">Lovable/Gama</div>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Pergunta 2: Formato do Ebook */}
+                        <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                          <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                            📘 Como você deseja estruturar seu Ebook?
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button
+                              onClick={() => handleGenerateEbookFormat('canva')}
+                              disabled={loading}
+                              className="glass border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 rounded-lg p-4 font-semibold text-cyan-300 hover:text-cyan-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🎨</div>
+                              <div className="font-bold">Canva</div>
+                              <div className="text-xs text-gray-400 mt-1">Design Visual Simples</div>
+                            </button>
+                            <button
+                              onClick={() => handleGenerateEbookFormat('gama')}
+                              disabled={loading}
+                              className="glass border-2 border-orange-500/50 hover:border-orange-400 hover:bg-orange-500/10 rounded-lg p-4 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">⚡</div>
+                              <div className="font-bold">Gama</div>
+                              <div className="text-xs text-gray-400 mt-1">Estrutura Completa</div>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
