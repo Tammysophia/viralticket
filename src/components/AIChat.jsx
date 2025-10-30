@@ -106,13 +106,15 @@ const AIChat = ({ initialText = '' }) => {
 
       // VT: Salvar oferta automaticamente no Firestore
       try {
+        const copyContent = offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets?.join('\n') || ''}\n\n${offerData.cta}\n\n${offerData.bonus}`;
+        
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
           agent: selectedAgent,
           copy: {
-            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
-            adPrimary: offerData.bullets.join(' '),
+            page: copyContent,
+            adPrimary: offerData.bullets?.join(' ') || '',
             adHeadline: offerData.title,
             adDescription: offerData.subtitle
           },
@@ -139,7 +141,8 @@ const AIChat = ({ initialText = '' }) => {
   const handleCopy = () => {
     if (!output) return;
     
-    const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
+    // VT: Se tem fullResponse, copiar ela; senão copiar o formato antigo
+    const text = output.fullResponse || `${output.title}\n\n${output.subtitle}\n\n${output.bullets?.join('\n') || ''}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
     success('Oferta copiada!');
   };
@@ -222,7 +225,7 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <div className="space-y-2">
-              {output.bullets.map((bullet, index) => (
+              {output.bullets && output.bullets.map((bullet, index) => (
                 <p key={index} className="text-gray-300">{bullet}</p>
               ))}
             </div>
@@ -234,6 +237,18 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <p className="text-center text-yellow-400">{output.bonus}</p>
+
+            {/* VT: Resposta completa da IA */}
+            {output.fullResponse && (
+              <div className="mt-6 glass border border-white/10 rounded-lg p-6">
+                <h4 className="text-lg font-bold mb-3 text-purple-400">📋 Resposta Completa da IA:</h4>
+                <div className="prose prose-invert max-w-none">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-300 bg-black/30 p-4 rounded-lg overflow-x-auto">
+                    {output.fullResponse}
+                  </pre>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       )}
