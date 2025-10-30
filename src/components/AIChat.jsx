@@ -163,6 +163,55 @@ const AIChat = ({ initialText = '' }) => {
     success('Oferta copiada!');
   };
 
+  // VT: Gerar oferta alternativa (1, 2 ou 3)
+  const handleGenerateAlternativeOffer = async (offerNumber) => {
+    if (!inputText.trim()) {
+      error('Por favor, mantenha o texto original ou digite novamente');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log(`🎯 VT: Gerando oferta alternativa #${offerNumber}...`);
+
+      // Criar prompt específico para gerar a oferta escolhida
+      const specificPrompt = `${inputText}\n\n---\n\nVocê já analisou esses comentários e apresentou 3 ofertas. Agora gere TODA a estrutura completa (ebook, página de vendas, criativos, order bumps, quiz) da OFERTA ${offerNumber} que você identificou. Siga o protocolo completo do item 5 ao 10 do seu prompt.`;
+
+      const offerData = await generateOffer(specificPrompt, selectedAgent);
+
+      setOutput(offerData);
+      success(`✅ Oferta ${offerNumber} gerada com sucesso!`);
+
+      // Salvar no Kanban
+      try {
+        const copyContent = offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}`;
+        
+        const offerId = await createOfferFromAI({
+          userId: user.id,
+          title: `${offerData.title} (Alternativa ${offerNumber})`,
+          agent: selectedAgent,
+          copy: {
+            page: copyContent,
+            adPrimary: offerData.bullets?.join(' ') || '',
+            adHeadline: offerData.title,
+            adDescription: offerData.subtitle
+          },
+          youtubeLinks: []
+        });
+        console.log('VT: Oferta alternativa salva:', offerId);
+        success('📝 Oferta salva no Kanban!');
+      } catch (saveError) {
+        console.error('VT: Erro ao salvar oferta alternativa:', saveError);
+      }
+    } catch (err) {
+      console.error(`❌ VT: Erro ao gerar oferta alternativa ${offerNumber}:`, err);
+      error(`Erro ao gerar oferta ${offerNumber}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Agent Selection */}
@@ -298,8 +347,9 @@ const AIChat = ({ initialText = '' }) => {
                     />
                   </div>
 
-                  {/* Botão de copiar análise completa */}
-                  <div className="mt-8 pt-6 border-t border-purple-500/30">
+                  {/* Botões de ação */}
+                  <div className="mt-8 pt-6 border-t border-purple-500/30 space-y-4">
+                    {/* Botão de copiar */}
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(output.fullResponse);
@@ -310,6 +360,38 @@ const AIChat = ({ initialText = '' }) => {
                       <Copy size={20} />
                       Copiar Análise Completa
                     </button>
+
+                    {/* VT: Botões para gerar ofertas alternativas */}
+                    {output.fullResponse && output.fullResponse.includes('💥 As 3 Ofertas Assassinas') && (
+                      <div className="space-y-3">
+                        <p className="text-center text-sm text-gray-400">
+                          💡 Quer gerar outra oferta completa?
+                        </p>
+                        <div className="grid grid-cols-3 gap-3">
+                          <button
+                            onClick={() => handleGenerateAlternativeOffer(1)}
+                            disabled={loading}
+                            className="glass border border-green-500/50 hover:border-green-400 rounded-lg px-4 py-3 font-semibold text-green-300 hover:text-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            🥇 Oferta 1
+                          </button>
+                          <button
+                            onClick={() => handleGenerateAlternativeOffer(2)}
+                            disabled={loading}
+                            className="glass border border-blue-500/50 hover:border-blue-400 rounded-lg px-4 py-3 font-semibold text-blue-300 hover:text-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            🥈 Oferta 2
+                          </button>
+                          <button
+                            onClick={() => handleGenerateAlternativeOffer(3)}
+                            disabled={loading}
+                            className="glass border border-orange-500/50 hover:border-orange-400 rounded-lg px-4 py-3 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            🥉 Oferta 3
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
