@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sparkles, Copy, Loader2, CheckCircle, Send } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
@@ -11,13 +11,29 @@ import { createOfferFromAI } from '../services/offersService';
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
   const [inputText, setInputText] = useState(initialText);
-  const [output, setOutput] = useState(null);
+  
+  // VT: Sistema de chat interativo
+  const [messages, setMessages] = useState([]); // Histórico de mensagens
+  const [conversationState, setConversationState] = useState({
+    stage: 'initial', // initial | offer_choice | ebook_choice | page_choice | generating
+    selectedOffer: null,
+    ebookFormat: null,
+    pageFormat: null,
+    offersData: null, // Dados das 3 ofertas
+  });
+  
   const [loading, setLoading] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const messagesEndRef = useRef(null);
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+  
+  // VT: Auto-scroll para última mensagem
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const agents = [
     {
