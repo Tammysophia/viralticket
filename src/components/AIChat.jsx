@@ -389,7 +389,7 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
                     </button>
 
                     {/* VT: Perguntas finais - Formato da Página de Vendas */}
-                    {output.fullResponse && output.fullResponse.includes('🔥 Oferta Campeã') && (
+                    {output.fullResponse && (output.fullResponse.includes('Oferta Campeã') || output.fullResponse.includes('Prompt de Entrega') || output.fullResponse.includes('Escolha o Modo')) && (
                       <div className="space-y-6">
                         {/* Pergunta 1: Página de Vendas */}
                         <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
