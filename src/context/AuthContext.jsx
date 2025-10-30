@@ -16,13 +16,38 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // VT: Função para verificar e resetar limites diários
+  const checkAndResetDailyLimits = (userData) => {
+    const today = new Date().toDateString();
+    const lastReset = userData.lastDailyReset;
+    
+    // Se não há lastReset ou se é um dia diferente, resetar
+    if (!lastReset || lastReset !== today) {
+      return {
+        ...userData,
+        dailyUsage: { offers: 0, urls: 0 },
+        lastDailyReset: today
+      };
+    }
+    
+    return userData;
+  };
+
   useEffect(() => {
     // Se Firebase não estiver configurado, usar localStorage
     if (!isFirebaseConfigured || !auth) {
       const savedUser = localStorage.getItem('viralticket_user');
       if (savedUser) {
         try {
-          setUser(JSON.parse(savedUser));
+          const parsedUser = JSON.parse(savedUser);
+          // VT: Verificar e resetar limites diários
+          const userWithResetLimits = checkAndResetDailyLimits(parsedUser);
+          setUser(userWithResetLimits);
+          
+          // Salvar de volta se houve reset
+          if (userWithResetLimits.lastDailyReset !== parsedUser.lastDailyReset) {
+            localStorage.setItem('viralticket_user', JSON.stringify(userWithResetLimits));
+          }
         } catch (error) {
           console.error('Error parsing saved user:', error);
         }
@@ -44,7 +69,7 @@ export const AuthProvider = ({ children }) => {
                 const userData = userDoc.data();
                 const isAdmin = firebaseUser.email === 'tamara14@gmail.com';
                 
-                const userProfile = {
+                let userProfile = {
                   id: firebaseUser.uid,
                   email: firebaseUser.email,
                   name: userData.name || firebaseUser.email.split('@')[0],
@@ -53,7 +78,23 @@ export const AuthProvider = ({ children }) => {
                   avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
                   dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
                   limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+                  lastDailyReset: userData.lastDailyReset
                 };
+                
+                // VT: Verificar e resetar limites diários
+                userProfile = checkAndResetDailyLimits(userProfile);
+                
+                // VT: Se resetou, atualizar no Firestore
+                if (userData.lastDailyReset !== userProfile.lastDailyReset) {
+                  try {
+                    await setDoc(doc(db, 'users', firebaseUser.uid), {
+                      dailyUsage: userProfile.dailyUsage,
+                      lastDailyReset: userProfile.lastDailyReset
+                    }, { merge: true });
+                  } catch (err) {
+                    console.warn('VT: Erro ao atualizar reset diário:', err);
+                  }
+                }
                 
                 setUser(userProfile);
                 localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
@@ -139,7 +180,7 @@ export const AuthProvider = ({ children }) => {
         console.warn('Firestore access warning (ignored):', firestoreError.code);
       }
       
-      const userProfile = {
+      let userProfile = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
         name: userData.name || email.split('@')[0],
@@ -148,7 +189,11 @@ export const AuthProvider = ({ children }) => {
         avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
         limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+        lastDailyReset: userData.lastDailyReset
       };
+      
+      // VT: Verificar e resetar limites diários
+      userProfile = checkAndResetDailyLimits(userProfile);
       
       setUser(userProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
@@ -231,12 +276,16 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Set local user state
-      const fullUserProfile = {
+      let fullUserProfile = {
         id: firebaseUser.uid,
         ...userProfile,
         isAdmin,
         limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
+        lastDailyReset: new Date().toDateString()
       };
+      
+      // VT: Verificar e resetar limites diários
+      fullUserProfile = checkAndResetDailyLimits(fullUserProfile);
       
       setUser(fullUserProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));

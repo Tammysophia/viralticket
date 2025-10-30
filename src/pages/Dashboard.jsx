@@ -85,17 +85,15 @@ const Dashboard = () => {
               </div>
 
               {/* Usage Progress */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="mt-6">
                 <ProgressBar
                   value={user?.dailyUsage.offers || 0}
                   max={user?.limits.offers || 3}
-                  label="Ofertas Geradas Hoje"
+                  label="Ofertas Geradas Hoje (reset automático diário)"
                 />
-                <ProgressBar
-                  value={user?.dailyUsage.urls || 0}
-                  max={user?.limits.urls || 3}
-                  label="URLs Extraídas Hoje"
-                />
+                <p className="text-sm text-gray-400 mt-2 text-center">
+                  ✨ Extração de comentários do YouTube: <span className="text-green-400 font-semibold">Ilimitada</span>
+                </p>
               </div>
             </Card>
           </motion.div>
