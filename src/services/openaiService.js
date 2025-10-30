@@ -166,7 +166,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     }
 
     // IMPORTANTE: Usar role "system" para o prompt (oculto) e "user" para os comentários
-    // O prompt da IA NUNCA aparece na tela - apenas a resposta gerada
+    // O prompt da IA NUNCA aparece na tela - apenas a resposta JSON
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -174,7 +174,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Modelo com 128K tokens de contexto
+        model: 'gpt-4o', // Modelo com 128K tokens
         messages: [
           {
             role: 'system',
@@ -182,11 +182,12 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
           },
           {
             role: 'user',
-            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}`, // Comentários do usuário
+            content: comments, // Comentários do usuário (entrada limpa)
           },
         ],
-        temperature: 0.9,
-        max_tokens: 16000, // Muito maior para gerar resposta completa
+        temperature: 0.8,
+        max_tokens: 4000,
+        response_format: { type: "json_object" }, // Força resposta em JSON
       }),
     });
 
@@ -198,27 +199,62 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('📥 Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
-    console.log('📊 Resposta completa tem', content.length, 'caracteres');
-    console.log('🔥 Agente utilizada:', agent);
+    console.log('📥 Resposta da OpenAI (primeiros 300 chars):', content.substring(0, 300));
+    console.log('📊 Tamanho da resposta:', content.length, 'caracteres');
+    console.log('🔥 Agente:', agent);
     
-    // Retornar TODA a resposta gerada pela IA
-    // O prompt da IA está OCULTO (foi enviado como "system")
-    // Apenas a resposta completa aparece na tela
-    return {
-      title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
-      subtitle: 'Veja abaixo o resultado completo da análise',
-      bullets: [
-        '✅ Oferta gerada seguindo todo o protocolo da IA',
-        '✅ Role para baixo para ver tudo (10 ofertas, ebook, quiz, página)',
-        '✅ Copie o conteúdo que precisar',
-        '✅ Material completo pronto para usar'
-      ],
-      cta: '👉 Veja o conteúdo completo abaixo',
-      bonus: '🎁 Todo o material foi gerado conforme o protocolo',
-      fullContent: content, // Conteúdo completo para exibir
-      agentId: agent // Salvar qual IA gerou
-    };
+    // Parsear JSON com segurança
+    try {
+      let jsonContent = content.trim();
+      
+      // Remover markdown se existir
+      if (jsonContent.includes('```json')) {
+        const match = jsonContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonContent = match[1].trim();
+          console.log('📦 JSON extraído de markdown');
+        }
+      } else if (jsonContent.includes('```')) {
+        const match = jsonContent.match(/```\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonContent = match[1].trim();
+          console.log('📦 JSON extraído de code block');
+        }
+      }
+      
+      const parsedOffer = JSON.parse(jsonContent);
+      console.log('✅ JSON parseado com sucesso:', parsedOffer);
+      
+      // Verificar se tem erro
+      if (parsedOffer.error) {
+        throw new Error(parsedOffer.error);
+      }
+      
+      // Extrair dados do JSON e formatar para exibição
+      const championOffer = parsedOffer.championOffer || {};
+      
+      return {
+        title: championOffer.name || championOffer.headline || '🔥 Oferta Gerada',
+        subtitle: championOffer.subheadline || 'Oferta criada com sucesso',
+        bullets: championOffer.benefits || [
+          '✅ Benefício 1',
+          '✅ Benefício 2',
+          '✅ Benefício 3',
+          '✅ Benefício 4'
+        ],
+        cta: championOffer.cta || '👉 COMEÇAR AGORA',
+        bonus: `🎁 Valor: ${championOffer.valueAnchoring || 'R$311'} → Por apenas ${championOffer.price || 'R$47'}`,
+        fullContent: JSON.stringify(parsedOffer, null, 2), // JSON formatado para exibição
+        rawData: parsedOffer, // Dados brutos para salvar
+        agentId: agent
+      };
+      
+    } catch (parseError) {
+      console.error('❌ Erro ao parsear JSON:', parseError);
+      console.log('📄 Resposta completa:', content);
+      
+      throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
+    }
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
     throw error;

@@ -167,20 +167,23 @@ const AIChat = ({ initialText = '' }) => {
 
     setLoading(true);
     try {
-      // IA responde com base na escolha
+      // IA responde com base na escolha do usuário
       const response = await generateOffer(
-        `Você perguntou ao usuário sobre como construir a página. Ele escolheu: ${choice}. Agora gere APENAS o conteúdo específico dessa opção (sem perguntas, direto ao ponto).`,
+        `O usuário escolheu: ${choice}. Gere APENAS essa parte específica agora (sem mais perguntas).`,
         selectedAgent
       );
 
-      setChatHistory([
+      // Adicionar resposta ao histórico
+      const newHistory = [
         { role: 'user', content: `Escolhi: ${choice}` },
-        { role: 'assistant', content: response.fullContent || 'Resposta gerada' }
-      ]);
+        { role: 'assistant', content: response.fullContent || response.rawData }
+      ];
       
+      setChatHistory(newHistory);
       success(`✅ ${choice} gerado!`);
     } catch (err) {
-      error('Erro ao gerar resposta');
+      error('Erro ao gerar resposta da IA');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -371,21 +374,108 @@ const AIChat = ({ initialText = '' }) => {
                   </button>
                 </div>
 
-                <div className="glass border border-white/10 rounded-lg p-6 max-h-[600px] overflow-y-auto">
-                  <div 
-                    className="text-white leading-relaxed"
-                    style={{ fontSize: '15px', lineHeight: '1.8' }}
-                    dangerouslySetInnerHTML={{
-                      __html: output.fullContent
-                        // Remover símbolos ### e #### mas manter formatação
-                        .replace(/###\s*(.*)/g, '<h3 style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 24px; margin-bottom: 12px;">$1</h3>')
-                        .replace(/####\s*(.*)/g, '<h4 style="font-size: 16px; font-weight: 600; color: #f0f0f0; margin-top: 16px; margin-bottom: 8px;">$1</h4>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff; font-weight: 600;">$1</strong>')
-                        .replace(/\n\n/g, '<div style="margin: 12px 0;"></div>')
-                        .replace(/• /g, '<span style="color: #a78bfa;">•</span> ')
-                        .replace(/\n/g, '<br/>')
-                    }}
-                  />
+                <div className="glass border border-white/10 rounded-lg p-6 max-h-[600px] overflow-y-auto bg-gray-900/50">
+                  {output.rawData ? (
+                    // Exibir dados estruturados do JSON
+                    <div className="space-y-6 text-white" style={{ fontSize: '15px', lineHeight: '1.7' }}>
+                      
+                      {/* Diagnóstico */}
+                      {output.rawData.diagnostic && (
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-3">💭 Diagnóstico Emocional</h3>
+                          <p className="text-gray-200">{output.rawData.diagnostic.interpretation}</p>
+                          <p className="text-sm text-gray-400 mt-2">
+                            Tipo de apego: {output.rawData.diagnostic.attachmentType} | 
+                            Urgência: {output.rawData.diagnostic.urgencyLevel}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Micro Ofertas */}
+                      {output.rawData.microOffers && (
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-3">🎯 Micro-Ofertas Criadas</h3>
+                          {output.rawData.microOffers.map((offer, idx) => (
+                            <div key={idx} className="mb-3 pl-4 border-l-2 border-purple-500">
+                              <p className="font-semibold text-white">{idx + 1}. {offer.name}</p>
+                              <p className="text-gray-300 text-sm">{offer.promise}</p>
+                              <p className="text-gray-400 text-xs mt-1">💰 {offer.priceSuggestion}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Top 3 */}
+                      {output.rawData.top3 && (
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-3">🏆 Top 3 Ofertas Mestres</h3>
+                          {output.rawData.top3.map((offer, idx) => (
+                            <div key={idx} className="mb-3 p-3 rounded bg-purple-600/10">
+                              <p className="font-bold text-white">{offer.name}</p>
+                              <p className="text-gray-300 text-sm">{offer.why}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Ebook */}
+                      {output.rawData.ebookOutline && (
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-3">📘 Estrutura do Ebook</h3>
+                          <ol className="list-decimal list-inside space-y-1 text-gray-200">
+                            {output.rawData.ebookOutline.map((chapter, idx) => (
+                              <li key={idx}>{chapter}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+
+                      {/* Quiz */}
+                      {output.rawData.quizQuestions && (
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-3">🎯 Quiz Interativo</h3>
+                          <ol className="list-decimal list-inside space-y-1 text-gray-200">
+                            {output.rawData.quizQuestions.map((q, idx) => (
+                              <li key={idx}>{q}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+
+                      {/* Criativos */}
+                      {output.rawData.creativeSuggestions && (
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-3">🎨 Sugestões Visuais</h3>
+                          <p className="text-gray-300">{output.rawData.creativeSuggestions.mainMockup}</p>
+                          {output.rawData.creativeSuggestions.palette && (
+                            <div className="flex gap-2 mt-2">
+                              {output.rawData.creativeSuggestions.palette.map((color, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <div style={{ width: 24, height: 24, backgroundColor: color, borderRadius: 4 }}></div>
+                                  <span className="text-xs text-gray-400">{color}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* JSON Completo (colapsável) */}
+                      <details className="mt-4">
+                        <summary className="cursor-pointer text-purple-400 hover:text-purple-300">
+                          📋 Ver JSON Completo
+                        </summary>
+                        <pre className="mt-2 p-4 bg-black/30 rounded text-xs text-gray-400 overflow-x-auto">
+                          {JSON.stringify(output.rawData, null, 2)}
+                        </pre>
+                      </details>
+                    </div>
+                  ) : (
+                    // Fallback: exibir como texto
+                    <pre className="text-white text-sm whitespace-pre-wrap leading-relaxed">
+                      {output.fullContent}
+                    </pre>
+                  )}
                 </div>
               </div>
             )}
