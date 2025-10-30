@@ -225,3 +225,113 @@ export const deleteAPIKey = async (service) => {
     throw error;
   }
 };
+
+/**
+ * VT: Busca todos os usuários cadastrados no sistema
+ * @returns {Promise<Array>} - Lista de usuários
+ */
+export const getAllUsers = async () => {
+  try {
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      
+      const users = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        users.push({
+          id: docSnap.id,
+          name: data.name || 'Sem nome',
+          email: data.email || 'Sem email',
+          plan: data.plan || 'FREE',
+          dailyOffers: data.dailyUsage?.offers || 0,
+          dailyUrls: data.dailyUsage?.urls || 0,
+          status: data.status || 'active',
+          createdAt: data.createdAt,
+        });
+      });
+      
+      return users;
+    } else {
+      // Fallback para simulação
+      const snapshot = await simulatedDb.collection('users').get();
+      const users = [];
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        users.push({
+          id: doc.id,
+          name: data.name || 'Sem nome',
+          email: data.email || 'Sem email',
+          plan: data.plan || 'FREE',
+          dailyOffers: data.dailyUsage?.offers || 0,
+          dailyUrls: data.dailyUsage?.urls || 0,
+          status: data.status || 'active',
+          createdAt: data.createdAt,
+        });
+      });
+      return users;
+    }
+  } catch (error) {
+    console.error('VT: Erro ao buscar usuários:', error);
+    return [];
+  }
+};
+
+/**
+ * VT: Atualiza o plano de um usuário
+ * @param {string} userId - ID do usuário
+ * @param {string} newPlan - Novo plano (FREE, BRONZE, PRATA, OURO)
+ */
+export const updateUserPlan = async (userId, newPlan) => {
+  try {
+    if (USE_REAL_FIREBASE) {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        throw new Error('Usuário não encontrado');
+      }
+      
+      // VT: Definir limites por plano
+      const limitsMap = {
+        'FREE': { offers: 3, urls: 3 },
+        'BRONZE': { offers: 10, urls: 10 },
+        'PRATA': { offers: 50, urls: 50 },
+        'OURO': { offers: 'unlimited', urls: 'unlimited' }
+      };
+      
+      await setDoc(userRef, {
+        ...userSnap.data(),
+        plan: newPlan,
+        limits: limitsMap[newPlan] || limitsMap['FREE'],
+        updatedAt: serverTimestamp()
+      });
+      
+      return { success: true };
+    } else {
+      // Fallback para simulação
+      const userData = await simulatedDb.collection('users').doc(userId).get();
+      if (!userData.exists) {
+        throw new Error('Usuário não encontrado');
+      }
+      
+      const limitsMap = {
+        'FREE': { offers: 3, urls: 3 },
+        'BRONZE': { offers: 10, urls: 10 },
+        'PRATA': { offers: 50, urls: 50 },
+        'OURO': { offers: 'unlimited', urls: 'unlimited' }
+      };
+      
+      await simulatedDb.collection('users').doc(userId).update({
+        plan: newPlan,
+        limits: limitsMap[newPlan] || limitsMap['FREE']
+      });
+      
+      return { success: true };
+    }
+  } catch (error) {
+    console.error('VT: Erro ao atualizar plano:', error);
+    throw error;
+  }
+};

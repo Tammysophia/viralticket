@@ -110,7 +110,7 @@ const AIChat = ({ initialText = '' }) => {
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
-          agent: user.name || user.email || 'Usuário',
+          agent: selectedAgent,
           copy: {
             page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
             adPrimary: offerData.bullets.join(' '),
