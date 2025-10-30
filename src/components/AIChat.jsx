@@ -6,6 +6,8 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
+import toast from 'react-hot-toast';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -108,7 +110,7 @@ const AIChat = ({ initialText = '' }) => {
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
-          agent: selectedAgent,
+          agent: user.name || user.email || 'Usuário',
           copy: {
             page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
             adPrimary: offerData.bullets.join(' '),

@@ -1,13 +1,13 @@
 // VT: Kanban integrado com Firestore em tempo real
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Sparkles, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, Sparkles, Edit2, Trash2, AlertCircle, Copy } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOffer } from '../services/offersService';
 
 const Kanban = ({ onEditOffer }) => {
   const { t } = useLanguage();
@@ -149,6 +149,17 @@ const Kanban = ({ onEditOffer }) => {
     }
   };
 
+  // VT: Duplicar oferta
+  const handleDuplicate = async (offerId, offerTitle) => {
+    try {
+      await duplicateOffer(offerId);
+      toast.success(`"${offerTitle}" duplicada com sucesso!`);
+    } catch (error) {
+      toast.error('Erro ao duplicar oferta');
+      console.error('VT: Erro ao duplicar:', error);
+    }
+  };
+
   const columnColors = {
     pending: 'border-yellow-500/30',
     inExecution: 'border-blue-500/30',
@@ -230,23 +241,35 @@ const Kanban = ({ onEditOffer }) => {
                           )}
                           
                           {/* VT: Botões de ação */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEditOffer && onEditOffer(item.id);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                              Editar
-                            </button>
+                          <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-white/10">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditOffer && onEditOffer(item.id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Editar
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDuplicate(item.id, item.title);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-sm transition-colors"
+                              >
+                                <Copy className="w-3 h-3" />
+                                Duplicar
+                              </button>
+                            </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(item.id, item.title);
                               }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
+                              className="w-full flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
                             >
                               <Trash2 className="w-3 h-3" />
                               Excluir

@@ -277,6 +277,61 @@ export const getUserOffers = async (userId) => {
 };
 
 /**
+ * VT: Duplica uma oferta existente
+ * @param {string} offerId - ID da oferta a ser duplicada
+ * @returns {Promise<string>} - ID da nova oferta duplicada
+ */
+export const duplicateOffer = async (offerId) => {
+  if (USE_MOCKS) {
+    console.log('VT: [MOCK] Duplicando oferta:', offerId);
+    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    const offer = offers.find(o => o.id === offerId);
+    if (offer) {
+      const newId = `mock_${Date.now()}`;
+      const duplicate = {
+        ...offer,
+        id: newId,
+        title: `${offer.title} (Cópia)`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'pendente' // VT: Oferta duplicada volta para pendente
+      };
+      offers.push(duplicate);
+      localStorage.setItem('vt_offers', JSON.stringify(offers));
+      return newId;
+    }
+    throw new Error('Oferta não encontrada');
+  }
+
+  try {
+    const offerRef = doc(db, 'offers', offerId);
+    const offerSnap = await getDoc(offerRef);
+    
+    if (!offerSnap.exists()) {
+      throw new Error('Oferta não encontrada');
+    }
+
+    const originalData = offerSnap.data();
+    const newOfferRef = doc(collection(db, 'offers'));
+    
+    const duplicateData = {
+      ...originalData,
+      title: `${originalData.title} (Cópia)`,
+      status: 'pendente', // VT: Oferta duplicada volta para pendente
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+    
+    await setDoc(newOfferRef, duplicateData);
+    console.log('VT: Oferta duplicada:', newOfferRef.id);
+    return newOfferRef.id;
+  } catch (error) {
+    console.error('VT: Erro ao duplicar oferta:', error);
+    throw error;
+  }
+};
+
+/**
  * VT: Listener em tempo real para ofertas do usuário
  * @param {string} userId - ID do usuário
  * @param {Function} callback - Função chamada quando ofertas mudam
