@@ -388,9 +388,21 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
                       Copiar Análise Completa
                     </button>
 
-                    {/* VT: Perguntas finais - Formato da Página de Vendas */}
-                    {output.fullResponse && output.fullResponse.length > 500 && (
+                    {/* VT: Botões de escolha - SEMPRE APARECEM */}
+                    {output.fullResponse && (
                       <div className="space-y-6">
+                        {/* Separador visual */}
+                        <div className="my-8 border-t-2 border-purple-500/30"></div>
+                        
+                        <div className="text-center mb-6">
+                          <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                            🎨 Escolha os Formatos de Entrega
+                          </h3>
+                          <p className="text-gray-400 text-sm">
+                            Clique nas opções abaixo para gerar os formatos específicos que você precisa
+                          </p>
+                        </div>
+
                         {/* Pergunta 1: Página de Vendas */}
                         <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
                           <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
