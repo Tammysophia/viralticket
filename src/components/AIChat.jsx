@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
+import OfferViewer from './OfferViewer';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -117,10 +119,10 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        console.log('✅ Oferta salva automaticamente no Kanban:', offerId);
+        success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
+        console.error('❌ Erro ao salvar oferta:', saveError);
         // VT: Não bloqueia o fluxo se falhar ao salvar
       }
     } catch (err) {
@@ -138,9 +140,17 @@ const AIChat = ({ initialText = '' }) => {
   const handleCopy = () => {
     if (!output) return;
     
-    const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
-    navigator.clipboard.writeText(text);
-    success('Oferta copiada!');
+    // Detectar se é oferta simples ou completa
+    if (output.title && output.subtitle && output.bullets) {
+      // Formato simples
+      const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
+      navigator.clipboard.writeText(text);
+      success('Oferta copiada!');
+    } else {
+      // Formato completo - copiar JSON
+      navigator.clipboard.writeText(JSON.stringify(output, null, 2));
+      success('Oferta completa copiada como JSON!');
+    }
   };
 
   return (
@@ -204,37 +214,7 @@ const AIChat = ({ initialText = '' }) => {
 
       {/* Output */}
       {output && (
-        <Card gradient>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-              {t('copy')}
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                {output.title}
-              </h2>
-              <p className="text-lg text-gray-300 mt-2">{output.subtitle}</p>
-            </div>
-
-            <div className="space-y-2">
-              {output.bullets.map((bullet, index) => (
-                <p key={index} className="text-gray-300">{bullet}</p>
-              ))}
-            </div>
-
-            <div className="glass border border-purple-500/30 rounded-lg p-4 text-center">
-              <p className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
-                {output.cta}
-              </p>
-            </div>
-
-            <p className="text-center text-yellow-400">{output.bonus}</p>
-          </div>
-        </Card>
+        <OfferViewer offerData={output} onCopy={handleCopy} />
       )}
     </div>
   );
