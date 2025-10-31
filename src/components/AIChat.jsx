@@ -6,6 +6,7 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -117,10 +118,10 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        console.log('✅ Oferta salva automaticamente no Kanban:', offerId);
+        success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
+        console.error('❌ Erro ao salvar oferta:', saveError);
         // VT: Não bloqueia o fluxo se falhar ao salvar
       }
     } catch (err) {

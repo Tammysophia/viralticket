@@ -225,3 +225,95 @@ export const deleteAPIKey = async (service) => {
     throw error;
   }
 };
+
+/**
+ * Busca um agente IA do Firestore
+ * @param {string} agentId - ID do agente (sophia, sofia)
+ * @returns {Promise<Object>} - Dados do agente incluindo prompt
+ */
+export const getAgent = async (agentId) => {
+  try {
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      const docRef = doc(db, 'agents', agentId);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        return null;
+      }
+      return docSnap.data();
+    } else {
+      // Fallback para simulação
+      const docData = await simulatedDb.collection('agents').doc(agentId).get();
+      if (!docData.exists) {
+        return null;
+      }
+      return docData.data();
+    }
+  } catch (error) {
+    console.error('Erro ao buscar agente:', error);
+    return null;
+  }
+};
+
+/**
+ * Busca todos os agentes IA ativos
+ * @returns {Promise<Object>} - Objeto com agentes indexados por ID
+ */
+export const getAllAgents = async () => {
+  try {
+    if (USE_REAL_FIREBASE) {
+      // Usar Firebase real
+      const agentsRef = collection(db, 'agents');
+      const snapshot = await getDocs(agentsRef);
+      
+      const agents = {};
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.active !== false) {
+          agents[docSnap.id] = data;
+        }
+      });
+      return agents;
+    } else {
+      // Fallback para simulação
+      const snapshot = await simulatedDb.collection('agents').get();
+      const agents = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.active !== false) {
+          agents[doc.id] = data;
+        }
+      });
+      return agents;
+    }
+  } catch (error) {
+    console.error('Erro ao buscar agentes:', error);
+    return {};
+  }
+};
+
+/**
+ * Salva ou atualiza um agente IA no Firestore
+ * @param {string} agentId - ID do agente
+ * @param {Object} agentData - Dados do agente (name, description, prompt, etc)
+ */
+export const saveAgent = async (agentId, agentData) => {
+  try {
+    if (USE_REAL_FIREBASE) {
+      await setDoc(doc(db, 'agents', agentId), {
+        ...agentData,
+        lastUpdated: serverTimestamp(),
+      });
+    } else {
+      await simulatedDb.collection('agents').doc(agentId).set({
+        ...agentData,
+        lastUpdated: serverTimestamp(),
+      });
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao salvar agente:', error);
+    throw error;
+  }
+};

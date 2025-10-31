@@ -8,6 +8,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { validateYouTubeUrl } from '../utils/validation';
 import { verifyAPIConnection, fetchMultipleVideosComments } from '../services/youtubeService';
+import { generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
 
 const YouTubeExtractor = ({ onUseWithAI }) => {
   const [urls, setUrls] = useState(['', '', '']);
@@ -44,6 +46,49 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       }
     } finally {
       setVerifying(false);
+    }
+  };
+
+  const generateOffersAutomatically = async (commentsData, urls) => {
+    try {
+      // Preparar texto dos comentários para a IA
+      const commentsText = commentsData.map(c => c.text).join('\n');
+      
+      // Gerar ofertas com ambos os agentes (sophia e sofia)
+      const agents = ['sophia', 'sofia'];
+      
+      for (const agentId of agents) {
+        try {
+          console.log(`🤖 Gerando oferta com ${agentId}...`);
+          
+          // Gerar oferta usando o prompt do Firebase
+          const offerData = await generateOffer(commentsText, agentId);
+          
+          // Salvar oferta no Firestore
+          const offerId = await createOfferFromAI({
+            userId: user.id,
+            title: offerData.title || `Oferta ${agentId.charAt(0).toUpperCase() + agentId.slice(1)}`,
+            agent: agentId,
+            copy: {
+              page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
+              adPrimary: offerData.bullets.join(' '),
+              adHeadline: offerData.title,
+              adDescription: offerData.subtitle
+            },
+            youtubeLinks: urls
+          });
+          
+          console.log(`✅ Oferta ${agentId} salva:`, offerId);
+        } catch (agentError) {
+          console.error(`❌ Erro ao gerar oferta com ${agentId}:`, agentError);
+        }
+      }
+      
+      success('🎯 Ofertas geradas e salvas no Kanban!');
+      
+    } catch (err) {
+      console.error('❌ Erro ao gerar ofertas automaticamente:', err);
+      // Não exibir erro para o usuário - ofertas são geradas em background
     }
   };
 
@@ -94,6 +139,9 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       });
       success(`${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
+
+      // Gerar ofertas automaticamente com ambos os agentes
+      await generateOffersAutomatically(fetchedComments, validUrls);
     } catch (err) {
       console.error('Erro ao extrair comentários:', err);
       if (user.isAdmin) {

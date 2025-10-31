@@ -1,5 +1,6 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { getAgent } from './firebaseService';
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -46,10 +47,10 @@ export const verifyAPIConnection = async () => {
 /**
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
- * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} agentId - Agente IA (sophia ou sofia)
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia') => {
+export const generateOffer = async (comments, agentId = 'sophia') => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
@@ -57,7 +58,11 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
+    // Buscar prompt do agente no Firebase
+    const agentData = await getAgent(agentId);
+    
+    // Prompts padrão caso não encontre no Firebase
+    const defaultPrompts = {
       sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
 
@@ -95,6 +100,17 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
 }`
     };
 
+    // Usar prompt do Firebase se disponível, senão usar padrão
+    let systemPrompt;
+    if (agentData && agentData.prompt) {
+      // Substituir placeholder {comments} pelo texto dos comentários
+      systemPrompt = agentData.prompt.replace('{comments}', comments);
+      console.log('✅ Usando prompt do Firebase para', agentId);
+    } else {
+      systemPrompt = defaultPrompts[agentId] || defaultPrompts.sophia;
+      console.log('⚠️ Prompt não encontrado no Firebase, usando padrão para', agentId);
+    }
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -106,7 +122,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: systemPrompt,
           },
         ],
         temperature: 0.8,
