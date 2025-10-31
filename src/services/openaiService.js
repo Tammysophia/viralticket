@@ -1,5 +1,40 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
+/**
+ * Busca o template da agente do Firestore
+ * @param {string} agentId - ID da agente (sophia ou sofia)
+ * @returns {Promise<string|null>} - Prompt da agente ou null
+ */
+const getAgentTemplate = async (agentId) => {
+  try {
+    console.log(`🔍 VT: Buscando template da agente "${agentId}" no Firestore...`);
+    
+    const docRef = doc(db, 'agent_templates', agentId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const prompt = data.prompt || data.systemPrompt || null;
+      
+      if (prompt && prompt.trim().length > 0) {
+        console.log(`✅ VT: Template da agente ${agentId} carregado do Firestore (${prompt.length} caracteres)`);
+        return prompt;
+      } else {
+        console.warn(`⚠️ VT: Template da agente ${agentId} está vazio no Firestore`);
+        return null;
+      }
+    }
+    
+    console.warn(`⚠️ VT: Template da agente ${agentId} não encontrado no Firestore`);
+    return null;
+  } catch (error) {
+    console.error(`❌ VT: Erro ao buscar template da agente ${agentId}:`, error);
+    return null;
+  }
+};
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -51,14 +86,26 @@ export const verifyAPIConnection = async () => {
  */
 export const generateOffer = async (comments, agent = 'sophia') => {
   try {
+    console.log(`🚀 VT: Iniciando geração de oferta com agente "${agent}"...`);
+    
     const apiKey = await getServiceAPIKey('openai');
     
     if (!apiKey) {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
+    console.log('🔑 VT: API Key obtida com sucesso');
+
+    // 1️⃣ Buscar prompt do Firestore primeiro
+    let agentPrompt = await getAgentTemplate(agent);
+    
+    console.log(`🔍 VT: agentPrompt tipo=${typeof agentPrompt}, vazio=${!agentPrompt}, length=${agentPrompt?.length || 0}`);
+    
+    // 2️⃣ Se não encontrar no Firestore, usar prompts fixos como fallback
+    if (!agentPrompt) {
+      console.log(`📝 VT: Usando prompt fixo para ${agent} (fallback)`);
+      const agentPrompts = {
+        sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
 
 Comentários:
@@ -79,7 +126,7 @@ Formato JSON:
   "cta": "",
   "bonus": ""
 }`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
+        sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
 Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
 
 Comentários:
@@ -93,8 +140,14 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
   "cta": "",
   "bonus": ""
 }`
-    };
+      };
+      agentPrompt = agentPrompts[agent] || agentPrompts.sophia;
+    }
 
+    console.log('📋 VT: Prompt preparado (tamanho:', agentPrompt.length, 'caracteres)');
+
+    // 3️⃣ IMPORTANTE: Usar role "system" para o prompt e "user" para os comentários
+    // O prompt da IA NUNCA aparece na tela - apenas a resposta gerada
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -102,47 +155,55 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o', // VT: Modelo mais recente (conforme solicitado: equivalente ao gpt-5)
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: agentPrompt, // VT: Prompt completo da IA do Firestore (OCULTO, base fixa)
+          },
+          {
+            role: 'user',
+            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}`, // VT: Comentários do usuário
           },
         ],
-        temperature: 0.8,
-        max_tokens: 1000,
+        temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas (conforme solicitado)
+        max_tokens: 2500, // VT: 2500 tokens conforme especificado
       }),
     });
 
+    console.log('📥 VT: Resposta recebida. Status:', response.status);
+
     if (!response.ok) {
       const error = await response.json();
+      console.error('❌ VT: Erro na API OpenAI:', error);
       throw new Error(error.error?.message || 'Erro ao gerar oferta');
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    // Tentar parsear JSON da resposta
-    try {
-      const offerData = JSON.parse(content);
-      return offerData;
-    } catch (parseError) {
-      // Se não conseguir parsear, criar estrutura básica
-      return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
-          '✅ Acesso imediato ao conteúdo',
-          '✅ Suporte dedicado',
-          '✅ Garantia de satisfação',
-          '✅ Bônus exclusivos',
-        ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
-      };
-    }
+    console.log('📥 VT: Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
+    console.log('📊 VT: Resposta completa tem', content.length, 'caracteres');
+    console.log('🔥 VT: Agente utilizada:', agent);
+    
+    // 4️⃣ Retornar TODA a resposta gerada pela IA
+    // O prompt da IA está OCULTO (foi enviado como "system")
+    // Apenas a resposta completa aparece na tela
+    return {
+      title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
+      subtitle: 'Veja abaixo o resultado completo da análise',
+      bullets: [
+        '✅ Oferta gerada seguindo todo o protocolo da IA',
+        '✅ Prompt do Firestore aplicado com sucesso',
+        '✅ Análise completa dos comentários',
+        '✅ Resposta completa disponível abaixo',
+      ],
+      cta: '📋 Role para baixo para ver a resposta completa',
+      bonus: '💡 Resposta completa da IA com todo o protocolo',
+      fullResponse: content, // VT: Resposta COMPLETA da IA (aparece na UI)
+    };
   } catch (error) {
-    console.error('Erro ao gerar oferta:', error);
+    console.error('❌ VT: Erro ao gerar oferta:', error);
     throw error;
   }
 };
