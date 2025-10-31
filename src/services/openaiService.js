@@ -126,7 +126,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
           },
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 8000, // Aumentado para suportar respostas completas e detalhadas
       }),
     });
 
@@ -136,14 +136,33 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    let content = data.choices[0].message.content;
+    
+    // Limpar markdown se houver
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
     // Tentar parsear JSON da resposta
     try {
       const offerData = JSON.parse(content);
+      console.log('✅ Resposta parseada com sucesso:', Object.keys(offerData));
       return offerData;
     } catch (parseError) {
+      console.warn('⚠️ Erro ao parsear JSON, tentando extrair...', parseError.message);
+      
+      // Tentar extrair JSON do conteúdo
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const extracted = JSON.parse(jsonMatch[0]);
+          console.log('✅ JSON extraído com sucesso:', Object.keys(extracted));
+          return extracted;
+        } catch (e) {
+          console.error('❌ Falha ao extrair JSON:', e);
+        }
+      }
+      
       // Se não conseguir parsear, criar estrutura básica
+      console.warn('⚠️ Usando estrutura básica como fallback');
       return {
         title: '🎯 Oferta Especial para Você!',
         subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
@@ -155,6 +174,7 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         ],
         cta: '🚀 QUERO APROVEITAR AGORA!',
         bonus: '🎁 Bônus: Material complementar gratuito',
+        _raw_content: content, // Salvar conteúdo bruto para debug
       };
     }
   } catch (error) {
