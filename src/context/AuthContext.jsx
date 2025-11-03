@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
                   isAdmin,
                   avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
                   dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
+                  lastOfferDate: userData.lastOfferDate || null,
                   limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
                 };
                 
@@ -93,6 +94,7 @@ export const AuthProvider = ({ children }) => {
           isAdmin,
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: { offers: 0, urls: 0 },
+          lastOfferDate: null,
           limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
         };
         
@@ -115,6 +117,7 @@ export const AuthProvider = ({ children }) => {
         plan: isAdmin ? 'ADMIN' : 'FREE',
         avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: { offers: 0, urls: 0 },
+        lastOfferDate: null,
         createdAt: new Date().toISOString(),
       };
       
@@ -147,6 +150,7 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
+        lastOfferDate: userData.lastOfferDate || null,
         limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
       };
       
@@ -195,6 +199,7 @@ export const AuthProvider = ({ children }) => {
           isAdmin,
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: { offers: 0, urls: 0 },
+          lastOfferDate: null,
           limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
         };
         
@@ -218,6 +223,7 @@ export const AuthProvider = ({ children }) => {
         plan: isAdmin ? 'ADMIN' : 'FREE',
         avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: { offers: 0, urls: 0 },
+        lastOfferDate: null,
         createdAt: new Date().toISOString(),
       };
       
@@ -235,6 +241,7 @@ export const AuthProvider = ({ children }) => {
         id: firebaseUser.uid,
         ...userProfile,
         isAdmin,
+        lastOfferDate: null,
         limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
       };
       

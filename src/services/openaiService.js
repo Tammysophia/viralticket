@@ -1,5 +1,7 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -44,6 +46,64 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
+ * Função auxiliar para parsear resposta da oferta
+ */
+const parseOfferResponse = (content) => {
+  try {
+    let jsonContent = content;
+    
+    if (content.includes('```json')) {
+      const match = content.match(/```json\s*([\s\S]*?)\s*```/);
+      if (match) jsonContent = match[1];
+    } else if (content.includes('```')) {
+      const match = content.match(/```\s*([\s\S]*?)\s*```/);
+      if (match) jsonContent = match[1];
+    }
+    
+    const jsonRegex = /\{[\s\S]*"title"[\s\S]*"subtitle"[\s\S]*"bullets"[\s\S]*"cta"[\s\S]*"bonus"[\s\S]*\}/;
+    const jsonMatch = content.match(jsonRegex);
+    if (jsonMatch && !jsonContent.includes('{')) {
+      jsonContent = jsonMatch[0];
+    }
+    
+    return JSON.parse(jsonContent.trim());
+  } catch (e) {
+    throw e;
+  }
+};
+
+/**
+ * Busca o template da agente do Firestore
+ * @param {string} agentId - ID da agente (sophia ou sofia)
+ * @returns {Promise<string|null>} - Prompt da agente ou null
+ */
+const getAgentTemplate = async (agentId) => {
+  try {
+    const docRef = doc(db, 'agent_templates', agentId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const prompt = data.prompt || data.systemPrompt || null;
+      
+      if (prompt && prompt.trim().length > 0) {
+        console.log(`✅ Template da agente ${agentId} carregado do Firestore (${prompt.length} caracteres)`);
+        return prompt;
+      } else {
+        console.warn(`⚠️ Template da agente ${agentId} está vazio no Firestore`);
+        return null;
+      }
+    }
+    
+    console.warn(`⚠️ Template da agente ${agentId} não encontrado no Firestore`);
+    return null;
+  } catch (error) {
+    console.error(`❌ Erro ao buscar template da agente ${agentId}:`, error);
+    return null;
+  }
+};
+
+/**
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
@@ -57,8 +117,16 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
+    // Buscar prompt do Firestore primeiro
+    let agentPrompt = await getAgentTemplate(agent);
+    
+    console.log(`🔍 Debug: agentPrompt tipo=${typeof agentPrompt}, vazio=${!agentPrompt}, length=${agentPrompt?.length || 0}`);
+    
+    // Se não encontrar no Firestore, usar prompts fixos como fallback
+    if (!agentPrompt) {
+      console.log(`📝 Usando prompt fixo para ${agent} (fallback)`);
+      const agentPrompts = {
+        sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
 
 Comentários:
@@ -79,7 +147,7 @@ Formato JSON:
   "cta": "",
   "bonus": ""
 }`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
+        sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
 Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
 
 Comentários:
@@ -93,8 +161,12 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
   "cta": "",
   "bonus": ""
 }`
-    };
+      };
+      agentPrompt = agentPrompts[agent] || agentPrompts.sophia;
+    }
 
+    // IMPORTANTE: Usar role "system" para o prompt (oculto) e "user" para os comentários
+    // O prompt da IA NUNCA aparece na tela - apenas a resposta JSON
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -102,15 +174,20 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o', // Modelo com 128K tokens
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: agentPrompt, // Prompt completo da IA do Firestore (OCULTO, base fixa)
+          },
+          {
+            role: 'user',
+            content: comments, // Comentários do usuário (entrada limpa)
           },
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 4000,
+        response_format: { type: "json_object" }, // Força resposta em JSON
       }),
     });
 
@@ -122,24 +199,61 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    // Tentar parsear JSON da resposta
+    console.log('📥 Resposta da OpenAI (primeiros 300 chars):', content.substring(0, 300));
+    console.log('📊 Tamanho da resposta:', content.length, 'caracteres');
+    console.log('🔥 Agente:', agent);
+    
+    // Parsear JSON com segurança
     try {
-      const offerData = JSON.parse(content);
-      return offerData;
-    } catch (parseError) {
-      // Se não conseguir parsear, criar estrutura básica
+      let jsonContent = content.trim();
+      
+      // Remover markdown se existir
+      if (jsonContent.includes('```json')) {
+        const match = jsonContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonContent = match[1].trim();
+          console.log('📦 JSON extraído de markdown');
+        }
+      } else if (jsonContent.includes('```')) {
+        const match = jsonContent.match(/```\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonContent = match[1].trim();
+          console.log('📦 JSON extraído de code block');
+        }
+      }
+      
+      const parsedOffer = JSON.parse(jsonContent);
+      console.log('✅ JSON parseado com sucesso:', parsedOffer);
+      
+      // Verificar se tem erro
+      if (parsedOffer.error) {
+        throw new Error(parsedOffer.error);
+      }
+      
+      // Extrair dados do JSON e formatar para exibição
+      const championOffer = parsedOffer.championOffer || {};
+      
       return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
-          '✅ Acesso imediato ao conteúdo',
-          '✅ Suporte dedicado',
-          '✅ Garantia de satisfação',
-          '✅ Bônus exclusivos',
+        title: championOffer.name || championOffer.headline || '🔥 Oferta Gerada',
+        subtitle: championOffer.subheadline || 'Oferta criada com sucesso',
+        bullets: championOffer.benefits || [
+          '✅ Benefício 1',
+          '✅ Benefício 2',
+          '✅ Benefício 3',
+          '✅ Benefício 4'
         ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
+        cta: championOffer.cta || '👉 COMEÇAR AGORA',
+        bonus: `🎁 Valor: ${championOffer.valueAnchoring || 'R$311'} → Por apenas ${championOffer.price || 'R$47'}`,
+        fullContent: JSON.stringify(parsedOffer, null, 2), // JSON formatado para exibição
+        rawData: parsedOffer, // Dados brutos para salvar
+        agentId: agent
       };
+      
+    } catch (parseError) {
+      console.error('❌ Erro ao parsear JSON:', parseError);
+      console.log('📄 Resposta completa:', content);
+      
+      throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
     }
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
