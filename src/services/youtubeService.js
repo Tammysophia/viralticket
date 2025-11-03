@@ -30,33 +30,49 @@ export const verifyAPIConnection = async (service = 'youtube') => {
   try {
     const apiKey = await getServiceAPIKey(service);
     
+    console.log('🔑 VT: Verificando conexão com YouTube API...');
+    console.log('🔑 VT: Chave encontrada:', apiKey ? 'SIM (' + apiKey.substring(0, 10) + '...)' : 'NÃO');
+    
     if (!apiKey) {
       return {
         success: false,
-        message: 'Chave não configurada no painel administrativo',
+        message: 'Chave da API do YouTube não configurada. Por favor, adicione a chave no painel administrativo.',
+      };
+    }
+
+    // Validar formato da chave
+    if (!apiKey.startsWith('AIza')) {
+      return {
+        success: false,
+        message: 'Formato de chave inválido. A chave do YouTube deve começar com "AIza"',
       };
     }
 
     // Fazer uma requisição simples para testar a chave
     const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=dQw4w9WgXcQ&key=${apiKey}`;
+    console.log('🚀 VT: Testando chave com YouTube API...');
+    
     const response = await fetch(testUrl);
     
     if (!response.ok) {
       const error = await response.json();
+      console.error('❌ VT: Erro na resposta da API:', error);
       return {
         success: false,
-        message: error.error?.message || 'Erro ao conectar com YouTube API',
+        message: error.error?.message || 'Erro ao conectar com YouTube API. Verifique se a chave está correta.',
       };
     }
 
+    console.log('✅ VT: Conexão com YouTube API estabelecida!');
     return {
       success: true,
       message: 'Conexão estabelecida com sucesso',
     };
   } catch (error) {
+    console.error('❌ VT: Erro ao verificar conexão:', error);
     return {
       success: false,
-      message: error.message || 'Erro ao verificar conexão',
+      message: error.message || 'Erro ao verificar conexão. Verifique sua internet e tente novamente.',
     };
   }
 };

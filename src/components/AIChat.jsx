@@ -69,11 +69,7 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
-    if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('Limite diário de ofertas atingido');
-      return;
-    }
-
+    console.info('[AIChat] Starting offer generation...');
     setLoading(true);
 
     try {
@@ -81,29 +77,23 @@ const AIChat = ({ initialText = '' }) => {
       const connectionCheck = await verifyAPIConnection();
       
       if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
+        error(`⚠️ ${connectionCheck.message}`);
         setLoading(false);
         return;
       }
 
+      console.info('[AIChat] Generating offer with agent:', selectedAgent);
+      
       // Gerar oferta com OpenAI
       const offerData = await generateOffer(inputText, selectedAgent);
 
       setOutput(offerData);
-      updateUser({
-        dailyUsage: {
-          ...user.dailyUsage,
-          offers: user.dailyUsage.offers + 1,
-        },
-      });
-      success('Oferta gerada com sucesso!');
+      success('✅ Oferta completa gerada com sucesso!');
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      console.info('[AIChat] Offer generated successfully');
+
+      // VT: Salvar oferta automaticamente no Firestore (opcional)
       try {
         const offerId = await createOfferFromAI({
           userId: user.id,
@@ -117,18 +107,19 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        console.info('[AIChat] Offer saved to Kanban:', offerId);
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        console.warn('[AIChat] Failed to save offer to Kanban:', saveError.message);
+        // Não bloqueia o fluxo se falhar ao salvar
       }
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
-      if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+      console.error('[AIChat][ERR]', err);
+      
+      // Erro genérico (fallback MVP já está ativo)
+      if (user?.isAdmin) {
+        error(`❌ Erro: ${err.message || 'Erro desconhecido'}`);
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        error('❌ Não foi possível gerar a oferta. Tente novamente.');
       }
     } finally {
       setLoading(false);

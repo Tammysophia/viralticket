@@ -29,19 +29,12 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
         success('✅ Conexão com YouTube API estabelecida!');
       } else {
         setApiConnected(false);
-        if (user.isAdmin) {
-          error(`⚠️ ${result.message}`);
-        } else {
-          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
-        }
+        // Sempre mostrar o erro real para o admin poder diagnosticar
+        error(`⚠️ ${result.message}`);
       }
     } catch (err) {
       setApiConnected(false);
-      if (user.isAdmin) {
-        error(`⚠️ Erro: ${err.message}`);
-      } else {
-        error('⚡ Erro ao conectar. Tente novamente em instantes!');
-      }
+      error(`⚠️ Erro: ${err.message}`);
     } finally {
       setVerifying(false);
     }
@@ -55,10 +48,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       return;
     }
 
-    if (user.dailyUsage.urls >= user.limits.urls && user.limits.urls !== 'unlimited') {
-      error('Limite diário de URLs atingido');
-      return;
-    }
+    // VT: SEM LIMITES - usuários podem extrair quantos comentários quiserem
+    console.log('🚀 VT: Extraindo comentários sem limites!');
 
     setLoading(true);
     
@@ -67,11 +58,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       const connectionCheck = await verifyAPIConnection('youtube');
       
       if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
-        }
+        error(`⚠️ Erro na API do YouTube: ${connectionCheck.message}`);
         setLoading(false);
         return;
       }
@@ -86,21 +73,12 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       }
 
       setComments(fetchedComments);
-      updateUser({
-        dailyUsage: {
-          ...user.dailyUsage,
-          urls: user.dailyUsage.urls + validUrls.length,
-        },
-      });
-      success(`${fetchedComments.length} comentários extraídos com sucesso!`);
+      // VT: SEM ATUALIZAR contador (sem limites)
+      success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
     } catch (err) {
       console.error('Erro ao extrair comentários:', err);
-      if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
-      } else {
-        error('⚡ Erro ao extrair comentários. Tente novamente!');
-      }
+      error(`⚠️ Erro ao extrair comentários: ${err.message}`);
     } finally {
       setLoading(false);
     }

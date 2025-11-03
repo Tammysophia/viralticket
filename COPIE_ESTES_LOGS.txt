@@ -1,0 +1,38 @@
+🚨 LOGS PARA COPIAR E COLAR 🚨
+
+Após executar "npm run dev" e gerar uma oferta, 
+copie TODAS as linhas do console que começam com:
+
+[AGENTS]
+[OPENAI]
+[AIChat]
+
+E cole aqui ou me envie.
+
+EXEMPLO DO QUE PRECISO VER:
+================================
+
+[AGENTS] fetching template: sophia-fenix
+[AGENTS][WARN] Document not found in Firestore, using MVP hardcoded prompt
+[OPENAI] 🔍 systemPrompt chars=3547
+[OPENAI] 🔍 systemPrompt preview: SOPHIA FÊNIX 🔥 Criada por Tamara Dutra — transforma qualquer dor pública em uma oferta que converte em até 48h...
+[OPENAI][MVP] ⚠️ Usando prompts hardcoded. Configure Firestore para produção: npm run inject-agents
+[OPENAI] ✅ Instruções JSON encontradas no prompt
+[OPENAI] Starting offer generation...
+[OPENAI] agentId=sophia-fenix
+[OPENAI] userInput length=XXX chars
+[OPENAI] Calling OpenAI API...
+[OPENAI] Response status=200
+[OPENAI] Response received: {id: "...", model: "gpt-4o-mini", usage: {...}}
+[OPENAI] Response length: XXX chars
+[OPENAI] Response preview: {...}
+[OPENAI] Parsing JSON response...
+[OPENAI] JSON parsed successfully
+[OPENAI] Complete offer structure detected
+[AIChat] Offer generated successfully
+
+================================
+
+COLE SEUS LOGS AQUI:
+(Aperte Ctrl+C no console para copiar)
+
