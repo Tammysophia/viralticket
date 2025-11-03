@@ -6,6 +6,8 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
+import toast from 'react-hot-toast';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');

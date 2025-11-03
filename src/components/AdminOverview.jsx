@@ -45,12 +45,8 @@ const AdminOverview = () => {
     },
   ];
 
-  const recentActivity = [
-    { user: 'João Silva', action: 'Gerou oferta', time: 'há 5 min', plan: 'OURO' },
-    { user: 'Maria Santos', action: 'Novo cadastro', time: 'há 12 min', plan: 'FREE' },
-    { user: 'Pedro Costa', action: 'Upgrade para PRATA', time: 'há 23 min', plan: 'PRATA' },
-    { user: 'Ana Lima', action: 'Extraiu comentários', time: 'há 35 min', plan: 'BRONZE' },
-  ];
+  // VT: Atividades recentes virão do Firestore em tempo real
+  const recentActivity = [];
 
   return (
     <div className="space-y-6">
@@ -120,24 +116,10 @@ const AdminOverview = () => {
       {/* Recent Activity */}
       <Card>
         <h3 className="text-xl font-bold mb-4">Atividades Recentes</h3>
-        <div className="space-y-3">
-          {recentActivity.map((activity, i) => (
-            <div key={i} className="flex items-center justify-between glass border border-white/5 rounded-lg p-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center font-bold">
-                  {activity.user[0]}
-                </div>
-                <div>
-                  <p className="font-semibold">{activity.user}</p>
-                  <p className="text-sm text-gray-400">{activity.action}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">{activity.time}</p>
-                <p className="text-xs font-semibold text-purple-400">{activity.plan}</p>
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-12 text-gray-400">
+          <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>As atividades dos usuários reais aparecerão aqui.</p>
+          <p className="text-sm mt-2">Sistema em operação normal.</p>
         </div>
       </Card>
     </div>

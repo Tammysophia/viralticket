@@ -55,11 +55,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       return;
     }
 
-    if (user.dailyUsage.urls >= user.limits.urls && user.limits.urls !== 'unlimited') {
-      error('Limite diário de URLs atingido');
-      return;
-    }
-
+    // VT: Extração de YouTube é ILIMITADA (sem limite diário)
+    
     setLoading(true);
     
     try {
@@ -86,12 +83,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       }
 
       setComments(fetchedComments);
-      updateUser({
-        dailyUsage: {
-          ...user.dailyUsage,
-          urls: user.dailyUsage.urls + validUrls.length,
-        },
-      });
+      // VT: Não incrementar contador de URLs pois extração é ilimitada
       success(`${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
     } catch (err) {

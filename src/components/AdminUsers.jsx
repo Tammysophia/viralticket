@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MoreVertical, Edit, Ban, TrendingUp } from 'lucide-react';
 import Card from './Card';
 import PlanBadge from './PlanBadge';
@@ -6,51 +6,34 @@ import Button from './Button';
 import Modal from './Modal';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
+import { getAllUsers, updateUserPlan } from '../services/firebaseService';
 
 const AdminUsers = () => {
   const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState([
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao@email.com',
-      plan: 'OURO',
-      dailyOffers: 45,
-      dailyUrls: 32,
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria@email.com',
-      plan: 'PRATA',
-      dailyOffers: 8,
-      dailyUrls: 7,
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'Pedro Costa',
-      email: 'pedro@email.com',
-      plan: 'BRONZE',
-      dailyOffers: 4,
-      dailyUrls: 3,
-      status: 'active',
-    },
-    {
-      id: '4',
-      name: 'Ana Lima',
-      email: 'ana@email.com',
-      plan: 'FREE',
-      dailyOffers: 2,
-      dailyUrls: 2,
-      status: 'active',
-    },
-  ]);
-
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const { success } = useToast();
+  const { success, error } = useToast();
+
+  // VT: Buscar usuários reais do Firestore
+  useEffect(() => {
+    const loadUsers = async () => {
+      setLoading(true);
+      try {
+        const realUsers = await getAllUsers();
+        setUsers(realUsers);
+      } catch (err) {
+        console.error('VT: Erro ao carregar usuários:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (currentUser?.isAdmin) {
+      loadUsers();
+    }
+  }, [currentUser?.isAdmin]);
 
   // Proteção adicional - não renderizar se não for admin
   if (!currentUser?.isAdmin) {
@@ -61,68 +44,92 @@ const AdminUsers = () => {
     );
   }
 
-  const handleChangePlan = (userId, newPlan) => {
-    setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
-    success(`Plano alterado para ${newPlan}`);
-    setShowModal(false);
+  const handleChangePlan = async (userId, newPlan) => {
+    try {
+      await updateUserPlan(userId, newPlan);
+      setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
+      success(`Plano alterado para ${newPlan}`);
+      setShowModal(false);
+    } catch (err) {
+      console.error('VT: Erro ao alterar plano:', err);
+      error('Erro ao alterar plano');
+    }
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-400">Carregando usuários...</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <>
       <Card>
         <h3 className="text-xl font-bold mb-4">Gerenciar Usuários</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-2">Usuário</th>
-                <th className="text-left py-3 px-2">Plano</th>
-                <th className="text-left py-3 px-2">Uso Diário</th>
-                <th className="text-left py-3 px-2">Status</th>
-                <th className="text-left py-3 px-2">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-3 px-2">
-                    <div>
-                      <p className="font-semibold">{user.name}</p>
-                      <p className="text-sm text-gray-400">{user.email}</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-2">
-                    <PlanBadge plan={user.plan} size="sm" />
-                  </td>
-                  <td className="py-3 px-2">
-                    <div className="text-sm">
-                      <p>{user.dailyOffers} ofertas</p>
-                      <p className="text-gray-400">{user.dailyUrls} URLs</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-2">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      user.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {user.status === 'active' ? 'Ativo' : 'Bloqueado'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2">
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowModal(true);
-                      }}
-                      className="glass-hover p-2 rounded-lg"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                  </td>
+        
+        {users.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <p>Nenhum usuário cadastrado ainda.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-3 px-2">Usuário</th>
+                  <th className="text-left py-3 px-2">Plano</th>
+                  <th className="text-left py-3 px-2">Uso Diário</th>
+                  <th className="text-left py-3 px-2">Status</th>
+                  <th className="text-left py-3 px-2">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="py-3 px-2">
+                      <div>
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-sm text-gray-400">{user.email}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2">
+                      <PlanBadge plan={user.plan} size="sm" />
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="text-sm">
+                        <p>{user.dailyOffers} ofertas</p>
+                        <p className="text-gray-400">{user.dailyUrls} URLs</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        user.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {user.status === 'active' ? 'Ativo' : 'Bloqueado'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowModal(true);
+                        }}
+                        className="glass-hover p-2 rounded-lg"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       <Modal
