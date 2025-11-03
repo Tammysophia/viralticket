@@ -1,0 +1,39 @@
+==================================================
+COPIE SEU PROMPT DA SOPHIA AQUI
+==================================================
+
+[COLE AQUI O PROMPT COMPLETO QUE VOCÊ QUER USAR]
+
+Deve ter aproximadamente 3500-5000 caracteres.
+
+Exemplo de estrutura:
+
+Você é Sophia Fênix, especialista em...
+
+[Suas instruções detalhadas]
+[Seus gatilhos mentais]
+[Suas fórmulas de copywriting]
+[Seus exemplos]
+
+No final, mencione {{comments}} onde você quer que os comentários sejam injetados.
+
+==================================================
+DEPOIS DE COLAR SEU PROMPT ACIMA:
+==================================================
+
+1. Vá em Firebase Console:
+   https://console.firebase.google.com/project/studio-6502227051-763bf/firestore/data
+
+2. Crie coleção: agent_templates
+
+3. Adicione documento: sophia
+   - agentId: "sophia"
+   - content: [COLE SEU PROMPT DAQUI]
+   - active: true
+   - version: "2.0"
+   - charCount: [número de caracteres]
+
+4. Teste gerando uma oferta
+
+5. Verifique no console (F12):
+   [AGENTS][SUCCESS] Prompt carregado do Firestore para sophia (XXXX chars)
