@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Função helper para verificar autenticação
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Função helper para verificar admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Função helper para verificar owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // ========================================
+    // AGENT TEMPLATES (apenas leitura metadata)
+    // ========================================
+    match /agent_templates/{templateId} {
+      // Leitura: qualquer usuário autenticado (mas SEM prompt_enc)
+      allow read: if isAuthenticated();
+      
+      // Escrita: APENAS via Cloud Functions (deny all)
+      // Admin deve usar /admin/agents/templates API
+      allow write: if false;
+    }
+    
+    // ========================================
+    // AGENT RUNS (logs de execução)
+    // ========================================
+    match /agent_runs/{runId} {
+      // Leitura: apenas o próprio usuário ou admin
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      
+      // Escrita: APENAS via Cloud Functions
+      allow write: if false;
+    }
+    
+    // ========================================
+    // AGENT OUTPUTS (resultados das execuções)
+    // ========================================
+    match /agent_outputs/{outputId} {
+      // Leitura: apenas o próprio usuário ou admin
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      
+      // Escrita: APENAS via Cloud Functions
+      allow write: if false;
+    }
+    
+    // ========================================
+    // AGENT AUDIT LOGS (apenas admin)
+    // ========================================
+    match /agent_audit_logs/{logId} {
+      // Leitura: apenas admin
+      allow read: if isAdmin();
+      
+      // Escrita: APENAS via Cloud Functions
+      allow write: if false;
+    }
+    
+    // ========================================
+    // USERS
+    // ========================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+    
+    // ========================================
+    // OFFERS
+    // ========================================
+    match /offers/{offerId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // ========================================
+    // API KEYS (apenas admin)
+    // ========================================
+    match /api_keys/{keyId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ========================================
+    // DEFAULT: DENY ALL
+    // ========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
