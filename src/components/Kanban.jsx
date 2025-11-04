@@ -680,7 +680,7 @@ const Kanban = ({ onEditOffer }) => {
                               )}
                             </div>
                           );
-                        })}
+                        }}
                       </Draggable>
                     ))}
                     {provided.placeholder}
