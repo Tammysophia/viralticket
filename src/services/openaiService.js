@@ -57,41 +57,28 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
+    const systemPrompts = {
       sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
-Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
+Analise os comentários fornecidos e crie uma oferta irresistível que atenda às dores e desejos do público.
 
-Comentários:
-${comments}
-
-Crie uma oferta com:
-1. Título impactante (emoji + frase poderosa)
-2. Subtítulo persuasivo
-3. 4 bullets de benefícios (começando com ✅)
-4. Call-to-action convincente
-5. Bônus irresistível
-
-Formato JSON:
+Retorne APENAS um JSON válido com esta estrutura:
 {
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
+  "title": "título impactante com emoji",
+  "subtitle": "subtítulo persuasivo",
+  "bullets": ["✅ benefício 1", "✅ benefício 2", "✅ benefício 3", "✅ benefício 4"],
+  "cta": "call-to-action convincente",
+  "bonus": "bônus irresistível"
 }`,
       sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
-Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
+Analise os comentários fornecidos e crie uma oferta personalizada e persuasiva.
 
-Comentários:
-${comments}
-
-Crie uma oferta completa com elementos persuasivos em formato JSON:
+Retorne APENAS um JSON válido com esta estrutura:
 {
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
+  "title": "título impactante com emoji",
+  "subtitle": "subtítulo persuasivo",
+  "bullets": ["✅ benefício 1", "✅ benefício 2", "✅ benefício 3", "✅ benefício 4"],
+  "cta": "call-to-action convincente",
+  "bonus": "bônus irresistível"
 }`
     };
 
@@ -106,7 +93,11 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         messages: [
           {
             role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
+            content: systemPrompts[agent] || systemPrompts.sophia,
+          },
+          {
+            role: 'user',
+            content: `Analise estes comentários e crie uma oferta:\n\n${comments}`,
           },
         ],
         temperature: 0.8,

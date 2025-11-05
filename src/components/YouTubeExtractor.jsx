@@ -61,27 +61,17 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     }
 
     setLoading(true);
+    setComments([]); // Limpar comentários anteriores
     
     try {
-      // Verificar conexão antes de buscar
-      const connectionCheck = await verifyAPIConnection('youtube');
+      console.log('VT: Iniciando extração de comentários...');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Buscar comentários reais
+      // Buscar comentários reais (a verificação de API key está dentro do fetchMultipleVideosComments)
       const fetchedComments = await fetchMultipleVideosComments(validUrls, 50);
+      console.log('VT: Comentários extraídos:', fetchedComments.length);
       
       if (fetchedComments.length === 0) {
-        error('Nenhum comentário encontrado nos vídeos');
-        setLoading(false);
+        error('❌ Nenhum comentário encontrado nos vídeos');
         return;
       }
 
@@ -92,14 +82,15 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
           urls: user.dailyUsage.urls + validUrls.length,
         },
       });
-      success(`${fetchedComments.length} comentários extraídos com sucesso!`);
+      success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
     } catch (err) {
-      console.error('Erro ao extrair comentários:', err);
+      console.error('VT: Erro ao extrair comentários:', err);
+      setComments([]);
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        error(`⚠️ Erro: ${err.message}`);
       } else {
-        error('⚡ Erro ao extrair comentários. Tente novamente!');
+        error('❌ Erro ao extrair comentários. Verifique sua chave de API no painel Admin.');
       }
     } finally {
       setLoading(false);

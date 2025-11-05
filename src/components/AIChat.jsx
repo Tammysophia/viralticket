@@ -84,23 +84,14 @@ const AIChat = ({ initialText = '' }) => {
     }
 
     setLoading(true);
+    setOutput(null); // Limpar output anterior
 
     try {
-      // Verificar conexão antes de gerar
-      const connectionCheck = await verifyAPIConnection();
+      console.log('VT: Iniciando geração de oferta...');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Gerar oferta com OpenAI
+      // Gerar oferta com OpenAI (a verificação de API key está dentro do generateOffer)
       const offerData = await generateOffer(inputText, selectedAgent);
+      console.log('VT: Oferta gerada:', offerData);
 
       setOutput(offerData);
       updateUser({
@@ -109,7 +100,7 @@ const AIChat = ({ initialText = '' }) => {
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('Oferta gerada com sucesso!');
+      success('✅ Oferta gerada com sucesso!');
       setApiConnected(true);
 
       // VT: Salvar oferta automaticamente no Firestore
@@ -126,18 +117,19 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
+        console.log('VT: Oferta salva no Kanban:', offerId);
         toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
       } catch (saveError) {
         console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        toast.error('⚠️ Oferta gerada mas não foi salva no Kanban');
       }
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
+      console.error('VT: Erro ao gerar oferta:', err);
+      setOutput(null);
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        error(`⚠️ Erro: ${err.message}`);
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        error('❌ Erro ao gerar oferta. Verifique sua chave de API no painel Admin.');
       }
     } finally {
       setLoading(false);
