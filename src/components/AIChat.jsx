@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
@@ -6,10 +6,12 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
+import toast from 'react-hot-toast';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
-  const [inputText, setInputText] = useState(initialText);
+  const [inputText, setInputText] = useState('');
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
@@ -17,6 +19,13 @@ const AIChat = ({ initialText = '' }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+
+  // Atualizar inputText apenas quando initialText mudar
+  useEffect(() => {
+    if (initialText) {
+      setInputText(initialText);
+    }
+  }, [initialText]);
 
   const agents = [
     {
