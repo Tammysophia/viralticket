@@ -4,6 +4,51 @@ import { db } from '../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 /**
+ * VT: Gera oferta MOCK para demonstração (quando não há API key)
+ * @param {string} comments - Comentários para análise
+ * @param {string} agent - Agente IA
+ * @returns {Promise<Object>} - Oferta mock
+ */
+const generateMockOffer = async (comments, agent) => {
+  console.log('🎭 VT: Gerando oferta DEMO (modo demonstração)...');
+  
+  // Simular delay da API
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  const mockOffers = {
+    sophia: {
+      title: '🔥 Transforme Seu Medo em Motivação',
+      subtitle: 'Descubra como superar bloqueios emocionais e alcançar seus objetivos',
+      bullets: [
+        '✅ Método comprovado para vencer o medo do fracasso',
+        '✅ Técnicas práticas aplicáveis hoje mesmo',
+        '✅ Comunidade de apoio com pessoas na mesma jornada',
+        '✅ Garantia de 7 dias ou seu dinheiro de volta',
+      ],
+      cta: '🚀 QUERO TRANSFORMAR MINHA VIDA AGORA!',
+      bonus: '🎁 BÔNUS: E-book "Os 7 Passos Para Superar Qualquer Medo"',
+    },
+    sofia: {
+      title: '🌟 Desperte Seu Potencial Máximo',
+      subtitle: 'Um guia completo para alcançar seus sonhos sem limitações',
+      bullets: [
+        '✅ Estratégias testadas por milhares de pessoas',
+        '✅ Passo a passo simples e direto',
+        '✅ Resultados visíveis em 30 dias',
+        '✅ Suporte dedicado durante toda sua jornada',
+      ],
+      cta: '🚀 COMEÇAR MINHA TRANSFORMAÇÃO!',
+      bonus: '🎁 BÔNUS: Planilha de Acompanhamento de Resultados',
+    },
+  };
+  
+  console.log('✅ VT: Oferta DEMO gerada com sucesso!');
+  console.log('💡 VT: DICA: Configure uma API Key real no painel Admin para usar a IA de verdade!');
+  
+  return mockOffers[agent] || mockOffers.sophia;
+};
+
+/**
  * VT: Busca o prompt do agente no Firestore
  * @param {string} agentId - ID do agente (sophia, sofia)
  * @returns {Promise<string|null>} - Prompt personalizado ou null
@@ -178,8 +223,10 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     // 1. Obter API Key
     const apiKey = await getServiceAPIKey('openai');
     
-    if (!apiKey) {
-      throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
+    // VT: MODO DEMONSTRAÇÃO - Se não tiver API key configurada
+    if (!apiKey || apiKey.includes('••••')) {
+      console.warn('⚠️ VT: API Key não configurada, usando MODO DEMONSTRAÇÃO');
+      return generateMockOffer(comments, agent);
     }
     console.log('🔑 VT: API Key obtida com sucesso');
 
