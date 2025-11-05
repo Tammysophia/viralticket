@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { Sparkles, Copy } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -118,7 +119,7 @@ const AIChat = ({ initialText = '' }) => {
           youtubeLinks: []
         });
         console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
         console.error('VT: Erro ao salvar oferta:', saveError);
         // VT: Não bloqueia o fluxo se falhar ao salvar
