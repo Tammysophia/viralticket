@@ -53,8 +53,17 @@ export const generateOffer = async (comments, agent = 'sophia') => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
+    console.log('🔑 VT: Chave OpenAI obtida:', apiKey ? 'SIM' : 'NÃO');
+    console.log('🔑 VT: Tipo da chave:', typeof apiKey);
+    console.log('🔑 VT: Primeira parte:', apiKey?.substring(0, 3));
+    
     if (!apiKey) {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
+    }
+    
+    // Verificar se é uma chave mockada
+    if (apiKey.includes('•') || apiKey.includes('*')) {
+      throw new Error('A chave da API está mockada. Configure uma chave real no painel Admin → API Keys');
     }
 
     const systemPrompts = {

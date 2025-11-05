@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Key, RefreshCw, Trash2, Lock, Save, Shield } from 'lucide-react';
+import { Plus, Key, RefreshCw, Trash2, Lock, Save, Shield, AlertTriangle } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import Modal from './Modal';
@@ -156,6 +156,11 @@ const AdminAPIKeys = () => {
     }
   };
 
+  // Verificar se há chaves mockadas
+  const hasMockedKeys = apiKeys.some(key => 
+    key.key && (key.key.includes('•') || key.key.includes('*') || key.key.length < 20)
+  );
+
   return (
     <>
       <Card>
@@ -165,6 +170,31 @@ const AdminAPIKeys = () => {
             Nova Chave
           </Button>
         </div>
+
+        {/* Alerta de chaves mockadas */}
+        {hasMockedKeys && (
+          <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border-2 border-yellow-500/30">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-bold text-yellow-400 mb-2">⚠️ Chaves Mockadas Detectadas!</h4>
+                <p className="text-sm text-yellow-300/90 mb-3">
+                  Você está usando chaves de demonstração que <strong>NÃO FUNCIONAM</strong> com as APIs reais.
+                  O sistema falhará ao extrair comentários ou gerar ofertas.
+                </p>
+                <div className="flex flex-col gap-2 text-xs text-yellow-200/80">
+                  <p>📝 <strong>Para corrigir:</strong></p>
+                  <ol className="list-decimal list-inside space-y-1 ml-2">
+                    <li>Obtenha chaves reais da OpenAI e YouTube (veja CONFIGURAR_API_KEYS.md)</li>
+                    <li>Clique em "Editar" nas chaves abaixo</li>
+                    <li>Cole suas chaves REAIS</li>
+                    <li>Salve as alterações</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           {apiKeys.map((key) => (

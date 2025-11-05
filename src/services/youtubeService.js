@@ -72,8 +72,17 @@ export const fetchVideoComments = async (videoUrl, maxResults = 100) => {
     // Buscar chave API
     const apiKey = await getServiceAPIKey('youtube');
     
+    console.log('🔑 VT: Chave YouTube obtida:', apiKey ? 'SIM' : 'NÃO');
+    console.log('🔑 VT: Tipo da chave:', typeof apiKey);
+    console.log('🔑 VT: Primeira parte:', apiKey?.substring(0, 5));
+    
     if (!apiKey) {
       throw new Error('Chave da API do YouTube não configurada no painel administrativo');
+    }
+    
+    // Verificar se é uma chave mockada
+    if (apiKey.includes('•') || apiKey.includes('*')) {
+      throw new Error('A chave da API está mockada. Configure uma chave real no painel Admin → API Keys');
     }
 
     // Extrair ID do vídeo
