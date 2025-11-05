@@ -87,10 +87,16 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     } catch (err) {
       console.error('VT: Erro ao extrair comentários:', err);
       setComments([]);
+      
+      // Mostrar mensagem específica para admin ou genérica para usuário
       if (user.isAdmin) {
-        error(`⚠️ Erro: ${err.message}`);
+        // Admin vê detalhes técnicos
+        const adminMsg = err.adminMessage || err.message || 'Erro desconhecido';
+        error(`⚠️ [ADMIN] ${adminMsg}`);
       } else {
-        error('❌ Erro ao extrair comentários. Verifique sua chave de API no painel Admin.');
+        // Usuário vê mensagem genérica
+        const userMsg = err.userMessage || '🔧 Sistema em manutenção. Tente novamente em instantes.';
+        error(userMsg);
       }
     } finally {
       setLoading(false);

@@ -126,10 +126,16 @@ const AIChat = ({ initialText = '' }) => {
     } catch (err) {
       console.error('VT: Erro ao gerar oferta:', err);
       setOutput(null);
+      
+      // Mostrar mensagem específica para admin ou genérica para usuário
       if (user.isAdmin) {
-        error(`⚠️ Erro: ${err.message}`);
+        // Admin vê detalhes técnicos
+        const adminMsg = err.adminMessage || err.message || 'Erro desconhecido';
+        error(`⚠️ [ADMIN] ${adminMsg}`);
       } else {
-        error('❌ Erro ao gerar oferta. Verifique sua chave de API no painel Admin.');
+        // Usuário vê mensagem genérica
+        const userMsg = err.userMessage || '🔧 Sistema em manutenção. Tente novamente em instantes.';
+        error(userMsg);
       }
     } finally {
       setLoading(false);
