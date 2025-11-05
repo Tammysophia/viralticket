@@ -63,20 +63,16 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     setLoading(true);
     
     try {
-      // Verificar conexão antes de buscar
+      // VT: Verificar modo (não bloqueia, usa mock se necessário)
+      console.log('🔍 VT: Verificando modo YouTube...');
       const connectionCheck = await verifyAPIConnection('youtube');
+      console.log('🔍 VT: Modo YouTube:', connectionCheck.isMock ? 'MOCK' : 'API REAL');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
-        }
-        setLoading(false);
-        return;
+      if (connectionCheck.isMock) {
+        console.log('🎭 VT: Usando comentários mock');
       }
 
-      // Buscar comentários reais
+      // VT: Buscar comentários (mock ou real, dependendo da chave)
       const fetchedComments = await fetchMultipleVideosComments(validUrls, 50);
       
       if (fetchedComments.length === 0) {
@@ -92,15 +88,11 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
           urls: user.dailyUsage.urls + validUrls.length,
         },
       });
-      success(`${fetchedComments.length} comentários extraídos com sucesso!`);
+      success(`✅ ${fetchedComments.length} comentários extraídos!`);
       setApiConnected(true);
     } catch (err) {
-      console.error('Erro ao extrair comentários:', err);
-      if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
-      } else {
-        error('⚡ Erro ao extrair comentários. Tente novamente!');
-      }
+      console.error('❌ VT: Erro ao extrair comentários:', err);
+      error('❌ Erro ao extrair comentários. Tente novamente!');
     } finally {
       setLoading(false);
     }
