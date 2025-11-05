@@ -76,23 +76,31 @@ const AIChat = ({ initialText = '' }) => {
     }
 
     setLoading(true);
+    console.log('🚀 VT: Iniciando geração de oferta...');
 
     try {
       // Verificar conexão antes de gerar
+      console.log('🔍 VT: Verificando conexão com OpenAI...');
       const connectionCheck = await verifyAPIConnection();
+      console.log('🔍 VT: Resultado da verificação:', connectionCheck);
       
       if (!connectionCheck.success) {
+        console.error('❌ VT: Falha na conexão:', connectionCheck.message);
         if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
+          error(`❌ API OpenAI: ${connectionCheck.message}`);
         } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
+          error('⚠️ Erro ao conectar com a IA. Contate o administrador.');
         }
         setLoading(false);
         return;
       }
+      
+      console.log('✅ VT: Conexão OK, gerando oferta...');
 
       // Gerar oferta com OpenAI
+      console.log('🤖 VT: Chamando API OpenAI...');
       const offerData = await generateOffer(inputText, selectedAgent);
+      console.log('✅ VT: Oferta gerada:', offerData);
 
       setOutput(offerData);
       updateUser({
@@ -101,11 +109,12 @@ const AIChat = ({ initialText = '' }) => {
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('Oferta gerada com sucesso!');
+      success('✅ Oferta gerada com sucesso!');
       setApiConnected(true);
 
       // VT: Salvar oferta automaticamente no Firestore
       try {
+        console.log('💾 VT: Salvando oferta no Firestore...');
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
@@ -118,18 +127,19 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
+        console.log('✅ VT: Oferta salva com ID:', offerId);
         success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        console.error('❌ VT: Erro ao salvar oferta:', saveError);
+        error('⚠️ Oferta gerada mas não foi salva no Kanban');
       }
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
+      console.error('❌ VT: Erro ao gerar oferta:', err);
+      console.error('❌ VT: Stack:', err.stack);
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        error(`❌ Erro: ${err.message}`);
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        error('❌ Erro ao gerar oferta. Verifique a configuração da API.');
       }
     } finally {
       setLoading(false);
