@@ -115,24 +115,25 @@ export const useAPIKeys = () => {
         {
           id: '1',
           name: 'YouTube Data API',
-          key: 'AIza************************',
+          key: 'AIzaSyB0000000000000000000000000000',
           type: 'youtube',
           status: 'active',
           quota: 85,
           lastUsed: new Date().toISOString(),
-          encrypted: true,
+          encrypted: false,
         },
         {
           id: '2',
           name: 'OpenAI API',
-          key: 'sk-••••••••••••••••••••••••',
+          key: 'sk-proj-test1234567890abcdefghijklmnopqrstuvwxyz1234567890',
           type: 'openai',
           status: 'active',
           quota: 60,
           lastUsed: new Date().toISOString(),
-          encrypted: true,
+          encrypted: false,
         },
       ];
+      console.log('🔑 VT: Criando chaves mock:', mockKeys);
       setApiKeys(mockKeys);
       localStorage.setItem('viralticket_api_keys', JSON.stringify(mockKeys));
     }

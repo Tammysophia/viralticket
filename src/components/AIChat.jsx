@@ -6,6 +6,7 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -75,36 +76,42 @@ const AIChat = ({ initialText = '' }) => {
     }
 
     setLoading(true);
+    console.log('🚀 VT: Iniciando geração de oferta...');
 
     try {
-      // Verificar conexão antes de gerar
+      // VT: Verificar conexão (não bloqueia se falhar, usa mock)
+      console.log('🔍 VT: Verificando modo de operação...');
       const connectionCheck = await verifyAPIConnection();
+      console.log('🔍 VT: Modo:', connectionCheck.isMock ? 'MOCK' : 'API REAL');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
-        setLoading(false);
-        return;
+      if (connectionCheck.isMock) {
+        console.log('🎭 VT: Usando modo MOCK - oferta será gerada localmente');
+      } else {
+        console.log('✅ VT: API OpenAI conectada');
       }
 
-      // Gerar oferta com OpenAI
+      // VT: Gerar oferta (usa mock automaticamente se não tiver API real)
+      console.log('🤖 VT: Gerando oferta...');
       const offerData = await generateOffer(inputText, selectedAgent);
+      console.log('✅ VT: Oferta gerada:', offerData);
 
+      // VT: Mostrar a oferta na tela
       setOutput(offerData);
+      
+      // VT: Atualizar contador de uso
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('Oferta gerada com sucesso!');
+      
+      success('✅ Oferta gerada com sucesso!');
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      // VT: Salvar oferta automaticamente no Firestore/localStorage
       try {
+        console.log('💾 VT: Salvando oferta...');
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
@@ -117,18 +124,19 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        console.log('✅ VT: Oferta salva com ID:', offerId);
+        success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        console.error('❌ VT: Erro ao salvar oferta:', saveError);
+        // VT: Não mostra erro, pois a oferta foi gerada com sucesso
       }
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
+      console.error('❌ VT: Erro ao gerar oferta:', err);
+      console.error('❌ VT: Stack:', err.stack);
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        error(`❌ Erro: ${err.message}`);
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        error('❌ Erro ao gerar oferta. Verifique a configuração da API.');
       }
     } finally {
       setLoading(false);
