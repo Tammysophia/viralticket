@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
@@ -6,6 +6,8 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
+import toast from 'react-hot-toast';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -17,6 +19,13 @@ const AIChat = ({ initialText = '' }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+
+  // Atualizar inputText quando initialText mudar (comentários do YouTube)
+  useEffect(() => {
+    if (initialText) {
+      setInputText(initialText);
+    }
+  }, [initialText]);
 
   const agents = [
     {
@@ -105,7 +114,7 @@ const AIChat = ({ initialText = '' }) => {
 
       // VT: Salvar oferta automaticamente no Firestore
       try {
-        const offerId = await createOfferFromAI({
+        const offerData_toSave = {
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
           agent: selectedAgent,
@@ -116,12 +125,14 @@ const AIChat = ({ initialText = '' }) => {
             adDescription: offerData.subtitle
           },
           youtubeLinks: []
-        });
+        };
+        
+        const offerId = await createOfferFromAI(offerData_toSave);
         console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        toast.success('✅ Oferta salva no Kanban!', { duration: 3000 });
       } catch (saveError) {
         console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        toast.error('⚠️ Oferta gerada, mas não foi salva no Kanban', { duration: 3000 });
       }
     } catch (err) {
       console.error('Erro ao gerar oferta:', err);

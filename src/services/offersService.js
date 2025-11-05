@@ -47,10 +47,18 @@ export const createOfferFromAI = async (data) => {
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
     offers.push({
       id: mockId,
-      ...data,
+      userId: data.userId,
+      title: data.title,
+      agent: data.agent || 'IA',
       status: 'execucao',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      copy: data.copy || {
+        page: '',
+        adPrimary: '',
+        adHeadline: '',
+        adDescription: ''
+      },
       modeling: {
         fanpageUrl: '',
         salesPageUrl: '',
@@ -61,6 +69,7 @@ export const createOfferFromAI = async (data) => {
         trend: null,
         modelavel: false
       },
+      youtubeLinks: data.youtubeLinks || [],
       attachments: { files: [] }
     });
     localStorage.setItem('vt_offers', JSON.stringify(offers));
@@ -70,10 +79,18 @@ export const createOfferFromAI = async (data) => {
   try {
     const offerRef = doc(collection(db, 'offers'));
     const offerData = {
-      ...data,
+      userId: data.userId,
+      title: data.title,
+      agent: data.agent || 'IA',
       status: 'execucao', // VT: Nova oferta começa em execução
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      copy: data.copy || {
+        page: '',
+        adPrimary: '',
+        adHeadline: '',
+        adDescription: ''
+      },
       modeling: {
         fanpageUrl: '',
         salesPageUrl: '',
@@ -89,7 +106,7 @@ export const createOfferFromAI = async (data) => {
     };
     
     await setDoc(offerRef, offerData);
-    console.log('VT: Oferta criada:', offerRef.id);
+    console.log('VT: Oferta criada com sucesso:', offerRef.id);
     return offerRef.id;
   } catch (error) {
     console.error('VT: Erro ao criar oferta:', error);
