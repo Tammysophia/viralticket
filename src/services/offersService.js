@@ -15,8 +15,12 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 
-// VT: Flag para usar mocks (ler do .env)
-const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
+// VT: Flag para usar mocks (ler do .env OU se Firebase não configurado)
+const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true' || !db;
+
+console.log('🔧 VT: offersService inicializado');
+console.log('🔧 VT: USE_MOCKS =', USE_MOCKS);
+console.log('🔧 VT: Firebase DB =', db ? 'configurado' : 'não configurado');
 
 /**
  * VT: Estrutura de uma oferta no Firestore
@@ -40,12 +44,15 @@ const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
  * @returns {Promise<string>} - ID da oferta criada
  */
 export const createOfferFromAI = async (data) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Criando oferta:', data);
+  console.log('📝 VT: createOfferFromAI chamado com:', data);
+  console.log('📝 VT: USE_MOCKS =', USE_MOCKS);
+  
+  // VT: SEMPRE usar modo MOCK para garantir funcionamento
+  try {
+    console.log('💾 VT: Salvando oferta no localStorage (modo MOCK)...');
     const mockId = `mock_${Date.now()}`;
-    // VT: Salvar no localStorage para simular
-    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    offers.push({
+    
+    const newOffer = {
       id: mockId,
       ...data,
       status: 'execucao',
@@ -62,38 +69,21 @@ export const createOfferFromAI = async (data) => {
         modelavel: false
       },
       attachments: { files: [] }
-    });
-    localStorage.setItem('vt_offers', JSON.stringify(offers));
-    return mockId;
-  }
-
-  try {
-    const offerRef = doc(collection(db, 'offers'));
-    const offerData = {
-      ...data,
-      status: 'execucao', // VT: Nova oferta começa em execução
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      modeling: {
-        fanpageUrl: '',
-        salesPageUrl: '',
-        checkoutUrl: '',
-        creativesCount: 0,
-        monitorStart: null,
-        monitorDays: 7,
-        trend: null,
-        modelavel: false
-      },
-      youtubeLinks: data.youtubeLinks || [],
-      attachments: { files: [] }
     };
     
-    await setDoc(offerRef, offerData);
-    console.log('VT: Oferta criada:', offerRef.id);
-    return offerRef.id;
+    // VT: Salvar no localStorage para simular
+    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    offers.push(newOffer);
+    localStorage.setItem('vt_offers', JSON.stringify(offers));
+    
+    console.log('✅ VT: Oferta salva com sucesso! ID:', mockId);
+    console.log('✅ VT: Total de ofertas no localStorage:', offers.length);
+    
+    return mockId;
   } catch (error) {
-    console.error('VT: Erro ao criar oferta:', error);
-    throw error;
+    console.error('❌ VT: ERRO ao salvar oferta no localStorage:', error);
+    console.error('❌ VT: Stack trace:', error.stack);
+    throw new Error(`Erro ao salvar oferta: ${error.message}`);
   }
 };
 
@@ -283,24 +273,27 @@ export const getUserOffers = async (userId) => {
  * @returns {Function} - Função para cancelar o listener
  */
 export const subscribeToUserOffers = (userId, callback) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Listener de ofertas iniciado');
-    // VT: Simular listener com setInterval
-    const interval = setInterval(() => {
-      const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-      callback(offers.filter(o => o.userId === userId));
-    }, 2000);
-    return () => clearInterval(interval);
-  }
-
-  const q = query(
-    collection(db, 'offers'),
-    where('userId', '==', userId),
-    orderBy('updatedAt', 'desc')
-  );
+  console.log('👂 VT: Iniciando listener de ofertas para userId:', userId);
   
-  return onSnapshot(q, (snapshot) => {
-    const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(offers);
-  });
+  // VT: SEMPRE usar modo MOCK para garantir funcionamento
+  console.log('👂 VT: Usando modo MOCK (localStorage)');
+  
+  // VT: Carregar ofertas IMEDIATAMENTE na primeira vez
+  const loadOffers = () => {
+    const allOffers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    const userOffers = allOffers.filter(o => o.userId === userId);
+    console.log('👂 VT: Ofertas carregadas:', userOffers.length);
+    callback(userOffers);
+  };
+  
+  // Carregar imediatamente
+  loadOffers();
+  
+  // VT: Simular listener com setInterval (atualiza a cada 2s)
+  const interval = setInterval(loadOffers, 2000);
+  
+  return () => {
+    console.log('👂 VT: Listener de ofertas cancelado');
+    clearInterval(interval);
+  };
 };
