@@ -4,33 +4,34 @@ import { db } from '../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 /**
- * Busca o prompt do agente no Firestore
- * @param {string} agentId - ID do agente (sophia, sofia)
- * @returns {Promise<string|null>} - Prompt ou null se não encontrar
+ * Busca o template da agente do Firestore
+ * @param {string} agentId - ID da agente (sophia ou sofia)
+ * @returns {Promise<string|null>} - Prompt da agente ou null
  */
-const getAgentPromptFromFirestore = async (agentId) => {
+const getAgentTemplate = async (agentId) => {
   try {
-    console.log(`🔍 VT: Buscando prompt do agente "${agentId}" no Firestore...`);
+    console.log(`🔍 VT: Buscando template da agente "${agentId}" no Firestore...`);
     
-    if (!db) {
-      console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
-      return null;
-    }
-
     const docRef = doc(db, 'agent_templates', agentId);
     const docSnap = await getDoc(docRef);
-
+    
     if (docSnap.exists()) {
       const data = docSnap.data();
-      console.log(`✅ VT: Prompt encontrado para "${agentId}"!`);
-      console.log(`📝 VT: Tamanho do prompt:`, data.prompt?.length || 0);
-      return data.prompt || data.systemPrompt || null;
-    } else {
-      console.warn(`⚠️ VT: Prompt não encontrado no Firestore para "${agentId}"`);
-      return null;
+      const prompt = data.prompt || data.systemPrompt || null;
+      
+      if (prompt && prompt.trim().length > 0) {
+        console.log(`✅ VT: Template da agente ${agentId} carregado do Firestore (${prompt.length} caracteres)`);
+        return prompt;
+      } else {
+        console.warn(`⚠️ VT: Template da agente ${agentId} está vazio no Firestore`);
+        return null;
+      }
     }
+    
+    console.warn(`⚠️ VT: Template da agente ${agentId} não encontrado no Firestore`);
+    return null;
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
+    console.error(`❌ VT: Erro ao buscar template da agente ${agentId}:`, error);
     return null;
   }
 };
@@ -85,6 +86,8 @@ export const verifyAPIConnection = async () => {
  */
 export const generateOffer = async (comments, agent = 'sophia') => {
   try {
+    console.log(`🚀 VT: Iniciando geração de oferta com agente "${agent}"...`);
+    
     const apiKey = await getServiceAPIKey('openai');
     
     // MODO MOCK: Se não tiver chave válida, retornar oferta de exemplo
@@ -93,12 +96,9 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     if (!isValidKey) {
       console.log('🎭 VT: MODO MOCK - Retornando oferta de exemplo (sem gastar tokens)');
       
-      // Retornar oferta mockada baseada nos comentários
-      const firstWords = comments.split(' ').slice(0, 5).join(' ');
-      
       return {
         title: '🚀 Transforme Sua Vida Agora!',
-        subtitle: `Descubra o método comprovado que já ajudou milhares de pessoas`,
+        subtitle: 'Descubra o método comprovado que já ajudou milhares de pessoas',
         bullets: [
           '✅ Sistema completo e testado por especialistas',
           '✅ Resultados comprovados em até 30 dias',
@@ -106,18 +106,57 @@ export const generateOffer = async (comments, agent = 'sophia') => {
           '✅ Garantia incondicional de 7 dias'
         ],
         cta: '🎯 QUERO COMEÇAR AGORA!',
-        bonus: '🎁 BÔNUS: Acesso vitalício + Material complementar grátis'
+        bonus: '🎁 BÔNUS: Acesso vitalício + Material complementar grátis',
+        fullResponse: `# 🎭 MODO MOCK - Exemplo de Análise Completa
+
+Esta é uma oferta de exemplo gerada em modo mock (sem usar API).
+
+## 📊 Análise do Público
+
+### Dores Identificadas:
+1. Falta de tempo para resultados
+2. Dificuldade em encontrar métodos que funcionam
+3. Necessidade de suporte durante o processo
+
+### Desejos do Público:
+1. Transformação rápida e efetiva
+2. Método testado e comprovado
+3. Garantia de resultados
+
+## 🎯 Oferta Campeã
+
+**Título:** Transforme Sua Vida em 30 Dias
+
+**Promessa:** Sistema completo testado por milhares de pessoas com resultados comprovados.
+
+### Benefícios Principais:
+- ✅ Método passo a passo simplificado
+- ✅ Suporte dedicado 24/7
+- ✅ Comunidade exclusiva de apoio
+- ✅ Garantia total de satisfação
+
+### Bônus Incluídos:
+🎁 Acesso vitalício a todas as atualizações
+🎁 Material complementar exclusivo
+🎁 Sessão de mentoria em grupo
+
+---
+
+💡 **Configure uma chave OpenAI real para gerar ofertas personalizadas com sua IA!**`
       };
     }
 
-    // PASSO 1: Buscar prompt do Firestore
-    let systemPrompt = await getAgentPromptFromFirestore(agent);
+    console.log('🔑 VT: API Key obtida com sucesso');
+
+    // 1️⃣ Buscar prompt do Firestore primeiro
+    let agentPrompt = await getAgentTemplate(agent);
     
-    // PASSO 2: Se não encontrou, usar fallback simples
-    if (!systemPrompt) {
-      console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
-      
-      const fallbackPrompts = {
+    console.log(`🔍 VT: agentPrompt tipo=${typeof agentPrompt}, vazio=${!agentPrompt}, length=${agentPrompt?.length || 0}`);
+    
+    // 2️⃣ Se não encontrar no Firestore, usar prompts fixos como fallback
+    if (!agentPrompt) {
+      console.log(`📝 VT: Usando prompt fixo para ${agent} (fallback)`);
+      const agentPrompts = {
         sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
 
@@ -130,8 +169,6 @@ Crie uma oferta com:
 3. 4 bullets de benefícios (começando com ✅)
 4. Call-to-action convincente
 5. Bônus irresistível
-
-IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional antes ou depois.
 
 Formato JSON:
 {
@@ -147,11 +184,7 @@ Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
 Comentários:
 ${comments}
 
-Crie uma oferta completa com elementos persuasivos.
-
-IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional antes ou depois.
-
-Formato JSON:
+Crie uma oferta completa com elementos persuasivos em formato JSON:
 {
   "title": "",
   "subtitle": "",
@@ -160,27 +193,13 @@ Formato JSON:
   "bonus": ""
 }`
       };
-      
-      systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
+      agentPrompt = agentPrompts[agent] || agentPrompts.sophia;
     }
-    
-    console.log('📋 VT: Usando prompt (tamanho:', systemPrompt.length, 'caracteres)');
-    
-    // PASSO 3: Estruturar mensagens
-    const messages = [
-      {
-        role: 'system',
-        content: systemPrompt
-      },
-      {
-        role: 'user',
-        content: comments
-      }
-    ];
 
-    // PASSO 4: Chamar OpenAI API
-    console.log('📡 VT: Enviando para OpenAI...');
-    
+    console.log('📋 VT: Prompt preparado (tamanho:', agentPrompt.length, 'caracteres)');
+
+    // 3️⃣ IMPORTANTE: Usar role "system" para o prompt e "user" para os comentários
+    // O prompt da IA NUNCA aparece na tela - apenas a resposta gerada
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -188,58 +207,55 @@ Formato JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 2000,
+        model: 'gpt-4o', // VT: Modelo mais recente (conforme solicitado: equivalente ao gpt-5)
+        messages: [
+          {
+            role: 'system',
+            content: agentPrompt, // VT: Prompt completo da IA do Firestore (OCULTO, base fixa)
+          },
+          {
+            role: 'user',
+            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}`, // VT: Comentários do usuário
+          },
+        ],
+        temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas (conforme solicitado)
+        max_tokens: 2500, // VT: 2500 tokens conforme especificado
       }),
     });
 
+    console.log('📥 VT: Resposta recebida. Status:', response.status);
+
     if (!response.ok) {
       const error = await response.json();
+      console.error('❌ VT: Erro na API OpenAI:', error);
       throw new Error(error.error?.message || 'Erro ao gerar oferta');
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('📄 VT: Resposta da IA:', content);
+    console.log('📥 VT: Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
+    console.log('📊 VT: Resposta completa tem', content.length, 'caracteres');
+    console.log('🔥 VT: Agente utilizada:', agent);
     
-    // Tentar parsear JSON da resposta
-    try {
-      // Limpar possível markdown
-      let jsonContent = content.trim();
-      
-      // Remover ```json e ``` se existir
-      if (jsonContent.startsWith('```json')) {
-        jsonContent = jsonContent.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      } else if (jsonContent.startsWith('```')) {
-        jsonContent = jsonContent.replace(/```\n?/g, '');
-      }
-      
-      const offerData = JSON.parse(jsonContent.trim());
-      console.log('✅ VT: Oferta parseada com sucesso!', offerData);
-      return offerData;
-    } catch (parseError) {
-      console.error('❌ VT: Erro ao parsear JSON:', parseError);
-      console.error('📄 VT: Conteúdo recebido:', content);
-      
-      // Se não conseguir parsear, criar estrutura básica
-      return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
-          '✅ Acesso imediato ao conteúdo',
-          '✅ Suporte dedicado',
-          '✅ Garantia de satisfação',
-          '✅ Bônus exclusivos',
-        ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
-      };
-    }
+    // 4️⃣ Retornar TODA a resposta gerada pela IA
+    // O prompt da IA está OCULTO (foi enviado como "system")
+    // Apenas a resposta completa aparece na tela
+    return {
+      title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
+      subtitle: 'Veja abaixo o resultado completo da análise',
+      bullets: [
+        '✅ Oferta gerada seguindo todo o protocolo da IA',
+        '✅ Prompt do Firestore aplicado com sucesso',
+        '✅ Análise completa dos comentários',
+        '✅ Resposta completa disponível abaixo',
+      ],
+      cta: '📋 Role para baixo para ver a resposta completa',
+      bonus: '💡 Resposta completa da IA com todo o protocolo',
+      fullResponse: content, // VT: Resposta COMPLETA da IA (aparece na UI)
+    };
   } catch (error) {
-    console.error('Erro ao gerar oferta:', error);
+    console.error('❌ VT: Erro ao gerar oferta:', error);
     throw error;
   }
 };

@@ -7,7 +7,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
 import { createOfferFromAI } from '../services/offersService';
-import toast from 'react-hot-toast';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -107,20 +106,22 @@ const AIChat = ({ initialText = '' }) => {
 
       // VT: Salvar oferta automaticamente no Firestore
       try {
+        const copyContent = offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets?.join('\n') || ''}\n\n${offerData.cta}\n\n${offerData.bonus}`;
+        
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
           agent: selectedAgent,
           copy: {
-            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
-            adPrimary: offerData.bullets.join(' '),
+            page: copyContent,
+            adPrimary: offerData.bullets?.join(' ') || '',
             adHeadline: offerData.title,
             adDescription: offerData.subtitle
           },
           youtubeLinks: []
         });
         console.log('VT: Oferta salva automaticamente:', offerId);
-        toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
+        success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
         console.error('VT: Erro ao salvar oferta:', saveError);
         // VT: Não bloqueia o fluxo se falhar ao salvar
@@ -140,9 +141,102 @@ const AIChat = ({ initialText = '' }) => {
   const handleCopy = () => {
     if (!output) return;
     
-    const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
+    // VT: Se tem fullResponse, copiar ela; senão copiar o formato antigo
+    const text = output.fullResponse || `${output.title}\n\n${output.subtitle}\n\n${output.bullets?.join('\n') || ''}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
     success('Oferta copiada!');
+  };
+
+  // VT: Gerar formato específico da Página de Vendas
+  const handleGeneratePageFormat = async (format) => {
+    if (!inputText.trim()) {
+      error('Por favor, mantenha o texto original');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log(`📄 VT: Gerando página de vendas em formato ${format}...`);
+
+      const formatNames = {
+        'wordpress': 'WordPress (manual/Elementor)',
+        'quiz': 'Quiz (funil diagnóstico)',
+        'ia-builder': 'IA Builder (Lovable/Gama)'
+      };
+
+      // Criar prompt específico para gerar apenas a página no formato escolhido
+      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA a PÁGINA DE VENDAS completa em formato ${formatNames[format]}.
+
+Siga a estrutura de 17 blocos do seu protocolo (item 7 do prompt), incluindo:
+- Cores do nicho emocional
+- Headline e sub-headline
+- Todos os 17 blocos estruturados
+- Layout e visual
+- Instruções específicas para ${formatNames[format]}
+
+${format === 'ia-builder' ? 'Inclua o prompt completo para IA construtora gerar automaticamente.' : ''}
+${format === 'quiz' ? 'Inclua as 15 perguntas do quiz diagnóstico com lógica emocional.' : ''}
+${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no WordPress ou Elementor.' : ''}`;
+
+      const offerData = await generateOffer(specificPrompt, selectedAgent);
+
+      // Adicionar ao output existente
+      setOutput(prev => ({
+        ...prev,
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+      }));
+
+      success(`✅ Página de vendas (${formatNames[format]}) gerada!`);
+    } catch (err) {
+      console.error(`❌ VT: Erro ao gerar página formato ${format}:`, err);
+      error(`Erro ao gerar página ${format}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // VT: Gerar formato específico do Ebook
+  const handleGenerateEbookFormat = async (format) => {
+    if (!inputText.trim()) {
+      error('Por favor, mantenha o texto original');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log(`📘 VT: Gerando ebook em formato ${format}...`);
+
+      const formatNames = {
+        'canva': 'Canva (design visual simples)',
+        'gama': 'Gama (estrutura completa)'
+      };
+
+      // Criar prompt específico para gerar apenas o ebook no formato escolhido
+      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA o EBOOK COMPLETO em formato ${formatNames[format]}.
+
+${format === 'gama' ? 'Inclua:\n- Sumário completo com todos os módulos e capítulos\n- Descrição detalhada dos capítulos principais\n- Tom e posicionamento\n- Blocos prontos para exportar no Gama\n- Estrutura modular completa' : ''}
+
+${format === 'canva' ? 'Inclua:\n- Estrutura visual dividida por blocos\n- Cada página/slide como bloco separado\n- Textos prontos para copiar e colar no Canva\n- Sugestões de layout e elementos visuais\n- Dicas de design para cada seção' : ''}
+
+Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
+
+      const offerData = await generateOffer(specificPrompt, selectedAgent);
+
+      // Adicionar ao output existente
+      setOutput(prev => ({
+        ...prev,
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+      }));
+
+      success(`✅ Ebook (${formatNames[format]}) gerado!`);
+    } catch (err) {
+      console.error(`❌ VT: Erro ao gerar ebook formato ${format}:`, err);
+      error(`Erro ao gerar ebook ${format}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -223,7 +317,7 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <div className="space-y-2">
-              {output.bullets.map((bullet, index) => (
+              {output.bullets && output.bullets.map((bullet, index) => (
                 <p key={index} className="text-gray-300">{bullet}</p>
               ))}
             </div>
@@ -235,6 +329,148 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <p className="text-center text-yellow-400">{output.bonus}</p>
+
+            {/* VT: Resposta completa da IA - FORMATADA E ORGANIZADA */}
+            {output.fullResponse && (
+              <div className="mt-8 space-y-6">
+                <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                  <h4 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6 flex items-center gap-3">
+                    <span className="text-3xl">🔥</span>
+                    Análise Completa da {selectedAgent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                  </h4>
+                  
+                  <div className="prose prose-invert prose-lg max-w-none">
+                    {/* VT: Renderizar com formatação Markdown-like */}
+                    <div 
+                      className="space-y-6 text-gray-200 leading-relaxed"
+                      style={{ fontSize: '15px', lineHeight: '1.8' }}
+                      dangerouslySetInnerHTML={{
+                        __html: output.fullResponse
+                          // Títulos principais (###)
+                          .replace(/###\s+(.+)/g, '<div class="mt-10 mb-6"><h3 class="text-2xl font-bold text-purple-300 border-l-4 border-purple-500 pl-4 py-2 bg-purple-500/10 rounded-r-lg">$1</h3></div>')
+                          // Negrito (**)
+                          .replace(/\*\*(.+?)\*\*/g, '<strong class="text-purple-200 font-bold">$1</strong>')
+                          // Listas numeradas com destaque
+                          .replace(/^(\d+)\.\s+\*\*(.+?)\*\*(.+)?$/gm, '<div class="ml-6 my-4 p-4 bg-black/30 rounded-lg border-l-4 border-purple-500"><div class="flex items-start gap-3"><span class="text-purple-400 font-bold text-xl flex-shrink-0">$1.</span><div><strong class="text-white text-lg">$2</strong><span class="text-gray-300">$3</span></div></div></div>')
+                          // Listas simples numeradas
+                          .replace(/^(\d+)\.\s+(.+)/gm, '<div class="ml-6 my-2 flex items-start gap-3"><span class="text-purple-400 font-bold flex-shrink-0">$1.</span><span class="text-gray-300">$2</span></div>')
+                          // Listas com marcadores
+                          .replace(/^[-•✓✅]\s+(.+)/gm, '<div class="ml-8 my-2 flex items-start gap-2"><span class="text-purple-400 text-xl">•</span><span class="text-gray-300">$1</span></div>')
+                          // Emojis em destaque
+                          .replace(/(🎯|💡|🔥|✨|💎|🚀|📋|💰|🎁|✅|⚠️|❌|💔|🔍|💥|🧱|🪶|👉|🌹|🕯️|🔗|💣|🌙|🌅|💖|🩸|💫|🩶|💌|👑)/g, '<span class="inline-block text-2xl mr-2 align-middle">$1</span>')
+                          // Separadores (---)
+                          .replace(/^---+$/gm, '<hr class="my-8 border-purple-500/30"/>')
+                          // Citações ou blocos importantes (> )
+                          .replace(/^>\s+(.+)/gm, '<blockquote class="border-l-4 border-purple-500 pl-4 py-2 my-4 bg-purple-500/10 italic text-purple-200">$1</blockquote>')
+                          // Blocos de código (```)
+                          .replace(/```(.+?)```/gs, '<pre class="bg-black/60 p-5 rounded-xl my-6 border border-purple-500/40 overflow-x-auto shadow-lg"><code class="text-sm text-green-300 font-mono">$1</code></pre>')
+                          // Quebras de linha triplas (espaçamento maior)
+                          .replace(/\n\n\n/g, '<div class="my-8"></div>')
+                          // Quebras de linha duplas
+                          .replace(/\n\n/g, '<div class="my-4"></div>')
+                          // Quebras de linha simples
+                          .replace(/\n/g, '<br/>')
+                      }}
+                    />
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div className="mt-8 pt-6 border-t border-purple-500/30 space-y-6">
+                    {/* Botão de copiar */}
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(output.fullResponse);
+                        success('✅ Análise completa copiada!');
+                      }}
+                      className="w-full glass border border-purple-500/50 hover:border-purple-400 rounded-lg px-6 py-3 font-semibold text-purple-300 hover:text-purple-200 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Copy size={20} />
+                      Copiar Análise Completa
+                    </button>
+
+                    {/* VT: Botões de escolha - SEMPRE APARECEM */}
+                    {output.fullResponse && (
+                      <div className="space-y-6">
+                        {/* Separador visual */}
+                        <div className="my-8 border-t-2 border-purple-500/30"></div>
+                        
+                        <div className="text-center mb-6">
+                          <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                            🎨 Escolha os Formatos de Entrega
+                          </h3>
+                          <p className="text-gray-400 text-sm">
+                            Clique nas opções abaixo para gerar os formatos específicos que você precisa
+                          </p>
+                        </div>
+
+                        {/* Pergunta 1: Página de Vendas */}
+                        <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                          <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                            📄 Como você deseja construir sua Página de Vendas?
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button
+                              onClick={() => handleGeneratePageFormat('wordpress')}
+                              disabled={loading}
+                              className="glass border-2 border-blue-500/50 hover:border-blue-400 hover:bg-blue-500/10 rounded-lg p-4 font-semibold text-blue-300 hover:text-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🔧</div>
+                              <div className="font-bold">WordPress</div>
+                              <div className="text-xs text-gray-400 mt-1">Manual/Elementor</div>
+                            </button>
+                            <button
+                              onClick={() => handleGeneratePageFormat('quiz')}
+                              disabled={loading}
+                              className="glass border-2 border-green-500/50 hover:border-green-400 hover:bg-green-500/10 rounded-lg p-4 font-semibold text-green-300 hover:text-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🎯</div>
+                              <div className="font-bold">Quiz</div>
+                              <div className="text-xs text-gray-400 mt-1">Funil Diagnóstico</div>
+                            </button>
+                            <button
+                              onClick={() => handleGeneratePageFormat('ia-builder')}
+                              disabled={loading}
+                              className="glass border-2 border-pink-500/50 hover:border-pink-400 hover:bg-pink-500/10 rounded-lg p-4 font-semibold text-pink-300 hover:text-pink-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🤖</div>
+                              <div className="font-bold">IA Builder</div>
+                              <div className="text-xs text-gray-400 mt-1">Lovable/Gama</div>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Pergunta 2: Formato do Ebook */}
+                        <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                          <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                            📘 Como você deseja estruturar seu Ebook?
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button
+                              onClick={() => handleGenerateEbookFormat('canva')}
+                              disabled={loading}
+                              className="glass border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 rounded-lg p-4 font-semibold text-cyan-300 hover:text-cyan-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">🎨</div>
+                              <div className="font-bold">Canva</div>
+                              <div className="text-xs text-gray-400 mt-1">Design Visual Simples</div>
+                            </button>
+                            <button
+                              onClick={() => handleGenerateEbookFormat('gama')}
+                              disabled={loading}
+                              className="glass border-2 border-orange-500/50 hover:border-orange-400 hover:bg-orange-500/10 rounded-lg p-4 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                            >
+                              <div className="text-3xl mb-2">⚡</div>
+                              <div className="font-bold">Gama</div>
+                              <div className="text-xs text-gray-400 mt-1">Estrutura Completa</div>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       )}
