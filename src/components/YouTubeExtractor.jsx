@@ -55,51 +55,50 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       return;
     }
 
-    if (user.dailyUsage.urls >= user.limits.urls && user.limits.urls !== 'unlimited') {
-      error('Limite diário de URLs atingido');
-      return;
-    }
+    // YouTube Extractor agora é ILIMITADO para todos os planos
+    // Não verifica limites de URLs
 
     setLoading(true);
+    setComments([]); // Limpar comentários anteriores
     
     try {
-      // Verificar conexão antes de buscar
-      const connectionCheck = await verifyAPIConnection('youtube');
+      console.log('VT: Iniciando extração de comentários...');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Buscar comentários reais
+      // Buscar comentários reais (a verificação de API key está dentro do fetchMultipleVideosComments)
       const fetchedComments = await fetchMultipleVideosComments(validUrls, 50);
+      console.log('VT: Comentários extraídos:', fetchedComments.length);
       
       if (fetchedComments.length === 0) {
-        error('Nenhum comentário encontrado nos vídeos');
-        setLoading(false);
+        error('❌ Nenhum comentário encontrado nos vídeos');
         return;
       }
 
       setComments(fetchedComments);
+      
+      // Não atualiza contadores de URLs pois é ilimitado
+      // Mas mantém rastreamento para estatísticas (opcional)
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
-          urls: user.dailyUsage.urls + validUrls.length,
+          urls: (user.dailyUsage.urls || 0) + validUrls.length, // Apenas para stats
         },
       });
-      success(`${fetchedComments.length} comentários extraídos com sucesso!`);
+      
+      success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
     } catch (err) {
-      console.error('Erro ao extrair comentários:', err);
+      console.error('VT: Erro ao extrair comentários:', err);
+      setComments([]);
+      
+      // Mostrar mensagem específica para admin ou genérica para usuário
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        // Admin vê detalhes técnicos
+        const adminMsg = err.adminMessage || err.message || 'Erro desconhecido';
+        error(`⚠️ [ADMIN] ${adminMsg}`);
       } else {
-        error('⚡ Erro ao extrair comentários. Tente novamente!');
+        // Usuário vê mensagem genérica
+        const userMsg = err.userMessage || '🔧 Sistema em manutenção. Tente novamente em instantes.';
+        error(userMsg);
       }
     } finally {
       setLoading(false);

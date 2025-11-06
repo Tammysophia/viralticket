@@ -1,31 +1,43 @@
 export const PLANS = {
   FREE: {
     name: 'FREE',
-    offers: 3,
-    urls: 3,
+    offers: 2,              // Por dia - APENAS geração de ofertas com IA
+    offersMonthly: 60,      // Por mês (30 dias × 2/dia)
+    urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
+    urlsMonthly: 'unlimited',
     color: 'gray',
     badge: '🆓',
+    price: 0,
   },
   BRONZE: {
     name: 'BRONZE',
-    offers: 5,
-    urls: 5,
+    offers: 5,              // Por dia
+    offersMonthly: 150,     // Por mês
+    urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
+    urlsMonthly: 'unlimited',
     color: 'orange',
     badge: '🥉',
+    price: 9.90,
   },
   PRATA: {
     name: 'PRATA',
-    offers: 10,
-    urls: 10,
+    offers: 10,             // Por dia
+    offersMonthly: 300,     // Por mês
+    urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
+    urlsMonthly: 'unlimited',
     color: 'gray',
     badge: '🥈',
+    price: 19.90,
   },
   OURO: {
     name: 'OURO',
-    offers: 'unlimited',
-    urls: 'unlimited',
+    offers: 'unlimited',    // ILIMITADO
+    offersMonthly: 'unlimited',
+    urls: 'unlimited',      // ILIMITADO
+    urlsMonthly: 'unlimited',
     color: 'yellow',
     badge: '🥇',
+    price: 49.90,
   },
 };
 

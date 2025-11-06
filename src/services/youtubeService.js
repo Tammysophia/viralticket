@@ -72,8 +72,24 @@ export const fetchVideoComments = async (videoUrl, maxResults = 100) => {
     // Buscar chave API
     const apiKey = await getServiceAPIKey('youtube');
     
+    console.log('🔑 VT: Chave YouTube obtida:', apiKey ? 'SIM' : 'NÃO');
+    console.log('🔑 VT: Comprimento da chave:', apiKey?.length);
+    console.log('🔑 VT: Primeira parte:', apiKey?.substring(0, 5));
+    console.log('🔑 VT: Última parte:', apiKey?.substring(apiKey?.length - 4));
+    
     if (!apiKey) {
-      throw new Error('Chave da API do YouTube não configurada no painel administrativo');
+      const error = new Error('API_KEY_NOT_FOUND');
+      error.adminMessage = 'Chave da API do YouTube não configurada no painel administrativo';
+      error.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
+      throw error;
+    }
+    
+    // Verificar se é uma chave mockada
+    if (apiKey.includes('•') || apiKey.includes('*') || apiKey.includes('AIza************************')) {
+      const error = new Error('API_KEY_MOCKED');
+      error.adminMessage = 'A chave da API está mockada. Configure uma chave real no painel Admin → API Keys';
+      error.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
+      throw error;
     }
 
     // Extrair ID do vídeo
@@ -89,7 +105,25 @@ export const fetchVideoComments = async (videoUrl, maxResults = 100) => {
     
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao buscar comentários');
+      const errorMessage = error.error?.message || 'Erro ao buscar comentários';
+      
+      // Detectar erro de quota
+      if (response.status === 429 || errorMessage.includes('quota')) {
+        const quotaError = new Error('QUOTA_EXCEEDED');
+        quotaError.adminMessage = '⚠️ Limite de quota do YouTube atingido. Aguarde ou ative billing em: https://console.cloud.google.com/';
+        quotaError.userMessage = '🔧 Sistema temporariamente indisponível. Tente novamente em alguns minutos.';
+        throw quotaError;
+      }
+      
+      // Detectar erro de autenticação
+      if (response.status === 401 || response.status === 403) {
+        const authError = new Error('AUTH_FAILED');
+        authError.adminMessage = '🔑 Chave da API YouTube inválida ou sem permissões. Verifique em: https://console.cloud.google.com/apis/credentials';
+        authError.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
+        throw authError;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

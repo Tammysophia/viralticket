@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
@@ -6,10 +6,12 @@ import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { createOfferFromAI } from '../services/offersService';
+import toast from 'react-hot-toast';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
-  const [inputText, setInputText] = useState(initialText);
+  const [inputText, setInputText] = useState('');
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
@@ -17,6 +19,13 @@ const AIChat = ({ initialText = '' }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+
+  // Atualizar inputText apenas quando initialText mudar
+  useEffect(() => {
+    if (initialText) {
+      setInputText(initialText);
+    }
+  }, [initialText]);
 
   const agents = [
     {
@@ -69,38 +78,36 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
+    // Verificar apenas limite DIÁRIO de geração de ofertas
     if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('Limite diário de ofertas atingido');
+      const planName = user.plan === 'FREE' ? 'BRONZE' : 'PRATA';
+      const nextPlanOffers = user.plan === 'FREE' ? '5' : '10';
+      error(`⏰ Limite diário atingido (${user.limits.offers} ofertas/dia). Volte amanhã ou faça upgrade para ${planName} (${nextPlanOffers} ofertas/dia)!`);
       return;
     }
 
     setLoading(true);
+    setOutput(null); // Limpar output anterior
 
     try {
-      // Verificar conexão antes de gerar
-      const connectionCheck = await verifyAPIConnection();
+      console.log('VT: Iniciando geração de oferta...');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Gerar oferta com OpenAI
+      // Gerar oferta com OpenAI (a verificação de API key está dentro do generateOffer)
       const offerData = await generateOffer(inputText, selectedAgent);
+      console.log('VT: Oferta gerada:', offerData);
 
       setOutput(offerData);
+      
+      // Atualizar apenas uso DIÁRIO (sem limite mensal)
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           offers: user.dailyUsage.offers + 1,
         },
       });
-      success('Oferta gerada com sucesso!');
+      
+      const remaining = user.limits.offers === 'unlimited' ? '∞' : user.limits.offers - (user.dailyUsage.offers + 1);
+      success(`✅ Oferta gerada com sucesso! ${remaining === '∞' ? 'Ilimitado' : `Restam ${remaining} hoje`}`);
       setApiConnected(true);
 
       // VT: Salvar oferta automaticamente no Firestore
@@ -117,18 +124,25 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
+        console.log('VT: Oferta salva no Kanban:', offerId);
         toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
       } catch (saveError) {
         console.error('VT: Erro ao salvar oferta:', saveError);
-        // VT: Não bloqueia o fluxo se falhar ao salvar
+        toast.error('⚠️ Oferta gerada mas não foi salva no Kanban');
       }
     } catch (err) {
-      console.error('Erro ao gerar oferta:', err);
+      console.error('VT: Erro ao gerar oferta:', err);
+      setOutput(null);
+      
+      // Mostrar mensagem específica para admin ou genérica para usuário
       if (user.isAdmin) {
-        error(`⚠️ ${err.message}`);
+        // Admin vê detalhes técnicos
+        const adminMsg = err.adminMessage || err.message || 'Erro desconhecido';
+        error(`⚠️ [ADMIN] ${adminMsg}`);
       } else {
-        error('🎯 Erro ao gerar oferta. Tente novamente!');
+        // Usuário vê mensagem genérica
+        const userMsg = err.userMessage || '🔧 Sistema em manutenção. Tente novamente em instantes.';
+        error(userMsg);
       }
     } finally {
       setLoading(false);

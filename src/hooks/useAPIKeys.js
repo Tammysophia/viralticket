@@ -47,22 +47,50 @@ export const getServiceAPIKey = async (service) => {
     if (saved) {
       const allKeys = JSON.parse(saved);
       console.log('🔍 VT: Total de chaves:', allKeys.length);
-      console.log('🔍 VT: Chaves disponíveis:', allKeys.map(k => ({ type: k.type, status: k.status, hasKey: !!k.key })));
+      console.log('🔍 VT: Chaves disponíveis:', allKeys.map(k => ({ 
+        type: k.type, 
+        status: k.status, 
+        hasKey: !!k.key,
+        keyLength: k.key?.length,
+        encrypted: k.encrypted,
+        isEncrypted: k.key ? isEncrypted(k.key) : false
+      })));
       
       const key = allKeys.find(k => k.type === service && k.status === 'active');
       
       if (key && key.key) {
-        // Descriptografar se necessário
-        const actualKey = isEncrypted(key.key) 
-          ? decrypt(key.key) 
-          : key.key;
+        console.log(`🔍 VT: Chave ${service} encontrada!`);
+        console.log(`🔍 VT: Chave bruta comprimento:`, key.key.length);
+        console.log(`🔍 VT: É criptografada?:`, isEncrypted(key.key));
+        console.log(`🔍 VT: Primeiros 10 chars:`, key.key.substring(0, 10));
         
-        console.log(`✅ VT: Chave ${service} encontrada no localStorage`);
-        console.log(`🔑 VT: Chave começa com:`, actualKey.substring(0, 10) + '...');
+        // Descriptografar se necessário
+        let actualKey = key.key;
+        
+        try {
+          if (isEncrypted(key.key)) {
+            console.log(`🔓 VT: Tentando descriptografar...`);
+            actualKey = decrypt(key.key);
+            console.log(`✅ VT: Descriptografada! Comprimento:`, actualKey.length);
+          } else {
+            console.log(`📝 VT: Chave não criptografada, usando diretamente`);
+          }
+        } catch (decryptError) {
+          console.error(`❌ VT: Erro ao descriptografar:`, decryptError);
+          // Se falhar, usar a chave diretamente (pode estar em plain text)
+          actualKey = key.key;
+        }
+        
+        console.log(`✅ VT: Chave ${service} pronta!`);
+        console.log(`🔑 VT: Começa com:`, actualKey.substring(0, 10) + '...');
+        console.log(`🔑 VT: Termina com:`, '...' + actualKey.substring(actualKey.length - 4));
         return actualKey;
       } else {
         console.warn(`⚠️ VT: Chave ${service} não encontrada ou inativa no localStorage`);
+        console.warn(`⚠️ VT: Key object:`, key);
       }
+    } else {
+      console.warn(`⚠️ VT: localStorage vazio!`);
     }
     
     // SEGUNDO: Tentar buscar do Firestore (fallback)
