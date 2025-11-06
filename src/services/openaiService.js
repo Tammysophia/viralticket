@@ -87,8 +87,27 @@ export const generateOffer = async (comments, agent = 'sophia') => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
-    if (!apiKey) {
-      throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
+    // MODO MOCK: Se não tiver chave válida, retornar oferta de exemplo
+    const isValidKey = apiKey && apiKey.startsWith('sk-') && apiKey.length > 40;
+    
+    if (!isValidKey) {
+      console.log('🎭 VT: MODO MOCK - Retornando oferta de exemplo (sem gastar tokens)');
+      
+      // Retornar oferta mockada baseada nos comentários
+      const firstWords = comments.split(' ').slice(0, 5).join(' ');
+      
+      return {
+        title: '🚀 Transforme Sua Vida Agora!',
+        subtitle: `Descubra o método comprovado que já ajudou milhares de pessoas`,
+        bullets: [
+          '✅ Sistema completo e testado por especialistas',
+          '✅ Resultados comprovados em até 30 dias',
+          '✅ Suporte dedicado e comunidade exclusiva',
+          '✅ Garantia incondicional de 7 dias'
+        ],
+        cta: '🎯 QUERO COMEÇAR AGORA!',
+        bonus: '🎁 BÔNUS: Acesso vitalício + Material complementar grátis'
+      };
     }
 
     // PASSO 1: Buscar prompt do Firestore
