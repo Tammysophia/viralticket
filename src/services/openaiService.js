@@ -1,5 +1,39 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
+/**
+ * Busca o prompt do agente no Firestore
+ * @param {string} agentId - ID do agente (sophia, sofia)
+ * @returns {Promise<string|null>} - Prompt ou null se não encontrar
+ */
+const getAgentPromptFromFirestore = async (agentId) => {
+  try {
+    console.log(`🔍 VT: Buscando prompt do agente "${agentId}" no Firestore...`);
+    
+    if (!db) {
+      console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
+      return null;
+    }
+
+    const docRef = doc(db, 'agent_templates', agentId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log(`✅ VT: Prompt encontrado para "${agentId}"!`);
+      console.log(`📝 VT: Tamanho do prompt:`, data.prompt?.length || 0);
+      return data.prompt || data.systemPrompt || null;
+    } else {
+      console.warn(`⚠️ VT: Prompt não encontrado no Firestore para "${agentId}"`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
+    return null;
+  }
+};
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -57,8 +91,15 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw new Error('Chave da API do OpenAI não configurada no painel administrativo');
     }
 
-    const agentPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
+    // PASSO 1: Buscar prompt do Firestore
+    let systemPrompt = await getAgentPromptFromFirestore(agent);
+    
+    // PASSO 2: Se não encontrou, usar fallback simples
+    if (!systemPrompt) {
+      console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
+      
+      const fallbackPrompts = {
+        sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
 Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
 
 Comentários:
@@ -81,7 +122,7 @@ Formato JSON:
   "cta": "",
   "bonus": ""
 }`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
+        sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
 Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
 
 Comentários:
@@ -99,8 +140,28 @@ Formato JSON:
   "cta": "",
   "bonus": ""
 }`
-    };
+      };
+      
+      systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
+    }
+    
+    console.log('📋 VT: Usando prompt (tamanho:', systemPrompt.length, 'caracteres)');
+    
+    // PASSO 3: Estruturar mensagens
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      {
+        role: 'user',
+        content: comments
+      }
+    ];
 
+    // PASSO 4: Chamar OpenAI API
+    console.log('📡 VT: Enviando para OpenAI...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -109,14 +170,9 @@ Formato JSON:
       },
       body: JSON.stringify({
         model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: agentPrompts[agent] || agentPrompts.sophia,
-          },
-        ],
+        messages: messages,
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 2000,
       }),
     });
 
