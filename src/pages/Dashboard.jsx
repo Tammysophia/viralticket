@@ -88,14 +88,21 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 <ProgressBar
                   value={user?.dailyUsage.offers || 0}
-                  max={user?.limits.offers || 3}
+                  max={user?.limits.offers || 2}
                   label="Ofertas Geradas Hoje"
                 />
-                <ProgressBar
-                  value={user?.dailyUsage.urls || 0}
-                  max={user?.limits.urls || 3}
-                  label="URLs Extraídas Hoje"
-                />
+                <div className="glass border border-purple-500/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-400">Extração YouTube</span>
+                    <span className="text-xs text-green-400 font-bold">ILIMITADO</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-400">
+                    ∞ URLs/dia
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Extraia comentários sem limites! 🎉
+                  </p>
+                </div>
               </div>
             </Card>
           </motion.div>

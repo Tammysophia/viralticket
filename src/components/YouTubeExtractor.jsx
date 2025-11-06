@@ -55,10 +55,8 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       return;
     }
 
-    if (user.dailyUsage.urls >= user.limits.urls && user.limits.urls !== 'unlimited') {
-      error('Limite diário de URLs atingido');
-      return;
-    }
+    // YouTube Extractor agora é ILIMITADO para todos os planos
+    // Não verifica limites de URLs
 
     setLoading(true);
     setComments([]); // Limpar comentários anteriores
@@ -76,12 +74,16 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       }
 
       setComments(fetchedComments);
+      
+      // Não atualiza contadores de URLs pois é ilimitado
+      // Mas mantém rastreamento para estatísticas (opcional)
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
-          urls: user.dailyUsage.urls + validUrls.length,
+          urls: (user.dailyUsage.urls || 0) + validUrls.length, // Apenas para stats
         },
       });
+      
       success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
       setApiConnected(true);
     } catch (err) {

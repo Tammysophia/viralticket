@@ -78,19 +78,11 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
-    // Verificar limite diário
+    // Verificar apenas limite DIÁRIO de geração de ofertas
     if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('⏰ Limite diário de ofertas atingido. Volte amanhã ou faça upgrade!');
-      return;
-    }
-
-    // Verificar limite mensal
-    const currentMonth = new Date().getMonth();
-    const monthlyOffers = user.monthlyUsage?.offers || 0;
-    const monthlyLimit = user.limits.offersMonthly;
-    
-    if (monthlyLimit !== 'unlimited' && monthlyOffers >= monthlyLimit) {
-      error('📊 Limite mensal de ofertas atingido. Faça upgrade para continuar!');
+      const planName = user.plan === 'FREE' ? 'BRONZE' : 'PRATA';
+      const nextPlanOffers = user.plan === 'FREE' ? '5' : '10';
+      error(`⏰ Limite diário atingido (${user.limits.offers} ofertas/dia). Volte amanhã ou faça upgrade para ${planName} (${nextPlanOffers} ofertas/dia)!`);
       return;
     }
 
@@ -106,28 +98,16 @@ const AIChat = ({ initialText = '' }) => {
 
       setOutput(offerData);
       
-      // Atualizar uso diário e mensal
-      const currentMonth = new Date().getMonth();
-      const monthlyUsage = user.monthlyUsage || { offers: 0, urls: 0, month: currentMonth };
-      
-      // Reset mensal se mudou de mês
-      if (monthlyUsage.month !== currentMonth) {
-        monthlyUsage.offers = 0;
-        monthlyUsage.urls = 0;
-        monthlyUsage.month = currentMonth;
-      }
-      
+      // Atualizar apenas uso DIÁRIO (sem limite mensal)
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           offers: user.dailyUsage.offers + 1,
         },
-        monthlyUsage: {
-          ...monthlyUsage,
-          offers: monthlyUsage.offers + 1,
-        },
       });
-      success('✅ Oferta gerada com sucesso!');
+      
+      const remaining = user.limits.offers === 'unlimited' ? '∞' : user.limits.offers - (user.dailyUsage.offers + 1);
+      success(`✅ Oferta gerada com sucesso! ${remaining === '∞' ? 'Ilimitado' : `Restam ${remaining} hoje`}`);
       setApiConnected(true);
 
       // VT: Salvar oferta automaticamente no Firestore
