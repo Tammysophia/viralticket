@@ -105,7 +105,25 @@ export const fetchVideoComments = async (videoUrl, maxResults = 100) => {
     
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao buscar comentários');
+      const errorMessage = error.error?.message || 'Erro ao buscar comentários';
+      
+      // Detectar erro de quota
+      if (response.status === 429 || errorMessage.includes('quota')) {
+        const quotaError = new Error('QUOTA_EXCEEDED');
+        quotaError.adminMessage = '⚠️ Limite de quota do YouTube atingido. Aguarde ou ative billing em: https://console.cloud.google.com/';
+        quotaError.userMessage = '🔧 Sistema temporariamente indisponível. Tente novamente em alguns minutos.';
+        throw quotaError;
+      }
+      
+      // Detectar erro de autenticação
+      if (response.status === 401 || response.status === 403) {
+        const authError = new Error('AUTH_FAILED');
+        authError.adminMessage = '🔑 Chave da API YouTube inválida ou sem permissões. Verifique em: https://console.cloud.google.com/apis/credentials';
+        authError.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
+        throw authError;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
