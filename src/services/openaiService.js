@@ -1,5 +1,76 @@
 // Serviço para integração com OpenAI API
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
+/**
+ * Busca o prompt do agente no Firestore
+ * @param {string} agentId - ID do agente (sophia, sofia)
+ * @returns {Promise<string|null>} - Prompt ou null se não encontrar
+ */
+const getAgentPromptFromFirestore = async (agentId) => {
+  try {
+    console.log(`🔍 VT: Buscando prompt do agente "${agentId}" no Firestore...`);
+    
+    if (!db) {
+      console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
+      return null;
+    }
+
+    const docRef = doc(db, 'agent_templates', agentId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log(`✅ VT: Prompt encontrado para "${agentId}"`);
+      return data.prompt || data.systemPrompt || null;
+    } else {
+      console.warn(`⚠️ VT: Prompt não encontrado no Firestore para "${agentId}"`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
+    return null;
+  }
+};
+
+/**
+ * Parse seguro de JSON removendo markdown
+ * @param {string} content - Conteúdo a parsear
+ * @returns {Object} - JSON parseado
+ */
+const safeJsonParse = (content) => {
+  try {
+    console.log('📝 VT: Tentando parsear JSON da resposta da IA...');
+    
+    // Tentar parsear direto primeiro
+    try {
+      const parsed = JSON.parse(content);
+      console.log('✅ VT: JSON parseado com sucesso (sem limpeza necessária)!');
+      return parsed;
+    } catch (e) {
+      // Se falhar, tentar remover markdown
+      console.log('🧹 VT: Removendo markdown do JSON...');
+      
+      let cleaned = content.trim();
+      // Remover ```json e ``` do início e fim
+      cleaned = cleaned.replace(/^```json\s*\n?/i, '');
+      cleaned = cleaned.replace(/^```\s*\n?/, '');
+      cleaned = cleaned.replace(/\n?```\s*$/, '');
+      cleaned = cleaned.trim();
+      
+      console.log('🔍 VT: Conteúdo limpo (primeiros 200 chars):', cleaned.substring(0, 200));
+      
+      const parsed = JSON.parse(cleaned);
+      console.log('✅ VT: JSON parseado com sucesso após limpeza!');
+      return parsed;
+    }
+  } catch (error) {
+    console.error('❌ VT: Erro ao parsear JSON:', error);
+    console.error('📄 VT: Conteúdo que falhou:', content);
+    throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
+  }
+};
 
 /**
  * Verifica se a conexão com a API do OpenAI está funcionando
@@ -65,7 +136,7 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw error;
     }
     
-    // Verificar se é uma chave mockada (mas permitir chaves curtas se forem criptografadas)
+    // Verificar se é uma chave mockada
     if ((apiKey.includes('•') || apiKey.includes('*') || apiKey.includes('AIza************************'))) {
       const error = new Error('API_KEY_MOCKED');
       error.adminMessage = 'A chave da API está mockada. Configure uma chave real no painel Admin → API Keys';
@@ -73,73 +144,40 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw error;
     }
 
-    const systemPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem vendas.
+    // PASSO 1: Buscar prompt do Firestore
+    let systemPrompt = await getAgentPromptFromFirestore(agent);
+    
+    // PASSO 2: Se não encontrou, usar fallback hardcoded
+    if (!systemPrompt) {
+      console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
+      
+      const fallbackPrompts = {
+        sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
+        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
+      };
+      
+      systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
+    }
+    
+    console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
+    
+    // PASSO 3: Estruturar mensagens corretamente
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      {
+        role: 'user',
+        content: comments  // Comentários vão direto como mensagem do usuário
+      }
+    ];
+    
+    console.log('💬 VT: Mensagens estruturadas (system + user)');
 
-INSTRUÇÕES:
-1. Analise PROFUNDAMENTE os comentários fornecidos
-2. Identifique as DORES, DESEJOS e OBJEÇÕES reais do público
-3. Identifique o NICHO e CONTEXTO específico
-4. Crie uma oferta ULTRA-ESPECÍFICA para esse público
-5. Use palavras e expressões que ELES usaram nos comentários
-6. Seja DIRETO, CLARO e PERSUASIVO
-
-Retorne APENAS um JSON válido (sem markdown, sem explicações):
-{
-  "title": "Título com emoji + promessa específica do nicho",
-  "subtitle": "Transformação clara que resolve a dor principal",
-  "bullets": [
-    "✅ Benefício específico 1 (use linguagem do público)",
-    "✅ Benefício específico 2 (resolva objeção real)",
-    "✅ Benefício específico 3 (resultado tangível)",
-    "✅ Benefício específico 4 (diferencial único)"
-  ],
-  "cta": "Ação urgente e específica do nicho",
-  "bonus": "Bônus irresistível e relevante"
-}`,
-      sofia: `Você é Sofia Universal, IA especializada em copywriting de alta conversão.
-
-INSTRUÇÕES:
-1. Leia TODOS os comentários com atenção
-2. Identifique: nicho, público-alvo, dores principais, desejos ocultos
-3. Encontre padrões: o que eles REALMENTE querem?
-4. Crie uma oferta que pareça "feita sob medida"
-5. Use gatilhos mentais: urgência, escassez, prova social
-6. Seja específico no nicho identificado
-
-Retorne APENAS um JSON válido (sem markdown, sem explicações):
-{
-  "title": "🎯 Título específico do nicho + promessa clara",
-  "subtitle": "Como [público] pode [resultado desejado] sem [objeção]",
-  "bullets": [
-    "✅ Solução para dor específica 1",
-    "✅ Benefício tangível e mensurável 2",
-    "✅ Diferencial competitivo 3",
-    "✅ Garantia ou segurança 4"
-  ],
-  "cta": "🚀 Ação clara e urgente",
-  "bonus": "🎁 Bônus complementar e valioso"
-}`
-    };
-
-    const userPrompt = `ANALISE ESTES COMENTÁRIOS REAIS:
-
-${comments}
-
----
-
-Agora crie uma oferta IRRESISTÍVEL para esse público específico. 
-
-IMPORTANTE:
-- Identifique o nicho/tema dos comentários
-- Use a linguagem DELES (palavras que eles usaram)
-- Resolva as DORES mencionadas
-- Atenda aos DESEJOS expressos
-- Seja ESPECÍFICO do nicho (não genérico!)
-- Crie senso de urgência
-
-Retorne APENAS o JSON, sem explicações.`;
-
+    // PASSO 4: Chamar OpenAI API
+    console.log('📡 VT: Enviando requisição para OpenAI API...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -147,21 +185,10 @@ Retorne APENAS o JSON, sem explicações.`;
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompts[agent] || systemPrompts.sophia,
-          },
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-        temperature: 0.9,  // Aumentado para mais criatividade
-        max_tokens: 1500,  // Aumentado para respostas mais completas
-        presence_penalty: 0.6,  // Evita repetições
-        frequency_penalty: 0.3, // Mais variação nas palavras
+        model: 'gpt-4o',  // Modelo mais recente
+        messages: messages,
+        temperature: 0.0,  // Mais determinístico
+        max_tokens: 2500,  // Mais tokens para respostas completas
       }),
     });
 
@@ -189,28 +216,40 @@ Retorne APENAS o JSON, sem explicações.`;
       throw new Error(errorMessage);
     }
 
+    console.log('📥 VT: Resposta recebida. Status:', response.status);
+    
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    // Tentar parsear JSON da resposta
-    try {
-      const offerData = JSON.parse(content);
-      return offerData;
-    } catch (parseError) {
-      // Se não conseguir parsear, criar estrutura básica
-      return {
-        title: '🎯 Oferta Especial para Você!',
-        subtitle: content.split('\n')[0] || 'Transforme sua realidade agora',
-        bullets: [
-          '✅ Acesso imediato ao conteúdo',
-          '✅ Suporte dedicado',
-          '✅ Garantia de satisfação',
-          '✅ Bônus exclusivos',
-        ],
-        cta: '🚀 QUERO APROVEITAR AGORA!',
-        bonus: '🎁 Bônus: Material complementar gratuito',
-      };
+    console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
+    
+    // PASSO 5: Parse seguro do JSON
+    const offerData = safeJsonParse(content);
+    
+    // PASSO 6: Validar estrutura
+    if (!offerData.title || !offerData.subtitle || !offerData.bullets || !offerData.cta) {
+      console.warn('⚠️ VT: JSON incompleto, verificando formato alternativo...');
+      
+      // Se for formato completo da Sophia (com sections, pains, etc), converter
+      if (offerData.offer) {
+        console.log('🔄 VT: Convertendo formato completo para formato simples...');
+        return {
+          title: offerData.offer.headline || '🎯 Oferta Especial',
+          subtitle: offerData.offer.subheadline || 'Transforme sua realidade',
+          bullets: offerData.offer.benefits?.map(b => `✅ ${b}`) || [
+            '✅ Acesso completo',
+            '✅ Suporte dedicado',
+            '✅ Garantia total',
+            '✅ Bônus exclusivos'
+          ],
+          cta: offerData.offer.cta || '🚀 QUERO AGORA!',
+          bonus: offerData.offer.bonus || '🎁 Bônus especial incluído',
+        };
+      }
     }
+    
+    console.log('✅ VT: Oferta gerada com sucesso!');
+    return offerData;
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
     throw error;
