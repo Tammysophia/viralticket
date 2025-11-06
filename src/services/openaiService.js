@@ -74,29 +74,71 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     }
 
     const systemPrompts = {
-      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
-Analise os comentários fornecidos e crie uma oferta irresistível que atenda às dores e desejos do público.
+      sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem vendas.
 
-Retorne APENAS um JSON válido com esta estrutura:
+INSTRUÇÕES:
+1. Analise PROFUNDAMENTE os comentários fornecidos
+2. Identifique as DORES, DESEJOS e OBJEÇÕES reais do público
+3. Identifique o NICHO e CONTEXTO específico
+4. Crie uma oferta ULTRA-ESPECÍFICA para esse público
+5. Use palavras e expressões que ELES usaram nos comentários
+6. Seja DIRETO, CLARO e PERSUASIVO
+
+Retorne APENAS um JSON válido (sem markdown, sem explicações):
 {
-  "title": "título impactante com emoji",
-  "subtitle": "subtítulo persuasivo",
-  "bullets": ["✅ benefício 1", "✅ benefício 2", "✅ benefício 3", "✅ benefício 4"],
-  "cta": "call-to-action convincente",
-  "bonus": "bônus irresistível"
+  "title": "Título com emoji + promessa específica do nicho",
+  "subtitle": "Transformação clara que resolve a dor principal",
+  "bullets": [
+    "✅ Benefício específico 1 (use linguagem do público)",
+    "✅ Benefício específico 2 (resolva objeção real)",
+    "✅ Benefício específico 3 (resultado tangível)",
+    "✅ Benefício específico 4 (diferencial único)"
+  ],
+  "cta": "Ação urgente e específica do nicho",
+  "bonus": "Bônus irresistível e relevante"
 }`,
-      sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
-Analise os comentários fornecidos e crie uma oferta personalizada e persuasiva.
+      sofia: `Você é Sofia Universal, IA especializada em copywriting de alta conversão.
 
-Retorne APENAS um JSON válido com esta estrutura:
+INSTRUÇÕES:
+1. Leia TODOS os comentários com atenção
+2. Identifique: nicho, público-alvo, dores principais, desejos ocultos
+3. Encontre padrões: o que eles REALMENTE querem?
+4. Crie uma oferta que pareça "feita sob medida"
+5. Use gatilhos mentais: urgência, escassez, prova social
+6. Seja específico no nicho identificado
+
+Retorne APENAS um JSON válido (sem markdown, sem explicações):
 {
-  "title": "título impactante com emoji",
-  "subtitle": "subtítulo persuasivo",
-  "bullets": ["✅ benefício 1", "✅ benefício 2", "✅ benefício 3", "✅ benefício 4"],
-  "cta": "call-to-action convincente",
-  "bonus": "bônus irresistível"
+  "title": "🎯 Título específico do nicho + promessa clara",
+  "subtitle": "Como [público] pode [resultado desejado] sem [objeção]",
+  "bullets": [
+    "✅ Solução para dor específica 1",
+    "✅ Benefício tangível e mensurável 2",
+    "✅ Diferencial competitivo 3",
+    "✅ Garantia ou segurança 4"
+  ],
+  "cta": "🚀 Ação clara e urgente",
+  "bonus": "🎁 Bônus complementar e valioso"
 }`
     };
+
+    const userPrompt = `ANALISE ESTES COMENTÁRIOS REAIS:
+
+${comments}
+
+---
+
+Agora crie uma oferta IRRESISTÍVEL para esse público específico. 
+
+IMPORTANTE:
+- Identifique o nicho/tema dos comentários
+- Use a linguagem DELES (palavras que eles usaram)
+- Resolva as DORES mencionadas
+- Atenda aos DESEJOS expressos
+- Seja ESPECÍFICO do nicho (não genérico!)
+- Crie senso de urgência
+
+Retorne APENAS o JSON, sem explicações.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -113,11 +155,13 @@ Retorne APENAS um JSON válido com esta estrutura:
           },
           {
             role: 'user',
-            content: `Analise estes comentários e crie uma oferta:\n\n${comments}`,
+            content: userPrompt,
           },
         ],
-        temperature: 0.8,
-        max_tokens: 1000,
+        temperature: 0.9,  // Aumentado para mais criatividade
+        max_tokens: 1500,  // Aumentado para respostas mais completas
+        presence_penalty: 0.6,  // Evita repetições
+        frequency_penalty: 0.3, // Mais variação nas palavras
       }),
     });
 
