@@ -1,61 +1,112 @@
-# 🔥 Prompt Sophia Universal - COM JSON NO FINAL
+# 🔥 Configurar QUALQUER IA para Funcionar no Sistema
 
-## ✅ **SOLUÇÃO:**
+## 📋 **VOCÊ TEM 2 AGENTES IA:**
 
-Adicione isso **NO FINAL DO SEU PROMPT** no Firestore:
+O sistema suporta múltiplos agentes IA. Configure cada um no Firestore:
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-### 🎯 JSON PARA SISTEMA (OBRIGATÓRIO)
-
-IMPORTANTE: Ao final de TODA a análise acima, retorne também este JSON para integração com o sistema:
-
-```json
-{
-  "title": "[Título da oferta campeã selecionada - com emoji]",
-  "subtitle": "[Subtítulo/promessa principal da oferta campeã]",
-  "bullets": [
-    "✅ [Benefício principal 1 da oferta campeã]",
-    "✅ [Benefício principal 2 da oferta campeã]",
-    "✅ [Benefício principal 3 da oferta campeã]",
-    "✅ [Benefício principal 4 da oferta campeã]"
-  ],
-  "cta": "[Call to action da oferta campeã]",
-  "bonus": "[Bônus principal da oferta campeã]"
-}
-```
-
-Este JSON deve conter APENAS os dados da OFERTA CAMPEÃ selecionada na seção 4️⃣.
-```
+- **`sophia`** → Sophia Universal (seu prompt de 48k caracteres)
+- **`sofia`** → Sofia (qualquer outro prompt que você quiser)
+- **`outro-agente`** → Qualquer outro nome que quiser criar
 
 ---
 
-## 📋 **COMO FICA:**
+## ✅ **REGRA ÚNICA PARA TODAS AS IAs:**
 
-Seu prompt completo (48.647 caracteres) + no final adiciona:
+**TODO prompt de IA PRECISA retornar JSON no final!**
+
+Adicione isso **NO FINAL** de QUALQUER prompt:
 
 ```
-[... todo seu prompt da Sophia Universal ...]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 🎯 JSON PARA SISTEMA (OBRIGATÓRIO)
 
-Ao final de toda a análise, retorne este JSON com os dados da OFERTA CAMPEÃ:
+IMPORTANTE: Ao final de TODA a análise/resposta, retorne este JSON:
 
 ```json
 {
-  "title": "[Título da oferta campeã]",
-  "subtitle": "[Promessa da oferta campeã]",
+  "title": "[Título da oferta principal - com emoji]",
+  "subtitle": "[Promessa/subtítulo da oferta]",
   "bullets": [
     "✅ [Benefício 1]",
     "✅ [Benefício 2]",
     "✅ [Benefício 3]",
     "✅ [Benefício 4]"
   ],
-  "cta": "[CTA da oferta campeã]",
-  "bonus": "[Bônus da oferta campeã]"
+  "cta": "[Call to action - ex: QUERO AGORA!]",
+  "bonus": "[Bônus incluído]"
+}
+```
+```
+
+---
+
+## 🎯 **EXEMPLO 1: SOPHIA UNIVERSAL (Prompt Gigante)**
+
+Seu prompt completo de 48.647 caracteres + adicione no final:
+
+```
+[... TODO SEU PROMPT DA SOPHIA UNIVERSAL (1-7 seções) ...]
+
+### 🎨 ESCOLHA SEUS FORMATOS DE ENTREGA
+[... instruções sobre WordPress/Quiz/IA Builder ...]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🎯 JSON PARA SISTEMA (OBRIGATÓRIO)
+
+Ao final de TODA a análise das 7 seções, retorne este JSON com os dados da OFERTA CAMPEÃ (seção 4️⃣):
+
+```json
+{
+  "title": "[Título da oferta campeã selecionada]",
+  "subtitle": "[Promessa principal da oferta campeã]",
+  "bullets": [
+    "✅ [Benefício desbloqueado 1]",
+    "✅ [Benefício desbloqueado 2]",
+    "✅ [Benefício desbloqueado 3]",
+    "✅ [Benefício desbloqueado 4]"
+  ],
+  "cta": "[CTA da oferta campeã - ex: QUERO ME TRANSFORMAR AGORA!]",
+  "bonus": "[Bônus exclusivo da oferta campeã]"
+}
+```
+```
+
+---
+
+## 🎯 **EXEMPLO 2: SOFIA (Prompt Simples)**
+
+Se você tem outro agente IA (exemplo: "sofia"), faça o mesmo:
+
+```
+Você é Sofia, especialista em criar ofertas irresistíveis.
+
+Analise os comentários do YouTube e:
+1. Identifique as dores principais
+2. Encontre os desejos ocultos
+3. Crie uma oferta low-ticket (R$7-97)
+
+[... resto do seu prompt ...]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🎯 JSON PARA SISTEMA (OBRIGATÓRIO)
+
+Ao final, retorne este JSON:
+
+```json
+{
+  "title": "[Título da oferta]",
+  "subtitle": "[Promessa]",
+  "bullets": [
+    "✅ [Benefício 1]",
+    "✅ [Benefício 2]",
+    "✅ [Benefício 3]",
+    "✅ [Benefício 4]"
+  ],
+  "cta": "[CTA]",
+  "bonus": "[Bônus]"
 }
 ```
 ```
@@ -72,12 +123,37 @@ Ao final de toda a análise, retorne este JSON com os dados da OFERTA CAMPEÃ:
 
 ---
 
-## 🔧 **ONDE ADICIONAR:**
+## 🔧 **ONDE ADICIONAR NO FIREBASE:**
 
-1. Firebase Console → Firestore → `agent_templates` → `sophia`
-2. **NO FINAL** do campo `prompt`, adicione o texto acima
-3. Salve
-4. Teste gerando uma oferta
+### **Para Sophia Universal:**
+1. Firebase Console → Firestore
+2. Coleção: `agent_templates`
+3. Documento: `sophia`
+4. Campo: `prompt`
+5. **NO FINAL** do campo `prompt`, cole a seção JSON acima
+6. Salve
+
+### **Para Sofia (ou outro agente):**
+1. Firebase Console → Firestore
+2. Coleção: `agent_templates`
+3. Documento: `sofia` (ou o nome do agente)
+4. Campo: `prompt`
+5. **NO FINAL** do campo `prompt`, cole a seção JSON acima
+6. Salve
+
+### **Estrutura no Firestore:**
+```
+agent_templates/
+├── sophia/
+│   ├── name: "Sophia Universal"
+│   ├── description: "IA completa para ofertas virais"
+│   └── prompt: "[SEU PROMPT GIGANTE] + [SEÇÃO JSON NO FINAL]"
+│
+└── sofia/
+    ├── name: "Sofia"
+    ├── description: "IA alternativa"
+    └── prompt: "[SEU PROMPT] + [SEÇÃO JSON NO FINAL]"
+```
 
 ---
 
@@ -125,4 +201,34 @@ E o sistema vai:
 
 ---
 
-**Adicione isso no final do seu prompt e vai funcionar perfeitamente!** 🎯
+## 🧪 **TESTAR:**
+
+1. Vá em Firestore e adicione o JSON no final dos seus prompts
+2. No sistema, extraia comentários do YouTube
+3. Clique em "Gerar Oferta com IA"
+4. Abra o console (F12) e veja os logs:
+   - `📝 VT: Tentando parsear JSON...`
+   - `✅ VT: JSON extraído com sucesso!`
+   - `✅ VT: Oferta gerada com sucesso!`
+
+---
+
+## ❓ **O QUE ACONTECE SE NÃO ADICIONAR O JSON?**
+
+Se você NÃO adicionar a seção JSON no final:
+- ✅ O sistema tentará extrair JSON automaticamente da resposta
+- ✅ Se não achar, criará uma oferta genérica com link para ver análise completa no console
+- ⚠️ Mas é SEMPRE melhor adicionar o JSON para garantir precisão!
+
+---
+
+## 🔥 **RESUMO SIMPLES:**
+
+1. ✅ Abra Firestore → `agent_templates` → `sophia` (ou `sofia`)
+2. ✅ Vá até o FINAL do campo `prompt`
+3. ✅ Cole a seção JSON (do exemplo acima)
+4. ✅ Salve
+5. ✅ Teste gerando oferta
+6. ✅ Funciona! 🎉
+
+**Faça isso para TODOS os agentes IA que você criar!** 🎯
