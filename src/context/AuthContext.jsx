@@ -44,6 +44,8 @@ export const AuthProvider = ({ children }) => {
                 const userData = userDoc.data();
                 const isAdmin = firebaseUser.email === 'tamara14@gmail.com';
                 
+                const planData = PLANS[userData.plan || 'FREE'];
+                
                 const userProfile = {
                   id: firebaseUser.uid,
                   email: firebaseUser.email,
@@ -52,7 +54,18 @@ export const AuthProvider = ({ children }) => {
                   isAdmin,
                   avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
                   dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
-                  limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+                  monthlyUsage: userData.monthlyUsage || { offers: 0, urls: 0, month: new Date().getMonth() },
+                  limits: isAdmin ? { 
+                    offers: 'unlimited', 
+                    urls: 'unlimited',
+                    offersMonthly: 'unlimited',
+                    urlsMonthly: 'unlimited'
+                  } : {
+                    offers: planData?.offers || 2,
+                    urls: planData?.urls || 3,
+                    offersMonthly: planData?.offersMonthly || 15,
+                    urlsMonthly: planData?.urlsMonthly || 30,
+                  },
                 };
                 
                 setUser(userProfile);

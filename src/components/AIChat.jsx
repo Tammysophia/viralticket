@@ -78,8 +78,19 @@ const AIChat = ({ initialText = '' }) => {
       return;
     }
 
+    // Verificar limite diário
     if (user.dailyUsage.offers >= user.limits.offers && user.limits.offers !== 'unlimited') {
-      error('Limite diário de ofertas atingido');
+      error('⏰ Limite diário de ofertas atingido. Volte amanhã ou faça upgrade!');
+      return;
+    }
+
+    // Verificar limite mensal
+    const currentMonth = new Date().getMonth();
+    const monthlyOffers = user.monthlyUsage?.offers || 0;
+    const monthlyLimit = user.limits.offersMonthly;
+    
+    if (monthlyLimit !== 'unlimited' && monthlyOffers >= monthlyLimit) {
+      error('📊 Limite mensal de ofertas atingido. Faça upgrade para continuar!');
       return;
     }
 
@@ -94,10 +105,26 @@ const AIChat = ({ initialText = '' }) => {
       console.log('VT: Oferta gerada:', offerData);
 
       setOutput(offerData);
+      
+      // Atualizar uso diário e mensal
+      const currentMonth = new Date().getMonth();
+      const monthlyUsage = user.monthlyUsage || { offers: 0, urls: 0, month: currentMonth };
+      
+      // Reset mensal se mudou de mês
+      if (monthlyUsage.month !== currentMonth) {
+        monthlyUsage.offers = 0;
+        monthlyUsage.urls = 0;
+        monthlyUsage.month = currentMonth;
+      }
+      
       updateUser({
         dailyUsage: {
           ...user.dailyUsage,
           offers: user.dailyUsage.offers + 1,
+        },
+        monthlyUsage: {
+          ...monthlyUsage,
+          offers: monthlyUsage.offers + 1,
         },
       });
       success('✅ Oferta gerada com sucesso!');
