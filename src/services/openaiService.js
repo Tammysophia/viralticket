@@ -49,26 +49,60 @@ const safeJsonParse = (content) => {
       console.log('✅ VT: JSON parseado com sucesso (sem limpeza necessária)!');
       return parsed;
     } catch (e) {
-      // Se falhar, tentar remover markdown
-      console.log('🧹 VT: Removendo markdown do JSON...');
+      // Se falhar, tentar extrair JSON de resposta complexa
+      console.log('🧹 VT: Resposta não é JSON puro, tentando extrair...');
       
-      let cleaned = content.trim();
-      // Remover ```json e ``` do início e fim
-      cleaned = cleaned.replace(/^```json\s*\n?/i, '');
-      cleaned = cleaned.replace(/^```\s*\n?/, '');
-      cleaned = cleaned.replace(/\n?```\s*$/, '');
-      cleaned = cleaned.trim();
+      // Procurar por blocos JSON na resposta
+      const jsonBlockMatch = content.match(/```json\s*\n?([\s\S]*?)\n?```/i);
+      if (jsonBlockMatch) {
+        console.log('🔍 VT: Encontrado bloco ```json```');
+        try {
+          const parsed = JSON.parse(jsonBlockMatch[1].trim());
+          console.log('✅ VT: JSON extraído de bloco markdown!');
+          return parsed;
+        } catch (e2) {
+          console.log('⚠️ VT: Bloco markdown não é JSON válido');
+        }
+      }
       
-      console.log('🔍 VT: Conteúdo limpo (primeiros 200 chars):', cleaned.substring(0, 200));
+      // Procurar por objeto JSON em qualquer lugar da resposta
+      const jsonMatch = content.match(/\{[\s\S]*"title"[\s\S]*"subtitle"[\s\S]*"bullets"[\s\S]*\}/);
+      if (jsonMatch) {
+        console.log('🔍 VT: Encontrado objeto JSON na resposta');
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          console.log('✅ VT: JSON extraído da resposta complexa!');
+          return parsed;
+        } catch (e3) {
+          console.log('⚠️ VT: Objeto encontrado não é JSON válido');
+        }
+      }
       
-      const parsed = JSON.parse(cleaned);
-      console.log('✅ VT: JSON parseado com sucesso após limpeza!');
-      return parsed;
+      // Última tentativa: remover tudo antes do primeiro {
+      const firstBrace = content.indexOf('{');
+      const lastBrace = content.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        console.log('🔍 VT: Tentando extrair entre { e }');
+        try {
+          const extracted = content.substring(firstBrace, lastBrace + 1);
+          const parsed = JSON.parse(extracted);
+          console.log('✅ VT: JSON extraído com sucesso!');
+          return parsed;
+        } catch (e4) {
+          console.log('⚠️ VT: Extração entre { } falhou');
+        }
+      }
+      
+      throw new Error('Não foi possível extrair JSON da resposta');
     }
   } catch (error) {
     console.error('❌ VT: Erro ao parsear JSON:', error);
-    console.error('📄 VT: Conteúdo que falhou:', content);
-    throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
+    console.error('📄 VT: Primeiros 500 chars:', content.substring(0, 500));
+    
+    const err = new Error('PARSE_ERROR');
+    err.adminMessage = 'Erro ao parsear resposta da IA. O prompt no Firestore deve retornar JSON válido com {title, subtitle, bullets, cta, bonus}';
+    err.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
+    throw err;
   }
 };
 
