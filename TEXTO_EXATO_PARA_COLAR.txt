@@ -1,0 +1,22 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🎯 JSON PARA SISTEMA (OBRIGATÓRIO)
+
+IMPORTANTE: Depois de gerar TODA a análise completa das 7 seções acima, finalize retornando este JSON com os dados da OFERTA CAMPEÃ escolhida na seção 4️⃣:
+
+```json
+{
+  "title": "🔥 [Nome da Oferta Campeã]",
+  "subtitle": "[Promessa Principal da Oferta Campeã]",
+  "bullets": [
+    "✅ [Benefício Desbloqueado 1]",
+    "✅ [Benefício Desbloqueado 2]",
+    "✅ [Benefício Desbloqueado 3]",
+    "✅ [Benefício Desbloqueado 4]"
+  ],
+  "cta": "[CTA da Oferta Campeã - ex: 🚀 QUERO ME TRANSFORMAR AGORA!]",
+  "bonus": "[Bônus Exclusivo principal da Oferta Campeã]"
+}
+```
+
+Este JSON é APENAS para o sistema capturar e exibir no painel. Toda a sua análise completa continuará sendo gerada normalmente.
