@@ -268,64 +268,67 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      const errorMessage = error.error?.message || 'Erro ao gerar oferta';
-      
-      // Detectar erro de quota/créditos
-      if (response.status === 429 || errorMessage.includes('quota') || errorMessage.includes('billing')) {
-        const quotaError = new Error('QUOTA_EXCEEDED');
-        quotaError.adminMessage = '💳 Conta OpenAI sem créditos! Adicione créditos em: https://platform.openai.com/account/billing';
-        quotaError.userMessage = '🔧 Sistema temporariamente indisponível. Tente novamente em alguns minutos.';
-        quotaError.originalError = errorMessage;
-        throw quotaError;
+      if (!response.ok) {
+        const error = await response.json();
+        const errorMessage = error.error?.message || 'Erro ao gerar oferta';
+        
+        // Detectar erro de quota/créditos
+        if (response.status === 429 || errorMessage.includes('quota') || errorMessage.includes('billing')) {
+          const quotaError = new Error('QUOTA_EXCEEDED');
+          quotaError.adminMessage = '💳 Conta OpenAI sem créditos! Adicione créditos em: https://platform.openai.com/account/billing';
+          quotaError.userMessage = '🔧 Sistema temporariamente indisponível. Tente novamente em alguns minutos.';
+          quotaError.originalError = errorMessage;
+          throw quotaError;
+        }
+        
+        // Detectar erro de autenticação
+        if (response.status === 401) {
+          const authError = new Error('AUTH_FAILED');
+          authError.adminMessage = '🔑 Chave da API OpenAI inválida ou expirada. Gere uma nova em: https://platform.openai.com/api-keys';
+          authError.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
+          throw authError;
+        }
+        
+        throw new Error(errorMessage);
       }
-      
-      // Detectar erro de autenticação
-      if (response.status === 401) {
-        const authError = new Error('AUTH_FAILED');
-        authError.adminMessage = '🔑 Chave da API OpenAI inválida ou expirada. Gere uma nova em: https://platform.openai.com/api-keys';
-        authError.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
-        throw authError;
-      }
-      
-      throw new Error(errorMessage);
-    }
 
-    console.log('📥 VT: Resposta recebida. Status:', response.status);
-    
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    
-    console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
-    
-    // PASSO 5: Parse seguro do JSON
-    const offerData = safeJsonParse(content);
-    
-    // PASSO 6: Validar estrutura
-    if (!offerData.title || !offerData.subtitle || !offerData.bullets || !offerData.cta) {
-      console.warn('⚠️ VT: JSON incompleto, verificando formato alternativo...');
+      console.log('📥 VT: Resposta recebida. Status:', response.status);
+
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+
+      console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
       
-      // Se for formato completo da Sophia (com sections, pains, etc), converter
-      if (offerData.offer) {
-        console.log('🔄 VT: Convertendo formato completo para formato simples...');
-        return {
-          title: offerData.offer.headline || '🎯 Oferta Especial',
-          subtitle: offerData.offer.subheadline || 'Transforme sua realidade',
-          bullets: offerData.offer.benefits?.map(b => `✅ ${b}`) || [
-            '✅ Acesso completo',
-            '✅ Suporte dedicado',
-            '✅ Garantia total',
-            '✅ Bônus exclusivos'
-          ],
-          cta: offerData.offer.cta || '🚀 QUERO AGORA!',
-          bonus: offerData.offer.bonus || '🎁 Bônus especial incluído',
-        };
+      // PASSO 5: Parse seguro do JSON
+      const offerData = safeJsonParse(content);
+      
+      // PASSO 6: Validar estrutura
+      if (!offerData.title || !offerData.subtitle || !offerData.bullets || !offerData.cta) {
+        console.warn('⚠️ VT: JSON incompleto, verificando formato alternativo...');
+        
+        // Se for formato completo da Sophia (com sections, pains, etc), converter
+        if (offerData.offer) {
+          console.log('🔄 VT: Convertendo formato completo para formato simples...');
+          return {
+            title: offerData.offer.headline || '🎯 Oferta Especial',
+            subtitle: offerData.offer.subheadline || 'Transforme sua realidade',
+            bullets: offerData.offer.benefits?.map(b => `✅ ${b}`) || [
+              '✅ Acesso completo',
+              '✅ Suporte dedicado',
+              '✅ Garantia total',
+              '✅ Bônus exclusivos'
+            ],
+            cta: offerData.offer.cta || '🚀 QUERO AGORA!',
+            bonus: offerData.offer.bonus || '🎁 Bônus especial incluído',
+          };
+        }
       }
-    }
-    
-    console.log('✅ VT: Oferta gerada com sucesso!');
-    return offerData;
+      
+      console.log('✅ VT: Oferta gerada com sucesso!');
+      return {
+        ...offerData,
+        rawContent: content,
+      };
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
     throw error;
