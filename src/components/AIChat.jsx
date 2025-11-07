@@ -110,19 +110,32 @@ const AIChat = ({ initialText = '' }) => {
       success(`✅ Oferta gerada com sucesso! ${remaining === '∞' ? 'Ilimitado' : `Restam ${remaining} hoje`}`);
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      // VT: Salvar oferta automaticamente no Firestore com estrutura completa
       try {
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
           agent: selectedAgent,
+          status: 'execucao', // VT: Status inicial
           copy: {
             page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
             adPrimary: offerData.bullets.join(' '),
             adHeadline: offerData.title,
             adDescription: offerData.subtitle
           },
-          youtubeLinks: []
+          modeling: {
+            fanpageUrl: '',
+            salesPageUrl: '',
+            checkoutUrl: '',
+            creativesCount: 0,
+            monitorStart: null,
+            monitorDays: 7,
+            trend: null,
+            modelavel: false
+          },
+          youtubeLinks: [],
+          // VT: Salvar também a oferta original completa para referência
+          originalOffer: offerData
         });
         console.log('VT: Oferta salva no Kanban:', offerId);
         toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });

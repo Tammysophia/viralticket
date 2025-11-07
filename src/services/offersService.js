@@ -45,36 +45,23 @@ export const createOfferFromAI = async (data) => {
     const mockId = `mock_${Date.now()}`;
     // VT: Salvar no localStorage para simular
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    offers.push({
+    
+    // VT: Garantir estrutura completa de dados
+    const newOffer = {
       id: mockId,
-      ...data,
-      status: 'execucao',
+      userId: data.userId,
+      title: data.title || 'Nova Oferta',
+      agent: data.agent || 'sophia',
+      status: data.status || 'execucao',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      modeling: {
-        fanpageUrl: '',
-        salesPageUrl: '',
-        checkoutUrl: '',
-        creativesCount: 0,
-        monitorStart: null,
-        monitorDays: 7,
-        trend: null,
-        modelavel: false
+      copy: data.copy || {
+        page: '',
+        adPrimary: '',
+        adHeadline: '',
+        adDescription: ''
       },
-      attachments: { files: [] }
-    });
-    localStorage.setItem('vt_offers', JSON.stringify(offers));
-    return mockId;
-  }
-
-  try {
-    const offerRef = doc(collection(db, 'offers'));
-    const offerData = {
-      ...data,
-      status: 'execucao', // VT: Nova oferta começa em execução
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      modeling: {
+      modeling: data.modeling || {
         fanpageUrl: '',
         salesPageUrl: '',
         checkoutUrl: '',
@@ -85,11 +72,50 @@ export const createOfferFromAI = async (data) => {
         modelavel: false
       },
       youtubeLinks: data.youtubeLinks || [],
-      attachments: { files: [] }
+      attachments: { files: [] },
+      originalOffer: data.originalOffer || null
+    };
+    
+    offers.push(newOffer);
+    localStorage.setItem('vt_offers', JSON.stringify(offers));
+    console.log('VT: [MOCK] Oferta criada com estrutura completa:', newOffer);
+    return mockId;
+  }
+
+  try {
+    const offerRef = doc(collection(db, 'offers'));
+    
+    // VT: Garantir estrutura completa de dados
+    const offerData = {
+      userId: data.userId,
+      title: data.title || 'Nova Oferta',
+      agent: data.agent || 'sophia',
+      status: data.status || 'execucao',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      copy: data.copy || {
+        page: '',
+        adPrimary: '',
+        adHeadline: '',
+        adDescription: ''
+      },
+      modeling: data.modeling || {
+        fanpageUrl: '',
+        salesPageUrl: '',
+        checkoutUrl: '',
+        creativesCount: 0,
+        monitorStart: null,
+        monitorDays: 7,
+        trend: null,
+        modelavel: false
+      },
+      youtubeLinks: data.youtubeLinks || [],
+      attachments: { files: [] },
+      originalOffer: data.originalOffer || null
     };
     
     await setDoc(offerRef, offerData);
-    console.log('VT: Oferta criada:', offerRef.id);
+    console.log('VT: Oferta criada com estrutura completa:', offerRef.id);
     return offerRef.id;
   } catch (error) {
     console.error('VT: Erro ao criar oferta:', error);
