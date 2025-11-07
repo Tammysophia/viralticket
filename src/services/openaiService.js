@@ -333,6 +333,70 @@ export const generateOffer = async (comments, agent = 'sophia') => {
 };
 
 /**
+ * Gera texto específico para um campo da oferta
+ * @param {string} fieldType - Tipo do campo ('page', 'adPrimary', 'adHeadline', 'adDescription')
+ * @param {Object} offerContext - Contexto da oferta (título, outros campos preenchidos)
+ * @returns {Promise<string>} - Texto gerado
+ */
+export const generateCopyField = async (fieldType, offerContext) => {
+  try {
+    const apiKey = await getServiceAPIKey('openai');
+    
+    if (!apiKey) {
+      throw new Error('Chave da API do OpenAI não configurada');
+    }
+
+    // Criar prompts específicos para cada tipo de campo
+    const prompts = {
+      page: `Crie uma copy persuasiva completa para página de vendas com base nesta oferta: "${offerContext.title}". Inclua: headline impactante, subtítulo, benefícios, prova social, e call to action. Retorne apenas o texto da copy, sem JSON.`,
+      adPrimary: `Crie um texto principal para anúncio do Facebook/Instagram sobre: "${offerContext.title}". Máximo 125 caracteres, persuasivo e direto. Retorne apenas o texto.`,
+      adHeadline: `Crie uma headline impactante de até 40 caracteres para esta oferta: "${offerContext.title}". Retorne apenas a headline.`,
+      adDescription: `Crie uma descrição de 90 caracteres para anúncio sobre: "${offerContext.title}". Retorne apenas a descrição.`
+    };
+
+    const prompt = prompts[fieldType] || prompts.page;
+
+    console.log(`🤖 VT: Gerando ${fieldType} com IA...`);
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é um especialista em copywriting e marketing digital. Crie textos persuasivos e diretos.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao gerar texto com IA');
+    }
+
+    const data = await response.json();
+    const generatedText = data.choices[0].message.content.trim();
+    
+    console.log(`✅ VT: ${fieldType} gerado com sucesso!`);
+    return generatedText;
+  } catch (error) {
+    console.error('Erro ao gerar campo com IA:', error);
+    throw error;
+  }
+};
+
+/**
  * Analisa sentimento de comentários usando OpenAI
  * @param {Array<string>} comments - Array de comentários
  * @returns {Promise<Object>} - Análise de sentimento

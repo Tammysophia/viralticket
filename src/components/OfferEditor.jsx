@@ -6,7 +6,7 @@ import Input from './Input';
 import Button from './Button';
 import toast from 'react-hot-toast';
 import { updateOffer, addYoutubeLink, removeYoutubeLink } from '../services/offersService';
-import { getServiceAPIKey } from '../hooks/useAPIKeys';
+import { generateCopyField } from '../services/openaiService';
 
 const OfferEditor = ({ isOpen, onClose, offer }) => {
   const [activeTab, setActiveTab] = useState('details');
@@ -107,10 +107,43 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     }
   };
 
-  // VT: Gerar texto com IA (placeholder - integrar com openaiService)
+  // VT: Gerar texto com IA
   const handleGenerateWithAI = async (field) => {
-    toast('🤖 Geração com IA em breve...', { icon: '⚙️' });
-    // TODO: Integrar com openaiService para gerar texto específico
+    if (!offer?.id) {
+      toast.error('Erro: Oferta não carregada');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      toast.loading('🤖 Gerando com IA...', { id: 'ai-gen' });
+      
+      // Contexto da oferta para a IA
+      const context = {
+        title: formData.title,
+        subtitle: formData.copy.adDescription || '',
+        copy: formData.copy
+      };
+
+      // Gerar o texto com IA
+      const generatedText = await generateCopyField(field, context);
+      
+      // Atualizar o campo correspondente
+      setFormData(prev => ({
+        ...prev,
+        copy: {
+          ...prev.copy,
+          [field]: generatedText
+        }
+      }));
+
+      toast.success('✨ Texto gerado com IA!', { id: 'ai-gen' });
+    } catch (error) {
+      console.error('VT: Erro ao gerar com IA:', error);
+      toast.error('❌ Erro ao gerar texto. Verifique as configurações da API.', { id: 'ai-gen' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   // VT: Iniciar monitoramento
