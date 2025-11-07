@@ -104,14 +104,34 @@ const AIChat = ({ initialText = '' }) => {
       success('Oferta gerada com sucesso!');
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      // VT: Salvar oferta automaticamente no Firestore COM TODOS OS CAMPOS
       try {
+        console.log('💾 VT: Salvando oferta completa no Kanban...');
+        
         const copyContent = offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets?.join('\n') || ''}\n\n${offerData.cta}\n\n${offerData.bonus}`;
         
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
+          subtitle: offerData.subtitle || '',
           agent: selectedAgent,
+          
+          // VT: Salvar fullResponse em TODOS os campos para garantir que aparecem no editor
+          bigIdea: offerData.fullResponse || '',
+          avatar: '', // Será preenchido manualmente ou por parsing futuro
+          promessaPrincipal: offerData.subtitle || '',
+          ofertaMatadora: offerData.fullResponse || '',
+          bullets: offerData.bullets || [],
+          garantia: offerData.bonus || '',
+          chamadaCheckout: offerData.cta || '',
+          
+          // Blocos de conteúdo
+          paginaVendas: offerData.fullResponse || '',
+          scriptVideos: '',
+          conteudoEbook: '',
+          fullResponse: offerData.fullResponse || '',
+          
+          // Campos antigos (compatibilidade)
           copy: {
             page: copyContent,
             adPrimary: offerData.bullets?.join(' ') || '',
@@ -120,10 +140,11 @@ const AIChat = ({ initialText = '' }) => {
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva automaticamente:', offerId);
+        
+        console.log('✅ VT: Oferta salva no Kanban com TODOS os campos:', offerId);
         success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
-        console.error('VT: Erro ao salvar oferta:', saveError);
+        console.error('❌ VT: Erro ao salvar oferta:', saveError);
         // VT: Não bloqueia o fluxo se falhar ao salvar
       }
     } catch (err) {
