@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { Sparkles, Copy, Loader2, FileText } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
@@ -8,6 +8,22 @@ import { useLanguage } from '../hooks/useLanguage';
 import { verifyAPIConnection, generateOffer } from '../services/openaiService';
 import { createOfferFromAI } from '../services/offersService';
 import toast from 'react-hot-toast';
+
+const buildOfferSummary = (offer) => {
+  if (!offer) return '';
+
+  const bullets = Array.isArray(offer?.bullets) ? offer.bullets.filter(Boolean) : [];
+
+  const sections = [
+    offer?.title,
+    offer?.subtitle,
+    bullets.length ? bullets.join('\n') : '',
+    offer?.cta,
+    offer?.bonus,
+  ].filter(Boolean);
+
+  return sections.join('\n\n');
+};
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
@@ -97,6 +113,9 @@ const AIChat = ({ initialText = '' }) => {
       console.log('VT: Oferta gerada:', offerData);
 
       setOutput(offerData);
+      const summaryText = buildOfferSummary(offerData);
+      const bulletsArray = Array.isArray(offerData.bullets) ? offerData.bullets : [];
+      const kanbanDescription = offerData.rawContent || summaryText;
       
       // Atualizar apenas uso DIÁRIO (sem limite mensal)
       updateUser({
@@ -117,12 +136,13 @@ const AIChat = ({ initialText = '' }) => {
           title: offerData.title || 'Nova Oferta',
           agent: selectedAgent,
           copy: {
-            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
-            adPrimary: offerData.bullets.join(' '),
-            adHeadline: offerData.title,
-            adDescription: offerData.subtitle
+            page: summaryText,
+            adPrimary: bulletsArray.join(' '),
+            adHeadline: offerData.title || 'Oferta Especial',
+            adDescription: offerData.subtitle || '',
           },
-          youtubeLinks: []
+          youtubeLinks: [],
+          kanbanDescription,
         });
         console.log('VT: Oferta salva no Kanban:', offerId);
         toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
@@ -152,9 +172,15 @@ const AIChat = ({ initialText = '' }) => {
   const handleCopy = () => {
     if (!output) return;
     
-    const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
+    const text = buildOfferSummary(output);
     navigator.clipboard.writeText(text);
     success('Oferta copiada!');
+  };
+
+  const handleCopyRaw = () => {
+    if (!output?.rawContent) return;
+    navigator.clipboard.writeText(output.rawContent);
+    success('Conteúdo completo copiado!');
   };
 
   return (
@@ -247,6 +273,22 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <p className="text-center text-yellow-400">{output.bonus}</p>
+
+            {output.rawContent && (
+              <div className="mt-6 space-y-3">
+                <h4 className="text-lg font-semibold">Conteúdo Completo</h4>
+                <textarea
+                  value={output.rawContent}
+                  readOnly
+                  className="w-full min-h-[260px] glass border border-white/10 rounded-lg px-4 py-3 text-sm whitespace-pre-wrap focus:outline-none focus:ring-2 focus:ring-purple-500/40 bg-black/30"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" onClick={handleCopyRaw} icon={FileText}>
+                    Copiar conteúdo completo
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       )}
