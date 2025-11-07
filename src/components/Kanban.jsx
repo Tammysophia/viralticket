@@ -81,6 +81,7 @@ const Kanban = ({ onEditOffer }) => {
       organized[columnId].items.push({
         id: offer.id,
         title: offer.title,
+        subtitle: offer.subtitle || offer.copy?.adDescription || '',
         agent: offer.agent || 'IA',
         date: offer.createdAt?.toDate?.() || offer.createdAt || new Date(),
         status: offer.status,
@@ -203,28 +204,67 @@ const Kanban = ({ onEditOffer }) => {
                             snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
                           }`}
                         >
-                          <h4 className="font-bold mb-2">{item.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                            <Sparkles className="w-4 h-4" />
-                            <span>{item.agent}</span>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">{item.agent === 'sophia' ? '🔥' : '🌟'}</span>
+                            <span className="text-xs text-purple-400 font-semibold">
+                              {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                            </span>
                           </div>
+                          
+                          <h4 className="font-bold mb-1 text-white">{item.title}</h4>
+                          
+                          {item.subtitle && (
+                            <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>
+                          )}
+                          
                           <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(item.date)}</span>
                           </div>
                           
-                          {/* VT: Badge de modelagem na coluna "Modelando" */}
+                          {/* VT: Info e barra de progresso para modelagem */}
                           {column.id === 'modeling' && item.modeling && (
-                            <div className="mb-3">
-                              {item.modeling.modelavel && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                  ✅ Modelável
-                                </span>
-                              )}
-                              {item.modeling.trend === 'caindo' && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
-                                  🚫 Parar
-                                </span>
+                            <div className="mb-3 space-y-2">
+                              {/* Badges */}
+                              <div className="flex gap-2 flex-wrap">
+                                {item.modeling.modelavel && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                    ✅ Modelável
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'caindo' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
+                                    🚫 Parar
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'subindo' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                    📈 Subindo
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'estavel' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
+                                    ➡️ Estável
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Barra de progresso */}
+                              {item.modeling.monitorStart && (
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between text-xs text-gray-400">
+                                    <span>Monitoramento</span>
+                                    <span>{item.modeling.monitorDays || 7} dias</span>
+                                  </div>
+                                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                                      style={{ 
+                                        width: `${Math.min(100, ((Date.now() - new Date(item.modeling.monitorStart).getTime()) / (item.modeling.monitorDays * 24 * 60 * 60 * 1000)) * 100)}%` 
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               )}
                             </div>
                           )}

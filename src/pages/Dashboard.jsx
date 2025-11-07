@@ -13,13 +13,15 @@ import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { getUserOffers } from '../services/offersService'; // VT: Buscar ofertas
+import { getOffer } from '../services/offersService'; // VT: Buscar oferta específica
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('youtube');
   const [aiInitialText, setAiInitialText] = useState('');
   const [editingOffer, setEditingOffer] = useState(null); // VT: Oferta sendo editada
   const [showOfferEditor, setShowOfferEditor] = useState(false); // VT: Modal de edição
+  const [loadingOffer, setLoadingOffer] = useState(false); // VT: Carregando oferta
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -36,11 +38,24 @@ const Dashboard = () => {
 
   // VT: Abrir editor de oferta
   const handleEditOffer = async (offerId) => {
-    const offers = await getUserOffers(user.id);
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
-      setEditingOffer(offer);
-      setShowOfferEditor(true);
+    try {
+      setLoadingOffer(true);
+      console.log('VT: Carregando oferta para edição:', offerId);
+      
+      const offer = await getOffer(offerId);
+      
+      if (offer) {
+        console.log('VT: Oferta carregada com sucesso:', offer);
+        setEditingOffer(offer);
+        setShowOfferEditor(true);
+      } else {
+        toast.error('❌ Oferta não encontrada');
+      }
+    } catch (error) {
+      console.error('VT: Erro ao carregar oferta:', error);
+      toast.error('❌ Erro ao abrir oferta');
+    } finally {
+      setLoadingOffer(false);
     }
   };
 

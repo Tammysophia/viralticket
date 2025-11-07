@@ -12,7 +12,25 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
   const [activeTab, setActiveTab] = useState('details');
   const [formData, setFormData] = useState({
     title: '',
-    status: 'execucao',
+    subtitle: '',
+    status: 'pendente',
+    
+    // Campos da oferta gerada pela IA
+    bigIdea: '',
+    avatar: '',
+    promessaPrincipal: '',
+    ofertaMatadora: '',
+    bullets: [],
+    garantia: '',
+    chamadaCheckout: '',
+    
+    // Blocos opcionais
+    paginaVendas: '',
+    scriptVideos: '',
+    conteudoEbook: '',
+    fullResponse: '',
+    
+    // Campos antigos (compatibilidade)
     copy: {
       page: '',
       adPrimary: '',
@@ -39,7 +57,25 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     if (offer) {
       setFormData({
         title: offer.title || '',
-        status: offer.status || 'execucao',
+        subtitle: offer.subtitle || '',
+        status: offer.status || 'pendente',
+        
+        // Campos da IA
+        bigIdea: offer.bigIdea || '',
+        avatar: offer.avatar || '',
+        promessaPrincipal: offer.promessaPrincipal || '',
+        ofertaMatadora: offer.ofertaMatadora || '',
+        bullets: offer.bullets || [],
+        garantia: offer.garantia || '',
+        chamadaCheckout: offer.chamadaCheckout || '',
+        
+        // Blocos opcionais
+        paginaVendas: offer.paginaVendas || '',
+        scriptVideos: offer.scriptVideos || '',
+        conteudoEbook: offer.conteudoEbook || '',
+        fullResponse: offer.fullResponse || '',
+        
+        // Campos antigos
         copy: offer.copy || { page: '', adPrimary: '', adHeadline: '', adDescription: '' },
         modeling: offer.modeling || {
           fanpageUrl: '',
@@ -135,7 +171,8 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
 
   const tabs = [
     { id: 'details', label: 'Detalhes', icon: Sparkles },
-    { id: 'copy', label: 'Cópias', icon: Sparkles },
+    { id: 'offer', label: 'Oferta', icon: Sparkles },
+    { id: 'content', label: 'Conteúdo', icon: Sparkles },
     { id: 'videos', label: 'Vídeos', icon: LinkIcon },
     { id: 'modeling', label: 'Modelagem', icon: TrendingUp },
   ];
@@ -176,6 +213,13 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
                 placeholder="Ex: Curso de Marketing Digital"
               />
               
+              <Input
+                label="Subtítulo"
+                value={formData.subtitle}
+                onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+                placeholder="Breve descrição da oferta"
+              />
+              
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                 <select
@@ -192,102 +236,125 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
             </div>
           )}
 
-          {/* ABA: Cópias */}
-          {activeTab === 'copy' && (
-            <div className="space-y-6">
-              {/* Página de Vendas */}
+          {/* ABA: Oferta (Campos da IA) */}
+          {activeTab === 'offer' && (
+            <div className="space-y-4">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Página de Vendas</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('page')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
-                </div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Big Idea</label>
                 <textarea
-                  value={formData.copy.page}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, page: e.target.value }
-                  }))}
-                  placeholder="Cole ou gere a copy da página de vendas..."
-                  className="w-full h-32 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
-                />
-              </div>
-
-              {/* Criativo - Texto Principal */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Criativo - Texto Principal</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('adPrimary')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
-                </div>
-                <textarea
-                  value={formData.copy.adPrimary}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, adPrimary: e.target.value }
-                  }))}
-                  placeholder="Texto principal do anúncio..."
+                  value={formData.bigIdea}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bigIdea: e.target.value }))}
+                  placeholder="A grande ideia por trás da oferta..."
                   className="w-full h-24 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                 />
               </div>
 
-              {/* Headline */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Headline</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('adHeadline')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
-                </div>
-                <Input
-                  value={formData.copy.adHeadline}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, adHeadline: e.target.value }
-                  }))}
-                  placeholder="Headline do anúncio..."
+                <label className="block text-sm font-medium text-gray-300 mb-2">Avatar (Público-Alvo)</label>
+                <textarea
+                  value={formData.avatar}
+                  onChange={(e) => setFormData(prev => ({ ...prev, avatar: e.target.value }))}
+                  placeholder="Descrição do avatar/cliente ideal..."
+                  className="w-full h-20 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                 />
               </div>
 
-              {/* Descrição */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Descrição</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('adDescription')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
-                </div>
-                <textarea
-                  value={formData.copy.adDescription}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, adDescription: e.target.value }
-                  }))}
-                  placeholder="Descrição do anúncio..."
-                  className="w-full h-20 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                <label className="block text-sm font-medium text-gray-300 mb-2">Promessa Principal</label>
+                <Input
+                  value={formData.promessaPrincipal}
+                  onChange={(e) => setFormData(prev => ({ ...prev, promessaPrincipal: e.target.value }))}
+                  placeholder="Ex: Emagreça 10kg em 30 dias"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Oferta Matadora</label>
+                <textarea
+                  value={formData.ofertaMatadora}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ofertaMatadora: e.target.value }))}
+                  placeholder="O que torna esta oferta irresistível..."
+                  className="w-full h-24 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Bullets / Benefícios</label>
+                <textarea
+                  value={Array.isArray(formData.bullets) ? formData.bullets.join('\n') : formData.bullets}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    bullets: e.target.value.split('\n').filter(b => b.trim())
+                  }))}
+                  placeholder="✅ Benefício 1&#10;✅ Benefício 2&#10;✅ Benefício 3"
+                  className="w-full h-32 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-1">Uma linha por benefício</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Garantia</label>
+                <Input
+                  value={formData.garantia}
+                  onChange={(e) => setFormData(prev => ({ ...prev, garantia: e.target.value }))}
+                  placeholder="Ex: 7 dias de garantia incondicional"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Chamada para Checkout</label>
+                <Input
+                  value={formData.chamadaCheckout}
+                  onChange={(e) => setFormData(prev => ({ ...prev, chamadaCheckout: e.target.value }))}
+                  placeholder="Ex: 🚀 QUERO COMEÇAR AGORA!"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ABA: Conteúdo (Blocos Grandes) */}
+          {activeTab === 'content' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Página de Vendas</label>
+                <textarea
+                  value={formData.paginaVendas}
+                  onChange={(e) => setFormData(prev => ({ ...prev, paginaVendas: e.target.value }))}
+                  placeholder="Copy completa da página de vendas..."
+                  className="w-full h-48 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Scripts de Vídeos</label>
+                <textarea
+                  value={formData.scriptVideos}
+                  onChange={(e) => setFormData(prev => ({ ...prev, scriptVideos: e.target.value }))}
+                  placeholder="Scripts completos dos vídeos..."
+                  className="w-full h-40 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Conteúdo do Ebook</label>
+                <textarea
+                  value={formData.conteudoEbook}
+                  onChange={(e) => setFormData(prev => ({ ...prev, conteudoEbook: e.target.value }))}
+                  placeholder="Conteúdo estruturado do ebook..."
+                  className="w-full h-40 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Resposta Completa da IA</label>
+                <textarea
+                  value={formData.fullResponse}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fullResponse: e.target.value }))}
+                  placeholder="Resposta completa gerada pela IA..."
+                  className="w-full h-64 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none font-mono text-xs"
+                  readOnly
+                />
+                <p className="text-xs text-gray-500 mt-1">Somente leitura - gerado pela IA</p>
               </div>
             </div>
           )}

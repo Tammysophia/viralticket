@@ -19,15 +19,36 @@ import {
 const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
 
 /**
- * VT: Estrutura de uma oferta no Firestore
+ * VT: Estrutura COMPLETA de uma oferta no Firestore
  * offers/{offerId}
  * {
  *   userId: string,
  *   title: string,
+ *   subtitle: string,
+ *   agent: string (sophia ou sofia),
  *   status: 'pendente' | 'execucao' | 'modelando' | 'concluido',
  *   createdAt: Timestamp,
  *   updatedAt: Timestamp,
+ * 
+ *   // Campos da oferta gerada pela IA
+ *   bigIdea: string,
+ *   avatar: string,
+ *   promessaPrincipal: string,
+ *   ofertaMatadora: string,
+ *   bullets: string[],
+ *   garantia: string,
+ *   chamadaCheckout: string,
+ * 
+ *   // Blocos opcionais
+ *   paginaVendas: string,
+ *   scriptVideos: string,
+ *   conteudoEbook: string,
+ *   fullResponse: string (resposta completa da IA),
+ * 
+ *   // Campos antigos mantidos para compatibilidade
  *   copy: { page, adPrimary, adHeadline, adDescription },
+ * 
+ *   // Modelagem
  *   modeling: { fanpageUrl, salesPageUrl, checkoutUrl, creativesCount, monitorStart, monitorDays, trend, modelavel },
  *   youtubeLinks: string[],
  *   attachments: { files: [] }
@@ -36,19 +57,30 @@ const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
 
 /**
  * VT: Cria uma oferta a partir da IA
- * @param {Object} data - { title, copy: { page, adPrimary, adHeadline, adDescription }, youtubeLinks, userId }
+ * @param {Object} data - Dados da oferta vinda da IA
  * @returns {Promise<string>} - ID da oferta criada
  */
 export const createOfferFromAI = async (data) => {
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Criando oferta:', data);
     const mockId = `mock_${Date.now()}`;
-    // VT: Salvar no localStorage para simular
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
     offers.push({
       id: mockId,
       ...data,
-      status: 'execucao',
+      status: 'pendente', // VT: Nova oferta começa em PENDENTE
+      subtitle: data.subtitle || '',
+      bigIdea: data.bigIdea || '',
+      avatar: data.avatar || '',
+      promessaPrincipal: data.promessaPrincipal || '',
+      ofertaMatadora: data.ofertaMatadora || '',
+      bullets: data.bullets || [],
+      garantia: data.garantia || '',
+      chamadaCheckout: data.chamadaCheckout || '',
+      paginaVendas: data.paginaVendas || '',
+      scriptVideos: data.scriptVideos || '',
+      conteudoEbook: data.conteudoEbook || '',
+      fullResponse: data.fullResponse || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       modeling: {
@@ -70,10 +102,38 @@ export const createOfferFromAI = async (data) => {
   try {
     const offerRef = doc(collection(db, 'offers'));
     const offerData = {
-      ...data,
-      status: 'execucao', // VT: Nova oferta começa em execução
+      userId: data.userId,
+      title: data.title || 'Nova Oferta',
+      subtitle: data.subtitle || '',
+      agent: data.agent || 'sophia',
+      status: 'pendente', // VT: Nova oferta começa em PENDENTE
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      
+      // Campos da oferta gerada pela IA
+      bigIdea: data.bigIdea || '',
+      avatar: data.avatar || '',
+      promessaPrincipal: data.promessaPrincipal || '',
+      ofertaMatadora: data.ofertaMatadora || '',
+      bullets: data.bullets || [],
+      garantia: data.garantia || '',
+      chamadaCheckout: data.chamadaCheckout || '',
+      
+      // Blocos opcionais
+      paginaVendas: data.paginaVendas || '',
+      scriptVideos: data.scriptVideos || '',
+      conteudoEbook: data.conteudoEbook || '',
+      fullResponse: data.fullResponse || '',
+      
+      // Campos antigos mantidos para compatibilidade
+      copy: data.copy || {
+        page: data.fullResponse || '',
+        adPrimary: data.bullets?.join(' ') || '',
+        adHeadline: data.title || '',
+        adDescription: data.subtitle || ''
+      },
+      
+      // Modelagem
       modeling: {
         fanpageUrl: '',
         salesPageUrl: '',
@@ -89,7 +149,7 @@ export const createOfferFromAI = async (data) => {
     };
     
     await setDoc(offerRef, offerData);
-    console.log('VT: Oferta criada:', offerRef.id);
+    console.log('VT: Oferta criada com estrutura completa:', offerRef.id);
     return offerRef.id;
   } catch (error) {
     console.error('VT: Erro ao criar oferta:', error);
@@ -247,6 +307,32 @@ export const attachFiles = async (offerId, filesMeta) => {
   } catch (error) {
     console.error('VT: Erro ao anexar arquivos:', error);
     throw error;
+  }
+};
+
+/**
+ * VT: Busca uma oferta específica por ID
+ * @param {string} offerId - ID da oferta
+ * @returns {Promise<Object|null>} - Dados da oferta ou null
+ */
+export const getOffer = async (offerId) => {
+  if (USE_MOCKS) {
+    console.log('VT: [MOCK] Buscando oferta:', offerId);
+    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    return offers.find(o => o.id === offerId) || null;
+  }
+
+  try {
+    const offerRef = doc(db, 'offers', offerId);
+    const offerSnap = await getDoc(offerRef);
+    
+    if (offerSnap.exists()) {
+      return { id: offerSnap.id, ...offerSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('VT: Erro ao buscar oferta:', error);
+    return null;
   }
 };
 
