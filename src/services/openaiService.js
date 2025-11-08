@@ -12,30 +12,45 @@ const getAgentPromptFromFirestore = async (agentId) => {
   try {
     console.log(`🔍 VT: Buscando template da agente "${agentId}" no Firestore...`);
     
+    // Verificar db
+    console.log('🔍 VT: Firebase db status:', db ? 'CONECTADO' : 'NÃO CONECTADO');
+    
     if (!db) {
-      console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
-      return null;
+      console.error('❌ VT: Firestore não configurado! Verifique variáveis de ambiente.');
+      console.error('❌ VT: FALLBACK NÃO SERÁ USADO - ISSO É UM ERRO!');
+      throw new Error('Firestore não configurado. Configure as variáveis de ambiente do Firebase.');
     }
 
+    console.log(`📡 VT: Buscando documento: agent_templates/${agentId}`);
     const docRef = doc(db, 'agent_templates', agentId);
     const docSnap = await getDoc(docRef);
 
+    console.log(`🔍 VT: Documento existe?`, docSnap.exists());
+
     if (docSnap.exists()) {
       const data = docSnap.data();
-      const prompt = data.prompt || data.systemPrompt || null;
+      console.log(`🔍 VT: Campos do documento:`, Object.keys(data));
+      
+      const prompt = data.prompt || data.systemPrompt || data.template || null;
       
       if (prompt) {
         console.log(`✅ VT: Template da agente ${agentId} carregado do Firestore (${prompt.length} caracteres)`);
+        return prompt;
+      } else {
+        console.error(`❌ VT: Documento existe mas não tem campo 'prompt', 'systemPrompt' ou 'template'`);
+        console.error(`❌ VT: Campos disponíveis:`, Object.keys(data));
+        throw new Error(`Template da agente ${agentId} não tem campo de prompt válido`);
       }
-      
-      return prompt;
     } else {
-      console.warn(`⚠️ VT: Template não encontrado no Firestore para "${agentId}"`);
-      return null;
+      console.error(`❌ VT: Documento agent_templates/${agentId} NÃO EXISTE no Firestore!`);
+      console.error(`❌ VT: Você precisa criar este documento no Firebase Console`);
+      throw new Error(`Template da agente ${agentId} não encontrado no Firestore`);
     }
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar template do Firestore:`, error);
-    return null;
+    console.error(`❌ VT: ERRO CRÍTICO ao buscar template:`, error);
+    console.error(`❌ VT: Mensagem:`, error.message);
+    console.error(`❌ VT: Stack:`, error.stack);
+    throw error; // Propagar erro em vez de retornar null
   }
 };
 
@@ -225,22 +240,13 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       throw error;
     }
 
-    // PASSO 1: Buscar prompt do Firestore
-    let systemPrompt = await getAgentPromptFromFirestore(agent);
+    // PASSO 1: Buscar prompt do Firestore (SEM FALLBACK!)
+    console.log(`🔥 VT: Buscando template da agente "${agent}" (SEM FALLBACK)...`);
+    const systemPrompt = await getAgentPromptFromFirestore(agent);
     
-    // PASSO 2: Se não encontrou, usar fallback hardcoded
-    if (!systemPrompt) {
-      console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
-      
-      const fallbackPrompts = {
-        sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
-      };
-      
-      systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
-    }
-    
-    console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
+    // Se chegou aqui, o prompt foi encontrado!
+    console.log('✅ VT: agentPrompt tipo=' + typeof systemPrompt + ', vazio=' + !systemPrompt + ', length=' + (systemPrompt?.length || 0));
+    console.log('📋 VT: Prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
     
     // PASSO 3: Estruturar mensagens corretamente
     const messages = [
