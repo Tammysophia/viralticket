@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle, Trash2 } from 'lucide-react';
+import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
@@ -19,40 +19,6 @@ const AIChat = ({ initialText = '' }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
-
-  // VT: Carregar oferta salva do localStorage quando componente montar
-  useEffect(() => {
-    const savedOutput = localStorage.getItem('vt_last_offer');
-    const savedInput = localStorage.getItem('vt_last_input');
-    const savedAgent = localStorage.getItem('vt_last_agent');
-    
-    if (savedOutput) {
-      try {
-        setOutput(JSON.parse(savedOutput));
-        console.log('✅ VT: Oferta anterior restaurada do localStorage');
-      } catch (e) {
-        console.warn('⚠️ VT: Erro ao restaurar oferta:', e);
-      }
-    }
-    
-    if (savedInput && !initialText) {
-      setInputText(savedInput);
-    }
-    
-    if (savedAgent) {
-      setSelectedAgent(savedAgent);
-    }
-  }, [initialText]);
-
-  // VT: Salvar output no localStorage sempre que mudar
-  useEffect(() => {
-    if (output) {
-      localStorage.setItem('vt_last_offer', JSON.stringify(output));
-      localStorage.setItem('vt_last_input', inputText);
-      localStorage.setItem('vt_last_agent', selectedAgent);
-      console.log('💾 VT: Oferta salva no localStorage');
-    }
-  }, [output, inputText, selectedAgent]);
 
   // Atualizar inputText apenas quando initialText mudar
   useEffect(() => {
@@ -192,117 +158,13 @@ const AIChat = ({ initialText = '' }) => {
     success('Oferta copiada!');
   };
 
-  // VT: Limpar oferta do painel (botão lixeira)
-  const handleClearOutput = () => {
-    if (window.confirm('🗑️ Tem certeza que deseja apagar esta oferta do painel?\n\n(A oferta já salva no Kanban não será afetada)')) {
-      setOutput(null);
-      setInputText('');
-      localStorage.removeItem('vt_last_offer');
-      localStorage.removeItem('vt_last_input');
-      localStorage.removeItem('vt_last_agent');
-      success('🗑️ Oferta apagada do painel!');
-      console.log('🗑️ VT: Oferta removida do localStorage');
-    }
-  };
-
-  // VT: Gerar formato específico da Página de Vendas
-  const handleGeneratePageFormat = async (format) => {
-    if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      console.log(`📄 VT: Gerando página de vendas em formato ${format}...`);
-
-      const formatNames = {
-        'wordpress': 'WordPress (manual/Elementor)',
-        'quiz': 'Quiz (funil diagnóstico)',
-        'ia-builder': 'IA Builder (Lovable/Gama)'
-      };
-
-      // Criar prompt específico para gerar apenas a página no formato escolhido
-      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA a PÁGINA DE VENDAS completa em formato ${formatNames[format]}.
-
-Siga a estrutura de 17 blocos do seu protocolo (item 7 do prompt), incluindo:
-- Cores do nicho emocional
-- Headline e sub-headline
-- Todos os 17 blocos estruturados
-- Layout e visual
-- Instruções específicas para ${formatNames[format]}
-
-${format === 'ia-builder' ? 'Inclua o prompt completo para IA construtora gerar automaticamente.' : ''}
-${format === 'quiz' ? 'Inclua as 15 perguntas do quiz diagnóstico com lógica emocional.' : ''}
-${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no WordPress ou Elementor.' : ''}`;
-
-      const offerData = await generateOffer(specificPrompt, selectedAgent);
-
-      // Adicionar ao output existente
-      setOutput(prev => ({
-        ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
-      }));
-
-      success(`✅ Página de vendas (${formatNames[format]}) gerada!`);
-    } catch (err) {
-      console.error(`❌ VT: Erro ao gerar página formato ${format}:`, err);
-      error(`Erro ao gerar página ${format}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // VT: Gerar formato específico do Ebook
-  const handleGenerateEbookFormat = async (format) => {
-    if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      console.log(`📘 VT: Gerando ebook em formato ${format}...`);
-
-      const formatNames = {
-        'canva': 'Canva (design visual simples)',
-        'gama': 'Gama (estrutura completa)'
-      };
-
-      // Criar prompt específico para gerar apenas o ebook no formato escolhido
-      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA o EBOOK COMPLETO em formato ${formatNames[format]}.
-
-${format === 'gama' ? 'Inclua:\n- Sumário completo com todos os módulos e capítulos\n- Descrição detalhada dos capítulos principais\n- Tom e posicionamento\n- Blocos prontos para exportar no Gama\n- Estrutura modular completa' : ''}
-
-${format === 'canva' ? 'Inclua:\n- Estrutura visual dividida por blocos\n- Cada página/slide como bloco separado\n- Textos prontos para copiar e colar no Canva\n- Sugestões de layout e elementos visuais\n- Dicas de design para cada seção' : ''}
-
-Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
-
-      const offerData = await generateOffer(specificPrompt, selectedAgent);
-
-      // Adicionar ao output existente
-      setOutput(prev => ({
-        ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
-      }));
-
-      success(`✅ Ebook (${formatNames[format]}) gerado!`);
-    } catch (err) {
-      console.error(`❌ VT: Erro ao gerar ebook formato ${format}:`, err);
-      error(`Erro ao gerar ebook ${format}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Agent Selection */}
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">Selecione a IA</h3>
+          {/* VT: Badge "API Conectada" removido conforme solicitado */}
         </div>
         
         {user?.isAdmin && (
@@ -360,19 +222,9 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-                {t('copy')}
-              </Button>
-              <Button 
-                variant="danger" 
-                onClick={handleClearOutput} 
-                icon={Trash2}
-                className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
-              >
-                Apagar
-              </Button>
-            </div>
+            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
+              {t('copy')}
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -384,7 +236,7 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
             </div>
 
             <div className="space-y-2">
-              {output.bullets && output.bullets.map((bullet, index) => (
+              {output.bullets.map((bullet, index) => (
                 <p key={index} className="text-gray-300">{bullet}</p>
               ))}
             </div>
