@@ -238,21 +238,43 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     console.log('📊 VT: Resposta completa tem', content.length, 'caracteres');
     console.log('🔥 VT: Agente utilizada:', agent);
     
-    // 4️⃣ Retornar TODA a resposta gerada pela IA
-    // O prompt da IA está OCULTO (foi enviado como "system")
-    // Apenas a resposta completa aparece na tela
+    // 4️⃣ SEMPRE retornar fullResponse + tentar extrair JSON
+    // Procurar por JSON no final da resposta (depois de todas as seções)
+    let offerJson = null;
+    
+    // Tentar encontrar JSON no formato esperado
+    const jsonMatch = content.match(/\{[\s\S]*"title"[\s\S]*"subtitle"[\s\S]*"bullets"[\s\S]*"cta"[\s\S]*"bonus"[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        offerJson = JSON.parse(jsonMatch[0]);
+        console.log('✅ VT: JSON extraído da resposta completa');
+      } catch (e) {
+        console.warn('⚠️ VT: Falha ao parsear JSON encontrado');
+      }
+    }
+    
+    // Se não encontrou JSON válido, criar estrutura básica
+    if (!offerJson || !offerJson.title) {
+      console.log('📝 VT: Criando estrutura básica (JSON não encontrado)');
+      offerJson = {
+        title: '🔥 Análise Completa Gerada',
+        subtitle: 'Veja a análise detalhada abaixo',
+        bullets: [
+          '✅ Diagnóstico profundo do público',
+          '✅ 10 micro-ofertas criadas',
+          '✅ 3 ofertas mestres selecionadas',
+          '✅ Estrutura completa da oferta campeã'
+        ],
+        cta: '📋 ROLE PARA BAIXO PARA VER TUDO',
+        bonus: '🎁 Análise completa de 8 seções disponível'
+      };
+    }
+    
+    // RETORNAR: JSON parseado + fullResponse (resposta completa da IA)
     return {
-      title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
-      subtitle: 'Veja abaixo o resultado completo da análise',
-      bullets: [
-        '✅ Oferta gerada seguindo todo o protocolo da IA',
-        '✅ Prompt do Firestore aplicado com sucesso',
-        '✅ Análise completa dos comentários',
-        '✅ Resposta completa disponível abaixo',
-      ],
-      cta: '📋 Role para baixo para ver a resposta completa',
-      bonus: '💡 Resposta completa da IA com todo o protocolo',
-      fullResponse: content, // VT: Resposta COMPLETA da IA (aparece na UI)
+      ...offerJson,
+      fullResponse: content, // ✅ CRÍTICO: Resposta COMPLETA para exibir na UI
+      agent: agent
     };
   } catch (error) {
     console.error('❌ VT: Erro ao gerar oferta:', error);
