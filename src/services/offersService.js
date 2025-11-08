@@ -265,11 +265,19 @@ export const getUserOffers = async (userId) => {
   try {
     const q = query(
       collection(db, 'offers'),
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
+      where('userId', '==', userId)
+      // VT: orderBy removido para não precisar de índice composto
+      // A ordenação é feita no cliente
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // VT: Ordena no cliente por updatedAt descendente
+    return offers.sort((a, b) => {
+      const aTime = a.updatedAt?.toMillis?.() || 0;
+      const bTime = b.updatedAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
   } catch (error) {
     console.error('VT: Erro ao buscar ofertas:', error);
     return [];
@@ -295,12 +303,20 @@ export const subscribeToUserOffers = (userId, callback) => {
 
   const q = query(
     collection(db, 'offers'),
-    where('userId', '==', userId),
-    orderBy('updatedAt', 'desc')
+    where('userId', '==', userId)
+    // VT: orderBy removido para não precisar de índice composto
   );
   
   return onSnapshot(q, (snapshot) => {
     const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(offers);
+    
+    // VT: Ordena no cliente por updatedAt descendente
+    const sortedOffers = offers.sort((a, b) => {
+      const aTime = a.updatedAt?.toMillis?.() || 0;
+      const bTime = b.updatedAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+    
+    callback(sortedOffers);
   });
 };
