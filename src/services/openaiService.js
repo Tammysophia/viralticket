@@ -215,7 +215,23 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
           },
           {
             role: 'user',
-            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}\n\n⚠️ IMPORTANTE: Ao final da análise completa, você DEVE retornar o JSON obrigatório com title, subtitle, bullets, cta e bonus da oferta campeã.`, // VT: Comentários + reforço da instrução JSON
+            content: `Analise estes comentários e gere APENAS as 4 primeiras etapas do seu protocolo:
+
+1️⃣ DIAGNÓSTICO PROFUNDO
+2️⃣ CRIAÇÃO DE OFERTAS (10 micro-ofertas)
+3️⃣ SELEÇÃO DAS 3 OFERTAS MESTRES
+4️⃣ ESTRUTURA DA OFERTA CAMPEÃ
+
+⚠️ IMPORTANTE: 
+- NÃO gere o Ebook (etapa 5)
+- NÃO gere a Página de Vendas (etapa 6)
+- NÃO gere o Copy para Criativos (etapa 7)
+- Esses formatos serão gerados DEPOIS que o cliente escolher como deseja receber
+
+Comentários para análise:
+${comments}
+
+Ao final da ESTRUTURA DA OFERTA CAMPEÃ, você DEVE retornar o JSON obrigatório com title, subtitle, bullets, cta e bonus.`, // VT: Comentários + instrução LIMITADA às 4 primeiras etapas
           },
         ],
         temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas
