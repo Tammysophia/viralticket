@@ -121,28 +121,35 @@ const safeJsonParse = (content) => {
       
       console.log(`🔍 VT: Encontrados ${allJsonObjects.length} objetos JSON na resposta`);
       
-      // Se não encontrou JSON válido, criar estrutura básica a partir do texto
-      console.warn('⚠️ VT: Nenhum JSON válido encontrado, criando estrutura básica...');
+      // Se não encontrou JSON válido, tentar extrair do primeiro objeto encontrado
+      if (allJsonObjects.length > 0) {
+        console.warn('⚠️ VT: Usando primeiro objeto JSON encontrado');
+        const firstObj = allJsonObjects[0];
+        return {
+          title: firstObj.title || '🎯 Oferta Especial',
+          subtitle: firstObj.subtitle || 'Transforme sua realidade',
+          bullets: firstObj.bullets || [
+            '✅ Benefício 1',
+            '✅ Benefício 2', 
+            '✅ Benefício 3',
+            '✅ Benefício 4'
+          ],
+          cta: firstObj.cta || '🚀 QUERO AGORA!',
+          bonus: firstObj.bonus || '🎁 Bônus especial incluído'
+        };
+      }
       
-      return {
-        title: '🎯 Oferta Especial',
-        subtitle: 'Análise detalhada gerada. Verifique o console para detalhes completos.',
-        bullets: [
-          '✅ Análise profunda do público-alvo',
-          '✅ 10 micro-ofertas personalizadas criadas',
-          '✅ 3 ofertas campeãs selecionadas',
-          '✅ Estrutura completa do produto'
-        ],
-        cta: '🚀 VER ANÁLISE COMPLETA NO CONSOLE',
-        bonus: '🎁 Análise detalhada disponível nos logs do navegador (F12)'
-      };
+      // Último recurso: lançar erro para admin ver
+      console.error('❌ VT: FALHA TOTAL - Nenhum JSON encontrado na resposta');
+      console.error('📄 VT: Resposta completa:', content);
+      throw new Error('Resposta da IA não contém JSON válido. Verifique o prompt no Firestore.');
     }
   } catch (error) {
     console.error('❌ VT: Erro ao parsear JSON:', error);
     console.error('📄 VT: Primeiros 1000 chars:', content.substring(0, 1000));
     
     const err = new Error('PARSE_ERROR');
-    err.adminMessage = 'A IA retornou análise completa mas sem JSON final. Adicione no final do prompt: "Ao final, retorne JSON: {title, subtitle, bullets, cta, bonus}"';
+    err.adminMessage = `Erro ao parsear resposta da IA: ${error.message}. Verifique se o prompt no Firestore pede JSON no formato correto.`;
     err.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
     throw err;
   }
@@ -228,8 +235,69 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
       
       const fallbackPrompts = {
-        sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
+        sophia: `Você é Sophia Fênix, a maior especialista em criar ofertas irresistíveis de alto impacto.
+
+MISSÃO: Analisar os comentários fornecidos e criar UMA oferta ultra-personalizada.
+
+INSTRUÇÕES CRÍTICAS:
+1. Identifique o NICHO específico dos comentários (relacionamentos, emagrecimento, negócios, etc)
+2. Encontre as 3 DORES mais mencionadas
+3. Identifique os DESEJOS ocultos do público
+4. Use EXATAMENTE a linguagem que ELES usaram
+5. Seja ESPECÍFICO do nicho (NUNCA genérico!)
+6. Crie URGÊNCIA real baseada nas dores
+7. Benefícios devem ser MENSURÁVEIS e TANGÍVEIS
+
+ESTRUTURA DA OFERTA:
+- Title: Emoji + Promessa específica + Resultado mensurável em prazo
+- Subtitle: Como [público] consegue [resultado] sem [objeção principal]
+- Bullets: 4 benefícios específicos resolvendo dores reais (começar com ✅)
+- CTA: Verbo de ação + urgência + benefício principal
+- Bonus: Bônus complementar específico do nicho
+
+REGRAS RÍGIDAS:
+❌ NUNCA seja genérico
+❌ NUNCA use clichês como "transforme sua vida"
+✅ SEMPRE use números específicos
+✅ SEMPRE mencione o nicho identificado
+✅ SEMPRE use palavras dos comentários
+
+FORMATO DE SAÍDA (OBRIGATÓRIO):
+Retorne APENAS um objeto JSON válido, sem markdown, sem explicações.
+{
+  "title": "string com emoji",
+  "subtitle": "string", 
+  "bullets": ["✅ string", "✅ string", "✅ string", "✅ string"],
+  "cta": "string",
+  "bonus": "string"
+}`,
+        sofia: `Você é Sofia Universal, especialista em criar ofertas personalizadas para todos os nichos.
+
+MISSÃO: Analisar comentários e criar oferta adaptada ao público específico.
+
+INSTRUÇÕES:
+1. Identifique o nicho dos comentários
+2. Encontre as dores principais mencionadas
+3. Crie oferta que resolva essas dores
+4. Use linguagem do público
+5. Seja específico e direto
+
+ESTRUTURA:
+- Title: Título impactante com emoji + promessa clara
+- Subtitle: Como conseguir resultado sem objeção principal
+- Bullets: 4 benefícios práticos (começar com ✅)
+- CTA: Chamada para ação urgente
+- Bonus: Bônus complementar
+
+FORMATO DE SAÍDA:
+Retorne APENAS JSON válido:
+{
+  "title": "string",
+  "subtitle": "string",
+  "bullets": ["✅ 1", "✅ 2", "✅ 3", "✅ 4"],
+  "cta": "string",
+  "bonus": "string"
+}`
       };
       
       systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
