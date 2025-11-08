@@ -63,7 +63,7 @@ const Login = () => {
       }
     } catch (err) {
       // Erros já tratados no AuthContext com toasts específicos
-      console.error('Auth error:', err);
+      // Não loga no console para evitar poluição
     }
   };
 
