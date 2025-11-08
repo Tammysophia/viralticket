@@ -215,11 +215,11 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
           },
           {
             role: 'user',
-            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}`, // VT: Comentários do usuário
+            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}\n\n⚠️ IMPORTANTE: Ao final da análise completa, você DEVE retornar o JSON obrigatório com title, subtitle, bullets, cta e bonus da oferta campeã.`, // VT: Comentários + reforço da instrução JSON
           },
         ],
-        temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas (conforme solicitado)
-        max_tokens: 2500, // VT: 2500 tokens conforme especificado
+        temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas
+        max_tokens: 4096, // VT: AUMENTADO para 4096 para garantir que não corte antes do JSON final
       }),
     });
 
