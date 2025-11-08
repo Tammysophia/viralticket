@@ -248,6 +248,68 @@ const AIChat = ({ initialText = '' }) => {
             </div>
 
             <p className="text-center text-yellow-400">{output.bonus}</p>
+
+            {/* VT: Resposta completa da IA - FORMATADA E ORGANIZADA */}
+            {output.fullResponse && (
+              <div className="mt-8 space-y-6">
+                <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                  <h4 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6 flex items-center gap-3">
+                    <span className="text-3xl">🔥</span>
+                    Análise Completa da {selectedAgent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                  </h4>
+                  
+                  <div className="prose prose-invert prose-lg max-w-none">
+                    {/* VT: Renderizar com formatação Markdown-like */}
+                    <div 
+                      className="space-y-6 text-gray-200 leading-relaxed"
+                      style={{ fontSize: '15px', lineHeight: '1.8' }}
+                      dangerouslySetInnerHTML={{
+                        __html: output.fullResponse
+                          // Títulos principais (###)
+                          .replace(/###\s+(.+)/g, '<div class="mt-10 mb-6"><h3 class="text-2xl font-bold text-purple-300 border-l-4 border-purple-500 pl-4 py-2 bg-purple-500/10 rounded-r-lg">$1</h3></div>')
+                          // Negrito (**)
+                          .replace(/\*\*(.+?)\*\*/g, '<strong class="text-purple-200 font-bold">$1</strong>')
+                          // Listas numeradas com destaque
+                          .replace(/^(\d+)\.\s+\*\*(.+?)\*\*(.+)?$/gm, '<div class="ml-6 my-4 p-4 bg-black/30 rounded-lg border-l-4 border-purple-500"><div class="flex items-start gap-3"><span class="text-purple-400 font-bold text-xl flex-shrink-0">$1.</span><div><strong class="text-white text-lg">$2</strong><span class="text-gray-300">$3</span></div></div></div>')
+                          // Listas simples numeradas
+                          .replace(/^(\d+)\.\s+(.+)/gm, '<div class="ml-6 my-2 flex items-start gap-3"><span class="text-purple-400 font-bold flex-shrink-0">$1.</span><span class="text-gray-300">$2</span></div>')
+                          // Listas com marcadores
+                          .replace(/^[-•✓✅]\s+(.+)/gm, '<div class="ml-8 my-2 flex items-start gap-2"><span class="text-purple-400 text-xl">•</span><span class="text-gray-300">$1</span></div>')
+                          // Emojis em destaque
+                          .replace(/(🎯|💡|🔥|✨|💎|🚀|📋|💰|🎁|✅|⚠️|❌|💔|🔍|💥|🧱|🪶|👉|🌹|🕯️|🔗|💣|🌙|🌅|💖|🩸|💫|🩶|💌|👑)/g, '<span class="inline-block text-2xl mr-2 align-middle">$1</span>')
+                          // Separadores (---)
+                          .replace(/^━━━+$/gm, '<hr class="my-8 border-purple-500/30"/>')
+                          // Citações ou blocos importantes (> )
+                          .replace(/^>\s+(.+)/gm, '<blockquote class="border-l-4 border-purple-500 pl-4 py-2 my-4 bg-purple-500/10 italic text-purple-200">$1</blockquote>')
+                          // Blocos de código (```)
+                          .replace(/```(.+?)```/gs, '<pre class="bg-black/60 p-5 rounded-xl my-6 border border-purple-500/40 overflow-x-auto shadow-lg"><code class="text-sm text-green-300 font-mono">$1</code></pre>')
+                          // Quebras de linha triplas (espaçamento maior)
+                          .replace(/\n\n\n/g, '<div class="my-8"></div>')
+                          // Quebras de linha duplas
+                          .replace(/\n\n/g, '<div class="my-4"></div>')
+                          // Quebras de linha simples
+                          .replace(/\n/g, '<br/>')
+                      }}
+                    />
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div className="mt-8 pt-6 border-t border-purple-500/30 space-y-6">
+                    {/* Botão de copiar */}
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(output.fullResponse);
+                        success('✅ Análise completa copiada!');
+                      }}
+                      className="w-full glass border border-purple-500/50 hover:border-purple-400 rounded-lg px-6 py-3 font-semibold text-purple-300 hover:text-purple-200 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Copy size={20} />
+                      Copiar Análise Completa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       )}
