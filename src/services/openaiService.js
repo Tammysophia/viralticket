@@ -299,17 +299,18 @@ Ao final da ESTRUTURA DA OFERTA CAMPEÃ, você DEVE retornar o JSON obrigatório
 };
 
 /**
- * 🆕 VT: Gera formato específico (página/ebook) SEM buscar template completo
- * Otimiza tokens ao gerar apenas o formato escolhido, baseado na oferta já gerada
+ * 🆕 VT: Gera formato específico (página/ebook/criativos) usando template do Firestore
+ * Chama a IA com o template completo para gerar APENAS a seção escolhida
  * 
- * @param {string} formatType - Tipo: 'page' ou 'ebook'
- * @param {string} format - Formato específico: 'wordpress', 'quiz', 'ia-builder', 'canva', 'gama'
- * @param {string} offerContext - Resumo da oferta campeã (title, bullets, etc)
+ * @param {string} formatType - Tipo: 'page', 'ebook' ou 'creatives'
+ * @param {string} format - Formato específico: 'wordpress', 'quiz', 'ia-builder', 'canva', 'gama', 'reels', 'carousel'
+ * @param {string} agent - Agente: 'sophia' ou 'sofia'
+ * @param {string} offerContext - Contexto da oferta campeã já gerada
  * @returns {Promise<string>} - Conteúdo formatado específico
  */
-export const generateSpecificFormat = async (formatType, format, offerContext = '') => {
+export const generateSpecificFormat = async (formatType, format, agent = 'sophia', offerContext = '') => {
   try {
-    console.log(`🎨 VT: Gerando formato específico: ${formatType}/${format}`);
+    console.log(`🎨 VT: Gerando formato específico: ${formatType}/${format} com agente ${agent}`);
     
     // 1️⃣ Buscar chave da OpenAI
     const apiKey = await getServiceAPIKey('openai');
@@ -318,76 +319,76 @@ export const generateSpecificFormat = async (formatType, format, offerContext = 
       throw new Error('Chave da OpenAI não configurada. Configure no painel administrativo.');
     }
 
-    // 2️⃣ Criar prompt CURTO e ESPECÍFICO (sem template completo)
-    let systemPrompt = '';
+    // 2️⃣ Buscar template COMPLETO do Firestore (igual geração principal)
+    let agentPrompt = await getAgentTemplate(agent);
+    
+    if (!agentPrompt) {
+      console.log(`📝 VT: Template não encontrado no Firestore, usando fallback para ${agent}`);
+      // Fallback se não encontrar no Firestore
+      agentPrompt = 'Você é uma especialista em marketing digital e copywriting emocional de alta conversão.';
+    }
+
+    console.log(`✅ VT: Template carregado (${agentPrompt.length} caracteres)`);
+
+    // 3️⃣ Criar instrução específica para gerar APENAS a seção escolhida
     let userPrompt = '';
 
     if (formatType === 'page') {
-      // PÁGINA DE VENDAS
-      const formatInstructions = {
-        'wordpress': `Gere a estrutura COMPLETA da página de vendas em formato WordPress/Elementor.
-Inclua:
-- Cores do nicho emocional
-- Headline e sub-headline
-- 17 blocos estruturados (conforme protocolo)
-- Copy pronta para copiar/colar
-- Instruções de montagem`,
-        
-        'quiz': `Gere o QUIZ DIAGNÓSTICO completo com 15 perguntas.
-Inclua:
-- Perguntas numeradas (1 a 15)
-- 4 opções (A, B, C, D) para cada
-- Lógica emocional de pontuação
-- Resultado do diagnóstico
-- Direcionamento para oferta`,
-        
-        'ia-builder': `Gere o PROMPT COMPLETO para IA construtora (Lovable/Gama).
-Inclua:
-- Prompt detalhado com estrutura da página
-- Seções e componentes
-- Copy completa
-- Cores e estilo
-- Funcionalidades necessárias`
+      const formatNames = {
+        'wordpress': 'Página de Vendas em WordPress/Elementor (item 7 do seu protocolo)',
+        'quiz': 'Quiz Diagnóstico com 15 perguntas (item 7 do seu protocolo)',
+        'ia-builder': 'Prompt para IA Builder (Lovable/Gama) (item 7 do seu protocolo)'
       };
 
-      systemPrompt = 'Você é uma expert em páginas de vendas de alto impacto. Gere APENAS a estrutura solicitada, sem repetir diagnósticos ou análises.';
-      userPrompt = `${formatInstructions[format]}
+      userPrompt = `Com base na oferta campeã abaixo, gere AGORA a ${formatNames[format]}.
 
-**CONTEXTO DA OFERTA CAMPEÃ:**
+📋 CONTEXTO DA OFERTA CAMPEÃ:
 ${offerContext}
 
-⚠️ IMPORTANTE: Gere APENAS o formato solicitado. NÃO repita o diagnóstico, análise ou micro-ofertas.`;
+⚠️ IMPORTANTE:
+- Gere APENAS a ${formatNames[format]}
+- Siga TODO o seu protocolo para este formato específico
+- NÃO repita o diagnóstico profundo
+- NÃO repita as 10 micro-ofertas
+- NÃO repita a seleção das 3 ofertas mestres
+- Vá direto para a estrutura da ${formatNames[format]}`;
 
     } else if (formatType === 'ebook') {
-      // EBOOK
-      const formatInstructions = {
-        'canva': `Gere a estrutura do EBOOK para Canva (design visual simples).
-Inclua:
-- Estrutura dividida por páginas/slides
-- Textos prontos para copiar/colar
-- Sugestões de layout
-- Elementos visuais para cada seção
-- Dicas de design`,
-        
-        'gama': `Gere a estrutura do EBOOK para Gama (estrutura completa).
-Inclua:
-- Sumário completo
-- Módulos e capítulos detalhados
-- Tom e posicionamento
-- Blocos prontos para exportar
-- Estrutura modular`
+      const formatNames = {
+        'canva': 'Ebook para Canva (design visual simples) (item 6 do seu protocolo)',
+        'gama': 'Ebook para Gama (estrutura completa) (item 6 do seu protocolo)'
       };
 
-      systemPrompt = 'Você é uma expert em criação de ebooks educativos de alto valor. Gere APENAS a estrutura solicitada, sem repetir diagnósticos ou análises.';
-      userPrompt = `${formatInstructions[format]}
+      userPrompt = `Com base na oferta campeã abaixo, gere AGORA o ${formatNames[format]}.
 
-**CONTEXTO DA OFERTA CAMPEÃ:**
+📋 CONTEXTO DA OFERTA CAMPEÃ:
 ${offerContext}
 
-⚠️ IMPORTANTE: Gere APENAS o formato solicitado. NÃO repita o diagnóstico, análise ou micro-ofertas.`;
+⚠️ IMPORTANTE:
+- Gere APENAS o ${formatNames[format]}
+- Siga TODO o seu protocolo para ebook (item 6)
+- Inclua TODOS os módulos e capítulos detalhados
+- NÃO repita o diagnóstico profundo
+- NÃO repita as 10 micro-ofertas
+- NÃO repita a seleção das 3 ofertas mestres`;
+
+    } else if (formatType === 'creatives') {
+      userPrompt = `Com base na oferta campeã abaixo, gere AGORA o COPY PARA CRIATIVOS RÁPIDOS (item 8 do seu protocolo).
+
+📋 CONTEXTO DA OFERTA CAMPEÃ:
+${offerContext}
+
+⚠️ IMPORTANTE:
+- Gere APENAS o copy para criativos rápidos
+- Inclua:
+  * 5 frases curtas para Reels (5-8 palavras)
+  * Copy completo para Carrossel (10 slides)
+  * Headlines para anúncios
+- Siga TODO o seu protocolo para este formato
+- NÃO repita o diagnóstico, ofertas ou análises`;
     }
 
-    // 3️⃣ Chamar OpenAI com prompt CURTO (economiza tokens)
+    // 4️⃣ Chamar OpenAI com template COMPLETO do Firestore
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -395,19 +396,19 @@ ${offerContext}
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // VT: Modelo mais barato para formatos específicos
+        model: 'gpt-4o', // VT: Mesmo modelo da geração principal
         messages: [
           {
             role: 'system',
-            content: systemPrompt,
+            content: agentPrompt, // VT: Template COMPLETO do Firestore
           },
           {
             role: 'user',
             content: userPrompt,
           },
         ],
-        temperature: 0.3,
-        max_tokens: 3000, // VT: Suficiente para um formato específico
+        temperature: 0.0,
+        max_tokens: 4096, // VT: Suficiente para formatos completos
       }),
     });
 
