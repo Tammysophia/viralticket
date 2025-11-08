@@ -121,28 +121,35 @@ const safeJsonParse = (content) => {
       
       console.log(`🔍 VT: Encontrados ${allJsonObjects.length} objetos JSON na resposta`);
       
-      // Se não encontrou JSON válido, criar estrutura básica a partir do texto
-      console.warn('⚠️ VT: Nenhum JSON válido encontrado, criando estrutura básica...');
+      // Se não encontrou JSON válido, tentar extrair do primeiro objeto encontrado
+      if (allJsonObjects.length > 0) {
+        console.warn('⚠️ VT: Usando primeiro objeto JSON encontrado');
+        const firstObj = allJsonObjects[0];
+        return {
+          title: firstObj.title || '🎯 Oferta Especial',
+          subtitle: firstObj.subtitle || 'Transforme sua realidade',
+          bullets: firstObj.bullets || [
+            '✅ Benefício 1',
+            '✅ Benefício 2', 
+            '✅ Benefício 3',
+            '✅ Benefício 4'
+          ],
+          cta: firstObj.cta || '🚀 QUERO AGORA!',
+          bonus: firstObj.bonus || '🎁 Bônus especial incluído'
+        };
+      }
       
-      return {
-        title: '🎯 Oferta Especial',
-        subtitle: 'Análise detalhada gerada. Verifique o console para detalhes completos.',
-        bullets: [
-          '✅ Análise profunda do público-alvo',
-          '✅ 10 micro-ofertas personalizadas criadas',
-          '✅ 3 ofertas campeãs selecionadas',
-          '✅ Estrutura completa do produto'
-        ],
-        cta: '🚀 VER ANÁLISE COMPLETA NO CONSOLE',
-        bonus: '🎁 Análise detalhada disponível nos logs do navegador (F12)'
-      };
+      // Último recurso: lançar erro para admin ver
+      console.error('❌ VT: FALHA TOTAL - Nenhum JSON encontrado na resposta');
+      console.error('📄 VT: Resposta completa:', content);
+      throw new Error('Resposta da IA não contém JSON válido. Verifique o prompt no Firestore.');
     }
   } catch (error) {
     console.error('❌ VT: Erro ao parsear JSON:', error);
     console.error('📄 VT: Primeiros 1000 chars:', content.substring(0, 1000));
     
     const err = new Error('PARSE_ERROR');
-    err.adminMessage = 'A IA retornou análise completa mas sem JSON final. Adicione no final do prompt: "Ao final, retorne JSON: {title, subtitle, bullets, cta, bonus}"';
+    err.adminMessage = `Erro ao parsear resposta da IA: ${error.message}. Verifique se o prompt no Firestore pede JSON no formato correto.`;
     err.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
     throw err;
   }
