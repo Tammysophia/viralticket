@@ -36,7 +36,7 @@ const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
 
 /**
  * VT: Cria uma oferta a partir da IA
- * @param {Object} data - { title, copy: { page, adPrimary, adHeadline, adDescription }, youtubeLinks, userId }
+ * @param {Object} data - { title, agent, fullResponse, copy: { page, adPrimary, adHeadline, adDescription }, youtubeLinks, userId }
  * @returns {Promise<string>} - ID da oferta criada
  */
 export const createOfferFromAI = async (data) => {
@@ -74,6 +74,8 @@ export const createOfferFromAI = async (data) => {
       status: 'execucao', // VT: Nova oferta começa em execução
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      agent: data.agent || 'sophia', // ✅ Agente utilizada
+      fullResponse: data.fullResponse || '', // ✅ Resposta COMPLETA da IA
       modeling: {
         fanpageUrl: '',
         salesPageUrl: '',

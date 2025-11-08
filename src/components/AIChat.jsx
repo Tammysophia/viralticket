@@ -90,7 +90,7 @@ const AIChat = ({ initialText = '' }) => {
     setOutput(null); // Limpar output anterior
 
     try {
-      console.log('VT: Iniciando geração de oferta...');
+      console.log('🚀 VT: Iniciando geração de oferta com agente "' + selectedAgent + '"...');
       
       // Gerar oferta com OpenAI (a verificação de API key está dentro do generateOffer)
       const offerData = await generateOffer(inputText, selectedAgent);
@@ -110,21 +110,22 @@ const AIChat = ({ initialText = '' }) => {
       success(`✅ Oferta gerada com sucesso! ${remaining === '∞' ? 'Ilimitado' : `Restam ${remaining} hoje`}`);
       setApiConnected(true);
 
-      // VT: Salvar oferta automaticamente no Firestore
+      // VT: Salvar oferta automaticamente no Firestore com estrutura completa
       try {
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
-          agent: selectedAgent,
+          agent: offerData.agent || selectedAgent,
+          fullResponse: offerData.fullResponse || '', // ✅ Resposta COMPLETA da IA
           copy: {
-            page: `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
+            page: offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets.join('\n')}\n\n${offerData.cta}\n\n${offerData.bonus}`,
             adPrimary: offerData.bullets.join(' '),
             adHeadline: offerData.title,
             adDescription: offerData.subtitle
           },
           youtubeLinks: []
         });
-        console.log('VT: Oferta salva no Kanban:', offerId);
+        console.log('VT: Oferta criada com estrutura completa:', offerId);
         toast.success('📝 Oferta salva no Kanban!', { duration: 2000 });
       } catch (saveError) {
         console.error('VT: Erro ao salvar oferta:', saveError);

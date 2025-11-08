@@ -10,7 +10,7 @@ import { doc, getDoc } from 'firebase/firestore';
  */
 const getAgentPromptFromFirestore = async (agentId) => {
   try {
-    console.log(`🔍 VT: Buscando prompt do agente "${agentId}" no Firestore...`);
+    console.log(`🔍 VT: Buscando template da agente "${agentId}" no Firestore...`);
     
     if (!db) {
       console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
@@ -22,14 +22,19 @@ const getAgentPromptFromFirestore = async (agentId) => {
 
     if (docSnap.exists()) {
       const data = docSnap.data();
-      console.log(`✅ VT: Prompt encontrado para "${agentId}"`);
-      return data.prompt || data.systemPrompt || null;
+      const prompt = data.prompt || data.systemPrompt || null;
+      
+      if (prompt) {
+        console.log(`✅ VT: Template da agente ${agentId} carregado do Firestore (${prompt.length} caracteres)`);
+      }
+      
+      return prompt;
     } else {
-      console.warn(`⚠️ VT: Prompt não encontrado no Firestore para "${agentId}"`);
+      console.warn(`⚠️ VT: Template não encontrado no Firestore para "${agentId}"`);
       return null;
     }
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
+    console.error(`❌ VT: Erro ao buscar template do Firestore:`, error);
     return null;
   }
 };
@@ -297,7 +302,9 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
+    console.log('📥 VT: Resposta da OpenAI (primeiros 500 chars):', content.substring(0, 500));
+    console.log('📊 VT: Resposta completa tem', content.length, 'caracteres');
+    console.log('🔥 VT: Agente utilizada:', agent);
     
     // PASSO 5: Parse seguro do JSON
     const offerData = safeJsonParse(content);
@@ -320,12 +327,20 @@ export const generateOffer = async (comments, agent = 'sophia') => {
           ],
           cta: offerData.offer.cta || '🚀 QUERO AGORA!',
           bonus: offerData.offer.bonus || '🎁 Bônus especial incluído',
+          fullResponse: content, // ✅ Resposta completa da IA
+          agent: agent,
         };
       }
     }
     
     console.log('✅ VT: Oferta gerada com sucesso!');
-    return offerData;
+    
+    // ✅ RETORNAR RESPOSTA COMPLETA DA IA + JSON PARSEADO
+    return {
+      ...offerData,
+      fullResponse: content, // Resposta completa para salvar no Firestore
+      agent: agent,
+    };
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
     throw error;
