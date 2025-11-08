@@ -5,7 +5,7 @@ import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { verifyAPIConnection, generateOffer } from '../services/openaiService';
+import { verifyAPIConnection, generateOffer, generateSpecificFormat } from '../services/openaiService';
 import { createOfferFromAI } from '../services/offersService';
 import toast from 'react-hot-toast';
 
@@ -207,8 +207,8 @@ const AIChat = ({ initialText = '' }) => {
 
   // VT: Gerar formato específico da Página de Vendas
   const handleGeneratePageFormat = async (format) => {
-    if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original');
+    if (!output || !output.title) {
+      error('Por favor, gere a oferta principal primeiro');
       return;
     }
 
@@ -223,26 +223,22 @@ const AIChat = ({ initialText = '' }) => {
         'ia-builder': 'IA Builder (Lovable/Gama)'
       };
 
-      // Criar prompt específico para gerar apenas a página no formato escolhido
-      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA a PÁGINA DE VENDAS completa em formato ${formatNames[format]}.
+      // 🆕 VT: Criar contexto resumido da oferta (sem repetir todo o prompt)
+      const offerContext = `
+TÍTULO: ${output.title}
+SUBTÍTULO: ${output.subtitle}
+BULLETS: ${output.bullets ? output.bullets.join(', ') : ''}
+CTA: ${output.cta || ''}
+BÔNUS: ${output.bonus || ''}
+`;
 
-Siga a estrutura de 17 blocos do seu protocolo (item 7 do prompt), incluindo:
-- Cores do nicho emocional
-- Headline e sub-headline
-- Todos os 17 blocos estruturados
-- Layout e visual
-- Instruções específicas para ${formatNames[format]}
-
-${format === 'ia-builder' ? 'Inclua o prompt completo para IA construtora gerar automaticamente.' : ''}
-${format === 'quiz' ? 'Inclua as 15 perguntas do quiz diagnóstico com lógica emocional.' : ''}
-${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no WordPress ou Elementor.' : ''}`;
-
-      const offerData = await generateOffer(specificPrompt, selectedAgent);
+      // 🆕 VT: Usar função otimizada (SEM buscar template completo)
+      const pageContent = await generateSpecificFormat('page', format, offerContext);
 
       // Adicionar ao output existente
       setOutput(prev => ({
         ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + pageContent
       }));
 
       success(`✅ Página de vendas (${formatNames[format]}) gerada!`);
@@ -256,8 +252,8 @@ ${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no
 
   // VT: Gerar formato específico do Ebook
   const handleGenerateEbookFormat = async (format) => {
-    if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original');
+    if (!output || !output.title) {
+      error('Por favor, gere a oferta principal primeiro');
       return;
     }
 
@@ -271,21 +267,22 @@ ${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no
         'gama': 'Gama (estrutura completa)'
       };
 
-      // Criar prompt específico para gerar apenas o ebook no formato escolhido
-      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA o EBOOK COMPLETO em formato ${formatNames[format]}.
+      // 🆕 VT: Criar contexto resumido da oferta (sem repetir todo o prompt)
+      const offerContext = `
+TÍTULO: ${output.title}
+SUBTÍTULO: ${output.subtitle}
+BULLETS: ${output.bullets ? output.bullets.join(', ') : ''}
+CTA: ${output.cta || ''}
+BÔNUS: ${output.bonus || ''}
+`;
 
-${format === 'gama' ? 'Inclua:\n- Sumário completo com todos os módulos e capítulos\n- Descrição detalhada dos capítulos principais\n- Tom e posicionamento\n- Blocos prontos para exportar no Gama\n- Estrutura modular completa' : ''}
-
-${format === 'canva' ? 'Inclua:\n- Estrutura visual dividida por blocos\n- Cada página/slide como bloco separado\n- Textos prontos para copiar e colar no Canva\n- Sugestões de layout e elementos visuais\n- Dicas de design para cada seção' : ''}
-
-Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
-
-      const offerData = await generateOffer(specificPrompt, selectedAgent);
+      // 🆕 VT: Usar função otimizada (SEM buscar template completo)
+      const ebookContent = await generateSpecificFormat('ebook', format, offerContext);
 
       // Adicionar ao output existente
       setOutput(prev => ({
         ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + ebookContent
       }));
 
       success(`✅ Ebook (${formatNames[format]}) gerado!`);

@@ -283,6 +283,139 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
 };
 
 /**
+ * 🆕 VT: Gera formato específico (página/ebook) SEM buscar template completo
+ * Otimiza tokens ao gerar apenas o formato escolhido, baseado na oferta já gerada
+ * 
+ * @param {string} formatType - Tipo: 'page' ou 'ebook'
+ * @param {string} format - Formato específico: 'wordpress', 'quiz', 'ia-builder', 'canva', 'gama'
+ * @param {string} offerContext - Resumo da oferta campeã (title, bullets, etc)
+ * @returns {Promise<string>} - Conteúdo formatado específico
+ */
+export const generateSpecificFormat = async (formatType, format, offerContext = '') => {
+  try {
+    console.log(`🎨 VT: Gerando formato específico: ${formatType}/${format}`);
+    
+    // 1️⃣ Buscar chave da OpenAI
+    const apiKey = await getServiceAPIKey('openai');
+    
+    if (!apiKey) {
+      throw new Error('Chave da OpenAI não configurada. Configure no painel administrativo.');
+    }
+
+    // 2️⃣ Criar prompt CURTO e ESPECÍFICO (sem template completo)
+    let systemPrompt = '';
+    let userPrompt = '';
+
+    if (formatType === 'page') {
+      // PÁGINA DE VENDAS
+      const formatInstructions = {
+        'wordpress': `Gere a estrutura COMPLETA da página de vendas em formato WordPress/Elementor.
+Inclua:
+- Cores do nicho emocional
+- Headline e sub-headline
+- 17 blocos estruturados (conforme protocolo)
+- Copy pronta para copiar/colar
+- Instruções de montagem`,
+        
+        'quiz': `Gere o QUIZ DIAGNÓSTICO completo com 15 perguntas.
+Inclua:
+- Perguntas numeradas (1 a 15)
+- 4 opções (A, B, C, D) para cada
+- Lógica emocional de pontuação
+- Resultado do diagnóstico
+- Direcionamento para oferta`,
+        
+        'ia-builder': `Gere o PROMPT COMPLETO para IA construtora (Lovable/Gama).
+Inclua:
+- Prompt detalhado com estrutura da página
+- Seções e componentes
+- Copy completa
+- Cores e estilo
+- Funcionalidades necessárias`
+      };
+
+      systemPrompt = 'Você é uma expert em páginas de vendas de alto impacto. Gere APENAS a estrutura solicitada, sem repetir diagnósticos ou análises.';
+      userPrompt = `${formatInstructions[format]}
+
+**CONTEXTO DA OFERTA CAMPEÃ:**
+${offerContext}
+
+⚠️ IMPORTANTE: Gere APENAS o formato solicitado. NÃO repita o diagnóstico, análise ou micro-ofertas.`;
+
+    } else if (formatType === 'ebook') {
+      // EBOOK
+      const formatInstructions = {
+        'canva': `Gere a estrutura do EBOOK para Canva (design visual simples).
+Inclua:
+- Estrutura dividida por páginas/slides
+- Textos prontos para copiar/colar
+- Sugestões de layout
+- Elementos visuais para cada seção
+- Dicas de design`,
+        
+        'gama': `Gere a estrutura do EBOOK para Gama (estrutura completa).
+Inclua:
+- Sumário completo
+- Módulos e capítulos detalhados
+- Tom e posicionamento
+- Blocos prontos para exportar
+- Estrutura modular`
+      };
+
+      systemPrompt = 'Você é uma expert em criação de ebooks educativos de alto valor. Gere APENAS a estrutura solicitada, sem repetir diagnósticos ou análises.';
+      userPrompt = `${formatInstructions[format]}
+
+**CONTEXTO DA OFERTA CAMPEÃ:**
+${offerContext}
+
+⚠️ IMPORTANTE: Gere APENAS o formato solicitado. NÃO repita o diagnóstico, análise ou micro-ofertas.`;
+    }
+
+    // 3️⃣ Chamar OpenAI com prompt CURTO (economiza tokens)
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // VT: Modelo mais barato para formatos específicos
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            role: 'user',
+            content: userPrompt,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 3000, // VT: Suficiente para um formato específico
+      }),
+    });
+
+    console.log('📥 VT: Resposta recebida. Status:', response.status);
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('❌ VT: Erro na API OpenAI:', error);
+      throw new Error(error.error?.message || 'Erro ao gerar formato');
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    console.log(`✅ VT: Formato ${formatType}/${format} gerado (${content.length} caracteres)`);
+    
+    return content;
+  } catch (error) {
+    console.error(`❌ VT: Erro ao gerar formato ${formatType}/${format}:`, error);
+    throw error;
+  }
+};
+
+/**
  * Analisa sentimento de comentários usando OpenAI
  * @param {Array<string>} comments - Array de comentários
  * @returns {Promise<Object>} - Análise de sentimento
