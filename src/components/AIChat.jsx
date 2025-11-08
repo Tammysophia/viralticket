@@ -306,6 +306,84 @@ const AIChat = ({ initialText = '' }) => {
                       <Copy size={20} />
                       Copiar Análise Completa
                     </button>
+
+                    {/* VT: Botões de escolha de formato */}
+                    <div className="space-y-6">
+                      {/* Separador visual */}
+                      <div className="my-8 border-t-2 border-purple-500/30"></div>
+                      
+                      <div className="text-center mb-6">
+                        <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                          🎨 Escolha os Formatos de Entrega
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                          Clique nas opções abaixo para gerar os formatos específicos que você precisa
+                        </p>
+                      </div>
+
+                      {/* Pergunta 1: Página de Vendas */}
+                      <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                        <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                          📄 Como você deseja construir sua Página de Vendas?
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <button
+                            onClick={() => handleGeneratePageFormat('wordpress')}
+                            disabled={loading}
+                            className="glass border-2 border-blue-500/50 hover:border-blue-400 hover:bg-blue-500/10 rounded-lg p-4 font-semibold text-blue-300 hover:text-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">🔧</div>
+                            <div className="font-bold">WordPress</div>
+                            <div className="text-xs text-gray-400 mt-1">Manual/Elementor</div>
+                          </button>
+                          <button
+                            onClick={() => handleGeneratePageFormat('quiz')}
+                            disabled={loading}
+                            className="glass border-2 border-green-500/50 hover:border-green-400 hover:bg-green-500/10 rounded-lg p-4 font-semibold text-green-300 hover:text-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">🎯</div>
+                            <div className="font-bold">Quiz</div>
+                            <div className="text-xs text-gray-400 mt-1">Funil Diagnóstico</div>
+                          </button>
+                          <button
+                            onClick={() => handleGeneratePageFormat('ia-builder')}
+                            disabled={loading}
+                            className="glass border-2 border-pink-500/50 hover:border-pink-400 hover:bg-pink-500/10 rounded-lg p-4 font-semibold text-pink-300 hover:text-pink-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">🤖</div>
+                            <div className="font-bold">IA Builder</div>
+                            <div className="text-xs text-gray-400 mt-1">Lovable/Gama</div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Pergunta 2: Formato do Ebook */}
+                      <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                        <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                          📘 Como você deseja estruturar seu Ebook?
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <button
+                            onClick={() => handleGenerateEbookFormat('canva')}
+                            disabled={loading}
+                            className="glass border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 rounded-lg p-4 font-semibold text-cyan-300 hover:text-cyan-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">🎨</div>
+                            <div className="font-bold">Canva</div>
+                            <div className="text-xs text-gray-400 mt-1">Design Visual Simples</div>
+                          </button>
+                          <button
+                            onClick={() => handleGenerateEbookFormat('gama')}
+                            disabled={loading}
+                            className="glass border-2 border-orange-500/50 hover:border-orange-400 hover:bg-orange-500/10 rounded-lg p-4 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">⚡</div>
+                            <div className="font-bold">Gama</div>
+                            <div className="text-xs text-gray-400 mt-1">Estrutura Completa</div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
