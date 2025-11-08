@@ -373,19 +373,62 @@ ${offerContext}
 - NÃO repita a seleção das 3 ofertas mestres`;
 
     } else if (formatType === 'creatives') {
-      userPrompt = `Com base na oferta campeã abaixo, gere AGORA o COPY PARA CRIATIVOS RÁPIDOS (item 8 do seu protocolo).
+      userPrompt = `Com base na oferta campeã abaixo, gere AGORA o COPY PARA CRIATIVOS (item 8 do seu protocolo).
 
 📋 CONTEXTO DA OFERTA CAMPEÃ:
 ${offerContext}
 
+⚠️ FORMATO OBRIGATÓRIO:
+
+🎨 CRIATIVOS ESTÁTICOS (Posts 1080x1080):
+Para cada post, gere EXATAMENTE neste formato:
+
+📸 POST [número]
+━━━━━━━━━━━━━━━━━━
+📝 COPY:
+[texto do post]
+
+🎨 CORES SUGERIDAS:
+- Fundo: [cor] ([código hex])
+- Texto: [cor] ([código hex])
+- Destaque: [cor] ([código hex])
+
+🖼️ IDEIA DA IMAGEM:
+- [descrição da imagem principal]
+- [elementos visuais]
+- [estilo/atmosfera]
+━━━━━━━━━━━━━━━━━━
+
+Gere 5 POSTS neste formato.
+
+🎥 CRIATIVOS PARA VÍDEO (Reels/TikTok):
+Para cada vídeo, gere EXATAMENTE neste formato:
+
+🎬 VÍDEO [número] ([duração] segundos)
+━━━━━━━━━━━━━━━━━━
+📝 TEXTO/COPY:
+[copy principal do vídeo]
+
+📹 SEQUÊNCIA DE IMAGENS:
+Segundo 0-[X]: [descrição da cena]
+Segundo [X]-[Y]: [descrição da cena]
+Segundo [Y]-[Z]: [descrição da cena]
+
+🎨 CORES DO VÍDEO:
+- Tom principal: [cor/paleta]
+- Transições: [estilo]
+
+🎵 SUGESTÃO DE ÁUDIO:
+- [tipo de música]
+- [tipo de voz/narração]
+━━━━━━━━━━━━━━━━━━
+
+Gere 5 VÍDEOS neste formato.
+
 ⚠️ IMPORTANTE:
-- Gere APENAS o copy para criativos rápidos
-- Inclua:
-  * 5 frases curtas para Reels (5-8 palavras)
-  * Copy completo para Carrossel (10 slides)
-  * Headlines para anúncios
-- Siga TODO o seu protocolo para este formato
-- NÃO repita o diagnóstico, ofertas ou análises`;
+- Siga EXATAMENTE a estrutura acima
+- NÃO repita o diagnóstico, ofertas ou análises
+- Gere criativos prontos para usar`;
     }
 
     // 4️⃣ Chamar OpenAI com template COMPLETO do Firestore

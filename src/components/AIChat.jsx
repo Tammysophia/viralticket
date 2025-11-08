@@ -205,6 +205,45 @@ const AIChat = ({ initialText = '' }) => {
     }
   };
 
+  // VT: Gerar criativos (posts + vídeos)
+  const handleGenerateCreatives = async () => {
+    if (!output || !output.title) {
+      error('Por favor, gere a oferta principal primeiro');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log(`🎨 VT: Gerando criativos...`);
+
+      // 🆕 VT: Criar contexto resumido da oferta
+      const offerContext = `
+TÍTULO: ${output.title}
+SUBTÍTULO: ${output.subtitle}
+BULLETS: ${output.bullets ? output.bullets.join(', ') : ''}
+CTA: ${output.cta || ''}
+BÔNUS: ${output.bonus || ''}
+`;
+
+      // 🆕 VT: Usar função com template do Firestore (passa agente)
+      const creativesContent = await generateSpecificFormat('creatives', 'all', selectedAgent, offerContext);
+
+      // Adicionar ao output existente
+      setOutput(prev => ({
+        ...prev,
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 🎨 COPY PARA CRIATIVOS\n\n' + creativesContent
+      }));
+
+      success(`✅ Criativos gerados (Posts + Vídeos)!`);
+    } catch (err) {
+      console.error(`❌ VT: Erro ao gerar criativos:`, err);
+      error(`Erro ao gerar criativos`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // VT: Gerar formato específico da Página de Vendas
   const handleGeneratePageFormat = async (format) => {
     if (!output || !output.title) {
@@ -232,8 +271,8 @@ CTA: ${output.cta || ''}
 BÔNUS: ${output.bonus || ''}
 `;
 
-      // 🆕 VT: Usar função otimizada (SEM buscar template completo)
-      const pageContent = await generateSpecificFormat('page', format, offerContext);
+      // 🆕 VT: Usar função com template do Firestore (passa agente)
+      const pageContent = await generateSpecificFormat('page', format, selectedAgent, offerContext);
 
       // Adicionar ao output existente
       setOutput(prev => ({
@@ -276,8 +315,8 @@ CTA: ${output.cta || ''}
 BÔNUS: ${output.bonus || ''}
 `;
 
-      // 🆕 VT: Usar função otimizada (SEM buscar template completo)
-      const ebookContent = await generateSpecificFormat('ebook', format, offerContext);
+      // 🆕 VT: Usar função com template do Firestore (passa agente)
+      const ebookContent = await generateSpecificFormat('ebook', format, selectedAgent, offerContext);
 
       // Adicionar ao output existente
       setOutput(prev => ({
@@ -527,6 +566,25 @@ BÔNUS: ${output.bonus || ''}
                             <div className="text-xs text-gray-400 mt-1">Estrutura Completa</div>
                           </button>
                         </div>
+                      </div>
+
+                      {/* VT: Pergunta 3: Gerar Criativos */}
+                      <div className="glass border border-yellow-500/30 rounded-xl p-6 bg-gradient-to-br from-yellow-900/20 to-orange-900/20">
+                        <h4 className="text-lg font-bold text-yellow-300 mb-4 text-center">
+                          🎨 Gerar Copy para Criativos?
+                        </h4>
+                        <p className="text-gray-400 text-sm text-center mb-4">
+                          Posts estáticos (1080x1080) + Vídeos (Reels/TikTok) com copy, cores e ideias de imagens
+                        </p>
+                        <button
+                          onClick={handleGenerateCreatives}
+                          disabled={loading}
+                          className="glass border-2 border-yellow-500/50 hover:border-yellow-400 hover:bg-yellow-500/10 rounded-lg p-4 font-semibold text-yellow-300 hover:text-yellow-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center w-full"
+                        >
+                          <div className="text-3xl mb-2">✨</div>
+                          <div className="font-bold">Gerar Criativos</div>
+                          <div className="text-xs text-gray-400 mt-1">5 Posts + 5 Vídeos com copy completo</div>
+                        </button>
                       </div>
                     </div>
                   </div>
