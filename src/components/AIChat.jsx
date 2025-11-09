@@ -256,8 +256,8 @@ BÔNUS: ${output.bonus || ''}`;
 
   // VT: Gerar formato específico da Página de Vendas
   const handleGeneratePageFormat = async (format) => {
-    if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original');
+    if (!output || !output.title) {
+      error('Por favor, gere a oferta principal primeiro');
       return;
     }
 
@@ -272,26 +272,68 @@ BÔNUS: ${output.bonus || ''}`;
         'ia-builder': 'IA Builder (Lovable/Gama)'
       };
 
-      // Criar prompt específico para gerar apenas a página no formato escolhido
-      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA a PÁGINA DE VENDAS completa em formato ${formatNames[format]}.
+      // ✅ CONTEXTO RESUMIDO (economizar tokens - não repetir toda análise)
+      const offerContext = `OFERTA JÁ IDENTIFICADA:
+TÍTULO: ${output.title}
+SUBTÍTULO: ${output.subtitle}
+BENEFÍCIOS: ${output.bullets ? output.bullets.join(', ') : ''}
+CTA: ${output.cta || ''}
+BÔNUS: ${output.bonus || ''}`;
 
-Siga a estrutura de 17 blocos do seu protocolo (item 7 do prompt), incluindo:
-- Cores do nicho emocional
-- Headline e sub-headline
-- Todos os 17 blocos estruturados
-- Layout e visual
-- Instruções específicas para ${formatNames[format]}
+      // ✅ INSTRUÇÕES ESPECÍFICAS POR FORMATO
+      let specificInstructions = '';
+      
+      if (format === 'wordpress') {
+        specificInstructions = `Gere a PÁGINA DE VENDAS completa em formato WordPress/Elementor:
 
-${format === 'ia-builder' ? 'Inclua o prompt completo para IA construtora gerar automaticamente.' : ''}
-${format === 'quiz' ? 'Inclua as 15 perguntas do quiz diagnóstico com lógica emocional.' : ''}
-${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no WordPress ou Elementor.' : ''}`;
+✅ Divida em BLOCOS NUMERADOS prontos para copiar/colar
+✅ Cada bloco deve ter:
+   - Número do bloco (ex: BLOCO 1, BLOCO 2)
+   - Copy completa do bloco
+   - Instruções de onde colocar no WordPress
+✅ Siga a estrutura de 17 blocos do protocolo
+✅ Inclua cores do nicho emocional
+✅ Layout e hierarquia visual clara
+✅ Pronto para copiar e colar direto no Elementor`;
+      } else if (format === 'quiz') {
+        specificInstructions = `Gere o QUIZ DIAGNÓSTICO completo (funil):
 
-      const offerData = await generateOffer(specificPrompt, selectedAgent);
+✅ 15 PERGUNTAS com lógica emocional
+✅ Para cada pergunta:
+   - Pergunta emocional estratégica
+   - 3-4 opções de resposta
+   - Lógica de pontuação (alta/média/baixa dor)
+   - Insights do que cada resposta revela
+✅ Resultado final personalizado por score
+✅ CTA específico por perfil identificado
+✅ Estrutura completa pronta para implementar`;
+      } else if (format === 'ia-builder') {
+        specificInstructions = `Gere o PROMPT COMPLETO para IA construtora (Lovable/Gama):
+
+✅ Prompt detalhado e estruturado para a IA gerar automaticamente
+✅ Inclua:
+   - Estrutura HTML/componentes
+   - Todos os 17 blocos da página
+   - Cores, tipografia, espaçamentos
+   - Copy completa de cada seção
+   - Instruções de responsividade
+✅ Prompt pronto para copiar e colar no Lovable ou Gama
+✅ IA construtora deve gerar página completa e funcional`;
+      }
+
+      // ✅ PROMPT OTIMIZADO (curto, direto, sem repetir)
+      const optimizedPrompt = `${offerContext}
+
+${specificInstructions}
+
+IMPORTANTE: Gere APENAS este formato específico, sem repetir análises anteriores.`;
+
+      const pageData = await generateOffer(optimizedPrompt, selectedAgent);
 
       // Adicionar ao output existente
       setOutput(prev => ({
         ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + (pageData.fullResponse || 'Página gerada com sucesso!')
       }));
 
       success(`✅ Página de vendas (${formatNames[format]}) gerada!`);
@@ -305,8 +347,8 @@ ${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no
 
   // VT: Gerar formato específico do Ebook
   const handleGenerateEbookFormat = async (format) => {
-    if (!inputText.trim()) {
-      error('Por favor, mantenha o texto original');
+    if (!output || !output.title) {
+      error('Por favor, gere a oferta principal primeiro');
       return;
     }
 
@@ -320,21 +362,57 @@ ${format === 'wordpress' ? 'Inclua copy e estrutura prontos para copiar/colar no
         'gama': 'Gama (estrutura completa)'
       };
 
-      // Criar prompt específico para gerar apenas o ebook no formato escolhido
-      const specificPrompt = `Com base na oferta campeã que você já identificou anteriormente, gere AGORA o EBOOK COMPLETO em formato ${formatNames[format]}.
+      // ✅ CONTEXTO RESUMIDO (economizar tokens - não repetir toda análise)
+      const offerContext = `OFERTA JÁ IDENTIFICADA:
+TÍTULO: ${output.title}
+SUBTÍTULO: ${output.subtitle}
+BENEFÍCIOS: ${output.bullets ? output.bullets.join(', ') : ''}`;
 
-${format === 'gama' ? 'Inclua:\n- Sumário completo com todos os módulos e capítulos\n- Descrição detalhada dos capítulos principais\n- Tom e posicionamento\n- Blocos prontos para exportar no Gama\n- Estrutura modular completa' : ''}
+      // ✅ INSTRUÇÕES ESPECÍFICAS POR FORMATO
+      let specificInstructions = '';
+      
+      if (format === 'canva') {
+        specificInstructions = `Gere o EBOOK em formato CANVA (design visual):
 
-${format === 'canva' ? 'Inclua:\n- Estrutura visual dividida por blocos\n- Cada página/slide como bloco separado\n- Textos prontos para copiar e colar no Canva\n- Sugestões de layout e elementos visuais\n- Dicas de design para cada seção' : ''}
+✅ ESTRUTURA VISUAL dividida página por página
+✅ Para cada página/slide:
+   - Número da página (ex: PÁGINA 1, PÁGINA 2)
+   - Título da página
+   - Copy/texto completo
+   - Sugestões de layout (onde colocar cada elemento)
+   - Elementos visuais (ícones, imagens, cores)
+   - Tamanho das fontes e hierarquia
+✅ Ebook de 20+ páginas
+✅ Design simples e direto para Canva
+✅ Textos prontos para copiar/colar`;
+      } else if (format === 'gama') {
+        specificInstructions = `Gere o EBOOK em formato GAMA (estrutura modular):
 
-Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
+✅ SUMÁRIO COMPLETO com todos os módulos e capítulos
+✅ Para cada capítulo:
+   - Nome do módulo
+   - Título do capítulo
+   - Conteúdo detalhado e estruturado
+   - Subcapítulos organizados
+✅ Tom e posicionamento estratégico
+✅ Blocos modulares prontos para exportar no Gama
+✅ Ebook de 20+ páginas bem estruturado
+✅ Conteúdo rico e completo`;
+      }
 
-      const offerData = await generateOffer(specificPrompt, selectedAgent);
+      // ✅ PROMPT OTIMIZADO (curto, direto, sem repetir)
+      const optimizedPrompt = `${offerContext}
+
+${specificInstructions}
+
+IMPORTANTE: Gere APENAS este formato específico de ebook, sem repetir análises anteriores.`;
+
+      const ebookData = await generateOffer(optimizedPrompt, selectedAgent);
 
       // Adicionar ao output existente
       setOutput(prev => ({
         ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + offerData.fullResponse
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
 
       success(`✅ Ebook (${formatNames[format]}) gerado!`);
