@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Sparkles, Copy, Loader2, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sparkles, Copy, Loader2, CheckCircle, Trash2 } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 import { useToast } from './Toast';
@@ -10,7 +10,7 @@ import { createOfferFromAI } from '../services/offersService';
 
 const AIChat = ({ initialText = '' }) => {
   const [selectedAgent, setSelectedAgent] = useState('sophia');
-  const [inputText, setInputText] = useState(initialText);
+  const [inputText, setInputText] = useState('');
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiConnected, setApiConnected] = useState(false);
@@ -18,6 +18,41 @@ const AIChat = ({ initialText = '' }) => {
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
+
+  // VT: Carregar oferta salva do localStorage quando componente montar
+  useEffect(() => {
+    const savedOutput = localStorage.getItem('vt_last_offer');
+    const savedInput = localStorage.getItem('vt_last_input');
+    const savedAgent = localStorage.getItem('vt_last_agent');
+    
+    if (savedOutput) {
+      try {
+        setOutput(JSON.parse(savedOutput));
+        console.log('✅ VT: Oferta anterior restaurada do localStorage');
+      } catch (e) {
+        console.error('❌ VT: Erro ao restaurar oferta:', e);
+      }
+    }
+    if (savedInput) setInputText(savedInput);
+    if (savedAgent) setSelectedAgent(savedAgent);
+  }, []);
+
+  // VT: Salvar output no localStorage sempre que mudar
+  useEffect(() => {
+    if (output) {
+      localStorage.setItem('vt_last_offer', JSON.stringify(output));
+      localStorage.setItem('vt_last_input', inputText);
+      localStorage.setItem('vt_last_agent', selectedAgent);
+      console.log('💾 VT: Oferta salva no localStorage');
+    }
+  }, [output, inputText, selectedAgent]);
+
+  // Atualizar inputText quando initialText mudar (comentários do YouTube)
+  useEffect(() => {
+    if (initialText) {
+      setInputText(initialText);
+    }
+  }, [initialText]);
 
   const agents = [
     {
@@ -168,6 +203,55 @@ const AIChat = ({ initialText = '' }) => {
     const text = output.fullResponse || `${output.title}\n\n${output.subtitle}\n\n${output.bullets?.join('\n') || ''}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
     success('Oferta copiada!');
+  };
+
+  // VT: Limpar oferta do painel (botão lixeira)
+  const handleClearOutput = () => {
+    if (window.confirm('🗑️ Tem certeza que deseja apagar esta oferta do painel?\n\n(A oferta já salva no Kanban não será afetada)')) {
+      setOutput(null);
+      setInputText('');
+      localStorage.removeItem('vt_last_offer');
+      localStorage.removeItem('vt_last_input');
+      localStorage.removeItem('vt_last_agent');
+      success('🗑️ Oferta apagada do painel!');
+      console.log('🗑️ VT: Oferta removida do localStorage');
+    }
+  };
+
+  // VT: Gerar criativos (posts + vídeos)
+  const handleGenerateCreatives = async () => {
+    if (!output || !output.title) {
+      error('Por favor, gere a oferta principal primeiro');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('🎨 VT: Gerando criativos...');
+
+      // Criar contexto resumido da oferta
+      const offerContext = `OFERTA: ${output.title}
+SUBTÍTULO: ${output.subtitle || ''}
+BENEFÍCIOS: ${output.bullets ? output.bullets.join(', ') : ''}
+CTA: ${output.cta || ''}
+BÔNUS: ${output.bonus || ''}`;
+
+      // Chamar IA para gerar criativos
+      const creativesData = await generateOffer(offerContext + '\n\nGere 5 posts estáticos (1080x1080) e 5 vídeos curtos (Reels/TikTok) com copy completo, ideias visuais e descrições detalhadas para cada criativo.', selectedAgent);
+
+      // Adicionar ao output existente
+      setOutput(prev => ({
+        ...prev,
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 🎨 CRIATIVOS (POSTS + VÍDEOS)\n\n' + (creativesData.fullResponse || 'Criativos gerados com sucesso!')
+      }));
+
+      success('✅ Criativos gerados (Posts + Vídeos)!');
+    } catch (err) {
+      console.error('❌ VT: Erro ao gerar criativos:', err);
+      error('Erro ao gerar criativos');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // VT: Gerar formato específico da Página de Vendas
@@ -337,9 +421,19 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-              {t('copy')}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={handleCopy} icon={Copy}>
+                {t('copy')}
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={handleClearOutput} 
+                icon={Trash2}
+                className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
+              >
+                Apagar
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -482,32 +576,51 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
                           </div>
                         </div>
 
-                        {/* Pergunta 2: Formato do Ebook */}
-                        <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
-                          <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
-                            📘 Como você deseja estruturar seu Ebook?
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button
-                              onClick={() => handleGenerateEbookFormat('canva')}
-                              disabled={loading}
-                              className="glass border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 rounded-lg p-4 font-semibold text-cyan-300 hover:text-cyan-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
-                            >
-                              <div className="text-3xl mb-2">🎨</div>
-                              <div className="font-bold">Canva</div>
-                              <div className="text-xs text-gray-400 mt-1">Design Visual Simples</div>
-                            </button>
-                            <button
-                              onClick={() => handleGenerateEbookFormat('gama')}
-                              disabled={loading}
-                              className="glass border-2 border-orange-500/50 hover:border-orange-400 hover:bg-orange-500/10 rounded-lg p-4 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
-                            >
-                              <div className="text-3xl mb-2">⚡</div>
-                              <div className="font-bold">Gama</div>
-                              <div className="text-xs text-gray-400 mt-1">Estrutura Completa</div>
-                            </button>
-                          </div>
+                      {/* Pergunta 2: Formato do Ebook */}
+                      <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                        <h4 className="text-lg font-bold text-purple-300 mb-4 text-center">
+                          📘 Como você deseja estruturar seu Ebook?
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <button
+                            onClick={() => handleGenerateEbookFormat('canva')}
+                            disabled={loading}
+                            className="glass border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 rounded-lg p-4 font-semibold text-cyan-300 hover:text-cyan-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">🎨</div>
+                            <div className="font-bold">Canva</div>
+                            <div className="text-xs text-gray-400 mt-1">Design Visual Simples</div>
+                          </button>
+                          <button
+                            onClick={() => handleGenerateEbookFormat('gama')}
+                            disabled={loading}
+                            className="glass border-2 border-orange-500/50 hover:border-orange-400 hover:bg-orange-500/10 rounded-lg p-4 font-semibold text-orange-300 hover:text-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                          >
+                            <div className="text-3xl mb-2">⚡</div>
+                            <div className="font-bold">Gama</div>
+                            <div className="text-xs text-gray-400 mt-1">Estrutura Completa</div>
+                          </button>
                         </div>
+                      </div>
+
+                      {/* Pergunta 3: Gerar Criativos */}
+                      <div className="glass border border-yellow-500/30 rounded-xl p-6 bg-gradient-to-br from-yellow-900/20 to-orange-900/20">
+                        <h4 className="text-lg font-bold text-yellow-300 mb-4 text-center">
+                          🎨 Gerar Copy para Criativos?
+                        </h4>
+                        <p className="text-gray-400 text-sm text-center mb-4">
+                          Posts estáticos (1080x1080) + Vídeos (Reels/TikTok) com copy, cores e ideias de imagens
+                        </p>
+                        <button
+                          onClick={handleGenerateCreatives}
+                          disabled={loading}
+                          className="glass border-2 border-yellow-500/50 hover:border-yellow-400 hover:bg-yellow-500/10 rounded-lg p-4 font-semibold text-yellow-300 hover:text-yellow-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center w-full"
+                        >
+                          <div className="text-3xl mb-2">✨</div>
+                          <div className="font-bold">Gerar Criativos</div>
+                          <div className="text-xs text-gray-400 mt-1">5 Posts + 5 Vídeos com copy completo</div>
+                        </button>
+                      </div>
                       </div>
                     )}
                   </div>
