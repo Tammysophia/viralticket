@@ -205,7 +205,16 @@ const Kanban = ({ onEditOffer }) => {
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">{item.agent === 'sophia' ? '🔥' : '🌟'}</span>
+                            <img 
+                              src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
+                              alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                              className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'inline-block';
+                              }}
+                            />
+                            <span className="text-2xl" style={{ display: 'none' }}>{item.agent === 'sophia' ? '🔥' : '🌟'}</span>
                             <span className="text-xs text-purple-400 font-semibold">
                               {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                             </span>

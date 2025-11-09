@@ -24,6 +24,7 @@ const AIChat = ({ initialText = '' }) => {
       id: 'sophia',
       name: 'Sophia Fênix',
       emoji: '🔥',
+      image: 'https://iili.io/KbegFWu.png',
       description: 'Especialista em ofertas de alto impacto',
       color: 'from-orange-500 to-red-600',
     },
@@ -31,6 +32,7 @@ const AIChat = ({ initialText = '' }) => {
       id: 'sofia',
       name: 'Sofia Universal',
       emoji: '🌟',
+      image: 'https://iili.io/KieLs1V.png',
       description: 'IA versátil para todos os nichos',
       color: 'from-purple-500 to-pink-600',
     },
@@ -292,7 +294,18 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
                   : 'border-white/10 glass-hover'
               }`}
             >
-              <div className="text-4xl mb-2">{agent.emoji}</div>
+              <div className="flex items-center justify-center mb-3">
+                <img 
+                  src={agent.image} 
+                  alt={agent.name}
+                  className="w-20 h-20 rounded-full object-cover border-2 border-purple-500/30"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+                <div className="text-4xl" style={{ display: 'none' }}>{agent.emoji}</div>
+              </div>
               <h4 className="font-bold mb-1">{agent.name}</h4>
               <p className="text-sm text-gray-400">{agent.description}</p>
             </button>
@@ -356,7 +369,16 @@ Siga o protocolo do item 6 do seu prompt (Ebook Completo de 20+ páginas).`;
               <div className="mt-8 space-y-6">
                 <div className="glass border border-purple-500/30 rounded-xl p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20">
                   <h4 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6 flex items-center gap-3">
-                    <span className="text-3xl">🔥</span>
+                    <img 
+                      src={selectedAgent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
+                      alt={selectedAgent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-purple-500/50"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'inline-block';
+                      }}
+                    />
+                    <span className="text-3xl" style={{ display: 'none' }}>🔥</span>
                     Análise Completa da {selectedAgent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                   </h4>
                   
