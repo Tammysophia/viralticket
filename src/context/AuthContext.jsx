@@ -312,9 +312,14 @@ export const AuthProvider = ({ children }) => {
     const today = new Date().toDateString();
     const lastReset = userData.lastResetDate;
     
+    console.log('🔍 VT: Verificando reset diário...');
+    console.log('   Hoje:', today);
+    console.log('   Último reset:', lastReset);
+    console.log('   Uso atual:', userData.dailyUsage);
+    
     // Se não tem lastResetDate ou é um dia diferente, resetar
     if (!lastReset || lastReset !== today) {
-      console.log('🔄 VT: Resetando limites diários...');
+      console.log('🔄 VT: RESETANDO limites diários! De', userData.dailyUsage.offers, 'para 0');
       return {
         ...userData,
         dailyUsage: { offers: 0, urls: 0 },
@@ -322,6 +327,7 @@ export const AuthProvider = ({ children }) => {
       };
     }
     
+    console.log('✅ VT: Mesmo dia - mantendo contador');
     return userData;
   };
 

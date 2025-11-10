@@ -211,7 +211,6 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     { id: 'content', label: 'Conteúdo', icon: Sparkles },
     { id: 'videos', label: 'Vídeos', icon: LinkIcon },
     { id: 'creatives', label: 'Criativos', icon: Sparkles },
-    { id: 'modeling', label: 'Modelagem', icon: TrendingUp },
   ];
 
   return (
@@ -464,8 +463,8 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
             </div>
           )}
 
-          {/* ABA: Modelagem */}
-          {activeTab === 'modeling' && (
+          {/* ABA: Modelagem REMOVIDA - Agora está no Monitoramento */}
+          {false && activeTab === 'modeling' && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input

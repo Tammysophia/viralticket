@@ -49,9 +49,6 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
               ViralTicket
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-2">
-            {type === 'admin' ? 'Admin Panel' : 'AI-Powered Offers'}
-          </p>
         </div>
 
         {/* Navigation */}

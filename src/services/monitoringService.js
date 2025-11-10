@@ -171,3 +171,18 @@ export const getUserMonitoring = async (userId) => {
     return [];
   }
 };
+
+/**
+ * Deleta um monitoramento
+ * @param {string} monitoringId - ID do monitoramento
+ */
+export const deleteMonitoring = async (monitoringId) => {
+  try {
+    const { deleteDoc, doc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'monitoring', monitoringId));
+    console.log('🗑️ VT: Monitoramento deletado:', monitoringId);
+  } catch (error) {
+    console.error('❌ VT: Erro ao deletar monitoramento:', error);
+    throw error;
+  }
+};

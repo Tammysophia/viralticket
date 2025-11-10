@@ -228,6 +228,27 @@ const MonitoringBoard = () => {
                   </p>
                 </div>
               )}
+
+              {/* Botão Deletar */}
+              <div className="mt-3 pt-3 border-t border-white/10">
+                <button
+                  onClick={async () => {
+                    if (confirm('Tem certeza que deseja excluir este monitoramento?')) {
+                      try {
+                        const { deleteMonitoring } = await import('../services/monitoringService');
+                        await deleteMonitoring(item.id);
+                        toast.success('🗑️ Monitoramento excluído!');
+                      } catch (error) {
+                        toast.error('Erro ao excluir');
+                      }
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Deletar Monitoramento
+                </button>
+              </div>
             </div>
           ))}
         </div>

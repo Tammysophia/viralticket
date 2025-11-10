@@ -186,7 +186,7 @@ const Kanban = ({ onEditOffer }) => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 px-2">
         {Object.values(columns).map((column) => (
           <div key={column.id} className="space-y-3">
             <h3 className="font-bold text-lg px-2 flex items-center gap-2">
