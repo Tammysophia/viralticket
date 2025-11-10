@@ -20,6 +20,7 @@ const Kanban = ({ onEditOffer }) => {
     'pendente': 'pending',
     'execucao': 'inExecution',
     'modelando': 'modeling',
+    'modelagem_ativa': 'activeModeling',
     'concluido': 'completed'
   };
 
@@ -27,10 +28,11 @@ const Kanban = ({ onEditOffer }) => {
     'pending': 'pendente',
     'inExecution': 'execucao',
     'modeling': 'modelando',
+    'activeModeling': 'modelagem_ativa',
     'completed': 'concluido'
   };
 
-  // VT: Estrutura de colunas
+  // VT: Estrutura de colunas (5 colunas agora!)
   const [columns, setColumns] = useState({
     pending: {
       id: 'pending',
@@ -45,6 +47,11 @@ const Kanban = ({ onEditOffer }) => {
     modeling: {
       id: 'modeling',
       title: t('modeling') || 'Modelando',
+      items: [],
+    },
+    activeModeling: {
+      id: 'activeModeling',
+      title: 'Modelagem Ativa',
       items: [],
     },
     completed: {
@@ -67,17 +74,44 @@ const Kanban = ({ onEditOffer }) => {
     return () => unsubscribe();
   }, [user?.id]);
 
-  // VT: Organizar ofertas por status
+  // VT: Organizar ofertas por status (5 colunas agora!)
   const organizeOffersByStatus = (allOffers) => {
     const organized = {
       pending: { ...columns.pending, items: [] },
       inExecution: { ...columns.inExecution, items: [] },
       modeling: { ...columns.modeling, items: [] },
+      activeModeling: { ...columns.activeModeling, items: [] },
       completed: { ...columns.completed, items: [] },
     };
 
     allOffers.forEach(offer => {
-      const columnId = STATUS_MAP[offer.status] || 'pending';
+      // VT: Auto-detectar se deve ir para "Modelagem Ativa"
+      const hasModelingData = offer.modeling && (
+        offer.modeling.fanpageUrl || 
+        offer.modeling.salesPageUrl || 
+        offer.modeling.checkoutUrl || 
+        offer.modeling.creativesCount > 0
+      );
+      
+      // VT: Se tem dados de modelagem E iniciou monitoramento → Modelagem Ativa
+      let columnId;
+      if (hasModelingData && offer.modeling.monitorStart) {
+        columnId = 'activeModeling';
+      } else {
+        columnId = STATUS_MAP[offer.status] || 'pending';
+      }
+      
+      // VT: Verificar se completou 7 dias e deve mover para Concluído
+      if (offer.modeling?.monitorStart) {
+        const daysPassed = (Date.now() - new Date(offer.modeling.monitorStart).getTime()) / (24 * 60 * 60 * 1000);
+        if (daysPassed >= (offer.modeling.monitorDays || 7)) {
+          columnId = 'completed';
+        }
+      }
+      
+      // VT: Verificar se é "Oferta Modelada" (10+ criativos em 7 dias)
+      const isModeledOffer = offer.modeling?.creativesCount >= 10 && offer.modeling?.monitorStart;
+      
       organized[columnId].items.push({
         id: offer.id,
         title: offer.title,
@@ -86,6 +120,7 @@ const Kanban = ({ onEditOffer }) => {
         date: offer.createdAt?.toDate?.() || offer.createdAt || new Date(),
         status: offer.status,
         modeling: offer.modeling,
+        isModeledOffer: isModeledOffer,
       });
     });
 
@@ -154,6 +189,7 @@ const Kanban = ({ onEditOffer }) => {
     pending: 'border-yellow-500/30',
     inExecution: 'border-blue-500/30',
     modeling: 'border-purple-500/30',
+    activeModeling: 'border-cyan-500/30',
     completed: 'border-green-500/30',
   };
 
@@ -170,7 +206,7 @@ const Kanban = ({ onEditOffer }) => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {Object.values(columns).map((column) => (
           <div key={column.id} className="space-y-3">
             <h3 className="font-bold text-lg px-2 flex items-center gap-2">
@@ -231,40 +267,51 @@ const Kanban = ({ onEditOffer }) => {
                             <span>{formatDate(item.date)}</span>
                           </div>
                           
+                          {/* VT: Badge "OFERTA MODELADA" (10+ criativos em 7 dias) */}
+                          {item.isModeledOffer && (
+                            <div className="mb-3">
+                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold shadow-lg">
+                                🏆 OFERTA MODELADA
+                              </span>
+                            </div>
+                          )}
+                          
                           {/* VT: ÁREA VISUAL DE MODELAGEM (quando tem dados preenchidos) */}
                           {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
-                            <div className="mb-3 p-3 glass border border-blue-500/30 rounded-lg bg-blue-900/10">
+                            <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
                               <div className="flex items-center gap-2 mb-2">
-                                <TrendingUp className="w-4 h-4 text-blue-400" />
-                                <span className="text-xs font-bold text-blue-300">Modelagem Ativa</span>
+                                <TrendingUp className="w-4 h-4 text-cyan-400" />
+                                <span className="text-xs font-bold text-cyan-300">Dados de Modelagem</span>
                               </div>
                               
                               <div className="space-y-1 text-xs">
                                 {item.modeling.creativesCount > 0 && (
                                   <div className="flex items-center justify-between">
                                     <span className="text-gray-400">Criativos:</span>
-                                    <span className="text-white font-semibold">{item.modeling.creativesCount}</span>
+                                    <span className={`font-semibold ${item.modeling.creativesCount >= 10 ? 'text-green-400' : 'text-white'}`}>
+                                      {item.modeling.creativesCount}/10
+                                    </span>
                                   </div>
                                 )}
                                 
                                 {item.modeling.fanpageUrl && (
                                   <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">✓</span>
-                                    <span className="text-green-400 text-xs">Fanpage configurada</span>
+                                    <span className="text-green-400">✓</span>
+                                    <span className="text-green-400 text-xs">Fanpage</span>
                                   </div>
                                 )}
                                 
                                 {item.modeling.salesPageUrl && (
                                   <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">✓</span>
-                                    <span className="text-green-400 text-xs">PV configurada</span>
+                                    <span className="text-green-400">✓</span>
+                                    <span className="text-green-400 text-xs">PV</span>
                                   </div>
                                 )}
                                 
                                 {item.modeling.checkoutUrl && (
                                   <div className="flex items-center gap-1">
-                                    <span className="text-gray-400">✓</span>
-                                    <span className="text-green-400 text-xs">Checkout configurado</span>
+                                    <span className="text-green-400">✓</span>
+                                    <span className="text-green-400 text-xs">Checkout</span>
                                   </div>
                                 )}
                               </div>

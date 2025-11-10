@@ -100,7 +100,32 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     
     setSaving(true);
     try {
-      await updateOffer(offer.id, formData);
+      // VT: Verificar se deve auto-mover para "Modelagem Ativa"
+      const hasModelingData = formData.modeling && (
+        formData.modeling.fanpageUrl || 
+        formData.modeling.salesPageUrl || 
+        formData.modeling.checkoutUrl || 
+        formData.modeling.creativesCount > 0
+      );
+      
+      // VT: Se preencheu dados de modelagem E não tinha antes, auto-iniciar monitoramento
+      let updatedFormData = { ...formData };
+      if (hasModelingData && !formData.modeling.monitorStart) {
+        updatedFormData.modeling = {
+          ...formData.modeling,
+          monitorStart: new Date().toISOString(),
+          monitorDays: 7
+        };
+        console.log('🔄 VT: Auto-iniciando monitoramento de 7 dias...');
+      }
+      
+      // VT: Auto-mover status para "modelagem_ativa" se preencheu dados
+      if (hasModelingData && updatedFormData.modeling.monitorStart) {
+        updatedFormData.status = 'modelagem_ativa';
+        console.log('📊 VT: Auto-movendo para coluna "Modelagem Ativa"...');
+      }
+      
+      await updateOffer(offer.id, updatedFormData);
       toast.success('💾 Oferta salva com sucesso!');
       onClose();
     } catch (error) {
