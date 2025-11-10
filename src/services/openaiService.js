@@ -243,15 +243,15 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
     // Apenas a resposta completa aparece na tela
     return {
       title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
-      subtitle: 'Veja abaixo o resultado completo da análise',
+      subtitle: 'Análise completa e estruturada da sua oferta',
       bullets: [
-        '✅ Oferta gerada seguindo todo o protocolo da IA',
-        '✅ Prompt do Firestore aplicado com sucesso',
-        '✅ Análise completa dos comentários',
-        '✅ Resposta completa disponível abaixo',
+        '✅ Análise profunda do público-alvo e suas dores',
+        '✅ Estrutura completa da oferta irresistível',
+        '✅ Copy persuasiva e estratégica',
+        '✅ Recomendações de implementação',
       ],
-      cta: '📋 Role para baixo para ver a resposta completa',
-      bonus: '💡 Resposta completa da IA com todo o protocolo',
+      cta: '📋 Veja a análise completa abaixo',
+      bonus: '💡 Tudo pronto para você aplicar',
       fullResponse: content, // VT: Resposta COMPLETA da IA (aparece na UI)
     };
   } catch (error) {
