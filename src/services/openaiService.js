@@ -82,9 +82,10 @@ export const verifyAPIConnection = async () => {
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma para gerar a oferta (português brasileiro, English, español)
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia') => {
+export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'português brasileiro') => {
   try {
     console.log(`🚀 VT: Iniciando geração de oferta com agente "${agent}"...`);
     
@@ -211,11 +212,11 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         messages: [
           {
             role: 'system',
-            content: agentPrompt, // VT: Prompt completo da IA do Firestore (OCULTO, base fixa)
+            content: agentPrompt + `\n\nIMPORTANTE: Gere TODA a resposta em ${targetLanguage}. Mantenha consistência no idioma em toda a análise.`, // VT: Prompt completo da IA do Firestore (OCULTO, base fixa) + idioma
           },
           {
             role: 'user',
-            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo:\n\n${comments}`, // VT: Comentários do usuário
+            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo em ${targetLanguage}:\n\n${comments}`, // VT: Comentários do usuário + instrução de idioma
           },
         ],
         temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas (conforme solicitado)

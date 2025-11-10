@@ -60,6 +60,45 @@ const translations = {
     status: 'Status',
     active: 'Ativo',
     inactive: 'Inativo',
+    
+    // Offer Generation
+    selectAI: 'Selecione a IA',
+    commentOrText: 'Comentário ou Texto',
+    offerGenerated: 'Oferta Gerada',
+    clearPanel: 'Apagar',
+    completeAnalysis: 'Análise Completa da',
+    copyCompleteAnalysis: 'Copiar Análise Completa',
+    chooseDeliveryFormats: 'Escolha os Formatos de Entrega',
+    clickOptionsBelow: 'Clique nas opções abaixo para gerar os formatos específicos que você precisa',
+    
+    // Page Formats
+    howBuildSalesPage: 'Como você deseja construir sua Página de Vendas?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Funil Diagnóstico',
+    iaBuilder: 'IA Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    
+    // Ebook Formats
+    howStructureEbook: 'Como você deseja estruturar seu Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Design Visual Simples',
+    gama: 'Gama',
+    gamaDesc: 'Estrutura Completa',
+    
+    // Creatives
+    generateCreativesCopy: 'Gerar Copy para Criativos?',
+    creativesDesc: 'Posts estáticos (1080x1080) + Vídeos (Reels/TikTok) com copy, cores e ideias de imagens',
+    generateCreatives: 'Gerar Criativos',
+    creativesCount: '5 Posts + 5 Vídeos com copy completo',
+    
+    // Editor Tabs
+    details: 'Detalhes',
+    offer: 'Oferta',
+    content: 'Conteúdo',
+    videos: 'Vídeos',
+    modelingTab: 'Modelagem',
   },
   'en-US': {
     login: 'Login',
@@ -110,6 +149,45 @@ const translations = {
     status: 'Status',
     active: 'Active',
     inactive: 'Inactive',
+    
+    // Offer Generation
+    selectAI: 'Select the AI',
+    commentOrText: 'Comment or Text',
+    offerGenerated: 'Offer Generated',
+    clearPanel: 'Clear',
+    completeAnalysis: 'Complete Analysis by',
+    copyCompleteAnalysis: 'Copy Complete Analysis',
+    chooseDeliveryFormats: 'Choose Delivery Formats',
+    clickOptionsBelow: 'Click the options below to generate the specific formats you need',
+    
+    // Page Formats
+    howBuildSalesPage: 'How do you want to build your Sales Page?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Diagnostic Funnel',
+    iaBuilder: 'AI Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    
+    // Ebook Formats
+    howStructureEbook: 'How do you want to structure your Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Simple Visual Design',
+    gama: 'Gama',
+    gamaDesc: 'Complete Structure',
+    
+    // Creatives
+    generateCreativesCopy: 'Generate Copy for Creatives?',
+    creativesDesc: 'Static posts (1080x1080) + Videos (Reels/TikTok) with copy, colors and image ideas',
+    generateCreatives: 'Generate Creatives',
+    creativesCount: '5 Posts + 5 Videos with complete copy',
+    
+    // Editor Tabs
+    details: 'Details',
+    offer: 'Offer',
+    content: 'Content',
+    videos: 'Videos',
+    modelingTab: 'Modeling',
   },
   'es-ES': {
     login: 'Iniciar sesión',
@@ -160,6 +238,45 @@ const translations = {
     status: 'Estado',
     active: 'Activo',
     inactive: 'Inactivo',
+    
+    // Offer Generation
+    selectAI: 'Selecciona la IA',
+    commentOrText: 'Comentario o Texto',
+    offerGenerated: 'Oferta Generada',
+    clearPanel: 'Borrar',
+    completeAnalysis: 'Análisis Completo de',
+    copyCompleteAnalysis: 'Copiar Análisis Completo',
+    chooseDeliveryFormats: 'Elige los Formatos de Entrega',
+    clickOptionsBelow: 'Haz clic en las opciones a continuación para generar los formatos específicos que necesitas',
+    
+    // Page Formats
+    howBuildSalesPage: '¿Cómo deseas construir tu Página de Ventas?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Embudo Diagnóstico',
+    iaBuilder: 'IA Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    
+    // Ebook Formats
+    howStructureEbook: '¿Cómo deseas estructurar tu Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Diseño Visual Simple',
+    gama: 'Gama',
+    gamaDesc: 'Estructura Completa',
+    
+    // Creatives
+    generateCreativesCopy: '¿Generar Copy para Creativos?',
+    creativesDesc: 'Posts estáticos (1080x1080) + Videos (Reels/TikTok) con copy, colores e ideas de imágenes',
+    generateCreatives: 'Generar Creativos',
+    creativesCount: '5 Posts + 5 Videos con copy completo',
+    
+    // Editor Tabs
+    details: 'Detalles',
+    offer: 'Oferta',
+    content: 'Contenido',
+    videos: 'Videos',
+    modelingTab: 'Modelado',
   },
 };
 
@@ -182,8 +299,18 @@ export const LangProvider = ({ children }) => {
     return translations[language][key] || key;
   };
 
+  // VT: Helper para obter nome do idioma para instrução da IA
+  const getLanguageForAI = () => {
+    const languageMap = {
+      'pt-BR': 'português brasileiro',
+      'en-US': 'English (American)',
+      'es-ES': 'español'
+    };
+    return languageMap[language] || 'português brasileiro';
+  };
+
   return (
-    <LangContext.Provider value={{ language, changeLanguage, t }}>
+    <LangContext.Provider value={{ language, changeLanguage, t, getLanguageForAI }}>
       {children}
     </LangContext.Provider>
   );
