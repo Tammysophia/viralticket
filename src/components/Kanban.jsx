@@ -1,7 +1,7 @@
 // VT: Kanban integrado com Firestore em tempo real
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Sparkles, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, Sparkles, Edit2, Trash2, AlertCircle, TrendingUp } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
@@ -230,6 +230,46 @@ const Kanban = ({ onEditOffer }) => {
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(item.date)}</span>
                           </div>
+                          
+                          {/* VT: ÁREA VISUAL DE MODELAGEM (quando tem dados preenchidos) */}
+                          {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
+                            <div className="mb-3 p-3 glass border border-blue-500/30 rounded-lg bg-blue-900/10">
+                              <div className="flex items-center gap-2 mb-2">
+                                <TrendingUp className="w-4 h-4 text-blue-400" />
+                                <span className="text-xs font-bold text-blue-300">Modelagem Ativa</span>
+                              </div>
+                              
+                              <div className="space-y-1 text-xs">
+                                {item.modeling.creativesCount > 0 && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-400">Criativos:</span>
+                                    <span className="text-white font-semibold">{item.modeling.creativesCount}</span>
+                                  </div>
+                                )}
+                                
+                                {item.modeling.fanpageUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-400">✓</span>
+                                    <span className="text-green-400 text-xs">Fanpage configurada</span>
+                                  </div>
+                                )}
+                                
+                                {item.modeling.salesPageUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-400">✓</span>
+                                    <span className="text-green-400 text-xs">PV configurada</span>
+                                  </div>
+                                )}
+                                
+                                {item.modeling.checkoutUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-400">✓</span>
+                                    <span className="text-green-400 text-xs">Checkout configurado</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                           
                           {/* VT: Info e barra de progresso para modelagem */}
                           {column.id === 'modeling' && item.modeling && (
