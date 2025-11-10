@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare } from 'lucide-react';
+import { Youtube, Sparkles, KanbanSquare, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -7,19 +7,22 @@ import Tabs from '../components/Tabs';
 import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
+import MonitoringBoard from '../components/MonitoringBoard'; // VT: Quadro de monitoramento
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { getUserOffers } from '../services/offersService'; // VT: Buscar ofertas
+import { getOffer } from '../services/offersService'; // VT: Buscar oferta específica
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('youtube');
   const [aiInitialText, setAiInitialText] = useState('');
   const [editingOffer, setEditingOffer] = useState(null); // VT: Oferta sendo editada
   const [showOfferEditor, setShowOfferEditor] = useState(false); // VT: Modal de edição
+  const [loadingOffer, setLoadingOffer] = useState(false); // VT: Carregando oferta
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -27,6 +30,7 @@ const Dashboard = () => {
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
     { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    { id: 'monitoring', label: 'Monitoramento', icon: TrendingUp },
   ];
 
   const handleUseWithAI = (text) => {
@@ -36,11 +40,24 @@ const Dashboard = () => {
 
   // VT: Abrir editor de oferta
   const handleEditOffer = async (offerId) => {
-    const offers = await getUserOffers(user.id);
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
-      setEditingOffer(offer);
-      setShowOfferEditor(true);
+    try {
+      setLoadingOffer(true);
+      console.log('VT: Carregando oferta para edição:', offerId);
+      
+      const offer = await getOffer(offerId);
+      
+      if (offer) {
+        console.log('VT: Oferta carregada com sucesso:', offer);
+        setEditingOffer(offer);
+        setShowOfferEditor(true);
+      } else {
+        toast.error('❌ Oferta não encontrada');
+      }
+    } catch (error) {
+      console.error('VT: Erro ao carregar oferta:', error);
+      toast.error('❌ Erro ao abrir oferta');
+    } finally {
+      setLoadingOffer(false);
     }
   };
 
@@ -124,6 +141,7 @@ const Dashboard = () => {
               <AIChat initialText={aiInitialText} />
             )}
             {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+            {activeTab === 'monitoring' && <MonitoringBoard />}
           </motion.div>
         </main>
       </div>

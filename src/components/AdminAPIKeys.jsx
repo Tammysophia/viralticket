@@ -12,6 +12,76 @@ import { useAuth } from '../hooks/useAuth';
 import { saveAPIKey as saveToFirestore } from '../services/firebaseService';
 import { encrypt, decrypt, isEncrypted } from '../utils/cryptoUtils';
 
+/**
+ * Valida o formato da chave API
+ */
+const validateAPIKeyFormat = (type, key) => {
+  if (!key || key.trim().length === 0) {
+    return { valid: false, message: 'Chave vazia' };
+  }
+
+  // Remover espaços
+  const cleanKey = key.trim();
+
+  if (type === 'youtube') {
+    // YouTube API Key: AIza... (39 caracteres)
+    if (!cleanKey.startsWith('AIza')) {
+      return { 
+        valid: false, 
+        message: 'Chave YouTube deve começar com "AIza"' 
+      };
+    }
+    if (cleanKey.length !== 39) {
+      return { 
+        valid: false, 
+        message: `Chave YouTube deve ter 39 caracteres (atual: ${cleanKey.length})` 
+      };
+    }
+  } else if (type === 'openai') {
+    // OpenAI API Key: sk-... (51+ caracteres)
+    if (!cleanKey.startsWith('sk-')) {
+      return { 
+        valid: false, 
+        message: 'Chave OpenAI deve começar com "sk-"' 
+      };
+    }
+    if (cleanKey.length < 40) {
+      return { 
+        valid: false, 
+        message: `Chave OpenAI muito curta (mínimo 40 caracteres, atual: ${cleanKey.length})` 
+      };
+    }
+  }
+
+  // Verificar se não é uma URL
+  if (cleanKey.includes('http://') || cleanKey.includes('https://')) {
+    return { 
+      valid: false, 
+      message: '❌ Você colou uma URL! Cole apenas a CHAVE DA API (ex: AIza... ou sk-...)' 
+    };
+  }
+
+  // Verificar se não tem espaços ou quebras de linha
+  if (/\s/.test(cleanKey)) {
+    return { 
+      valid: false, 
+      message: 'Chave não pode conter espaços ou quebras de linha' 
+    };
+  }
+
+  // Verificar se não é mockada
+  if (cleanKey.includes('•') || cleanKey.includes('*') || 
+      cleanKey.includes('AIza************************') ||
+      cleanKey.includes('sk-••••••••••••••••')) {
+    return { 
+      valid: false, 
+      message: 'Chave mockada detectada! Cole uma chave REAL da sua conta' 
+    };
+  }
+
+  return { valid: true, message: 'Chave válida' };
+};
+
 const AdminAPIKeys = () => {
   const { user } = useAuth();
   const { apiKeys, loading, keysLoaded, addAPIKey, updateAPIKey, deleteAPIKey, rotateAPIKey, encryptAPIKey } = useAPIKeys();
@@ -42,6 +112,13 @@ const AdminAPIKeys = () => {
   const handleAdd = async () => {
     if (!newKey.name || !newKey.key) {
       toast.error('📝 Preencha todos os campos');
+      return;
+    }
+
+    // Validar formato da chave
+    const keyValidation = validateAPIKeyFormat(newKey.type, newKey.key);
+    if (!keyValidation.valid) {
+      toast.error(`❌ ${keyValidation.message}`);
       return;
     }
 
@@ -295,13 +372,31 @@ const AdminAPIKeys = () => {
             </select>
           </div>
 
-          <Input
-            label="Chave API"
-            type="password"
-            placeholder={newKey.type === 'youtube' ? 'AIza...' : 'sk-...'}
-            value={newKey.key}
-            onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
-          />
+          <div className="space-y-2">
+            <Input
+              label="Chave API"
+              type="password"
+              placeholder={newKey.type === 'youtube' ? 'AIza...' : 'sk-...'}
+              value={newKey.key}
+              onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
+            />
+            <div className="text-xs text-gray-400 space-y-1">
+              {newKey.type === 'youtube' && (
+                <>
+                  <p>✓ Deve começar com "AIza"</p>
+                  <p>✓ Deve ter exatamente 39 caracteres</p>
+                  <p>✓ Obtenha em: console.cloud.google.com/apis/credentials</p>
+                </>
+              )}
+              {newKey.type === 'openai' && (
+                <>
+                  <p>✓ Deve começar com "sk-"</p>
+                  <p>✓ Deve ter 51+ caracteres</p>
+                  <p>✓ Obtenha em: platform.openai.com/api-keys</p>
+                </>
+              )}
+            </div>
+          </div>
 
           <div className="flex gap-2 mt-6">
             <Button 

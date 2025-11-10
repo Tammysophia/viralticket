@@ -1,8 +1,8 @@
 export const PLANS = {
   FREE: {
     name: 'FREE',
-    offers: 2,              // Por dia - APENAS geração de ofertas com IA
-    offersMonthly: 60,      // Por mês (30 dias × 2/dia)
+    offers: 3,              // Por dia - APENAS geração de ofertas com IA (3 ofertas/dia)
+    offersMonthly: 90,      // Por mês (30 dias × 3/dia)
     urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
     urlsMonthly: 'unlimited',
     color: 'gray',
