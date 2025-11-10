@@ -74,7 +74,7 @@ const Kanban = ({ onEditOffer }) => {
     return () => unsubscribe();
   }, [user?.id]);
 
-  // VT: Organizar ofertas por status (5 colunas agora!)
+  // VT: Organizar ofertas por status
   const organizeOffersByStatus = (allOffers) => {
     const organized = {
       pending: { ...columns.pending, items: [] },
@@ -85,32 +85,12 @@ const Kanban = ({ onEditOffer }) => {
     };
 
     allOffers.forEach(offer => {
-      // VT: Auto-detectar se deve ir para "Modelagem Ativa"
-      const hasModelingData = offer.modeling && (
-        offer.modeling.fanpageUrl || 
-        offer.modeling.salesPageUrl || 
-        offer.modeling.checkoutUrl || 
-        offer.modeling.creativesCount > 0
-      );
+      // VT: SEMPRE usar o status da oferta (não auto-detectar)
+      // Evita loop infinito de re-render
+      const columnId = STATUS_MAP[offer.status] || 'pending';
       
-      // VT: Se tem dados de modelagem E iniciou monitoramento → Modelagem Ativa
-      let columnId;
-      if (hasModelingData && offer.modeling.monitorStart) {
-        columnId = 'activeModeling';
-      } else {
-        columnId = STATUS_MAP[offer.status] || 'pending';
-      }
-      
-      // VT: Verificar se completou 7 dias e deve mover para Concluído
-      if (offer.modeling?.monitorStart) {
-        const daysPassed = (Date.now() - new Date(offer.modeling.monitorStart).getTime()) / (24 * 60 * 60 * 1000);
-        if (daysPassed >= (offer.modeling.monitorDays || 7)) {
-          columnId = 'completed';
-        }
-      }
-      
-      // VT: Verificar se é "Oferta Modelada" (10+ criativos em 7 dias)
-      const isModeledOffer = offer.modeling?.creativesCount >= 10 && offer.modeling?.monitorStart;
+      // VT: Verificar se é "Oferta Modelada" (10+ criativos)
+      const isModeledOffer = offer.modeling?.creativesCount >= 10;
       
       organized[columnId].items.push({
         id: offer.id,

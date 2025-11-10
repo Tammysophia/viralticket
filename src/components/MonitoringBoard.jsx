@@ -1,15 +1,28 @@
 // VT: Quadro de Monitoramento de Modelagem (independente do Kanban)
 import { useState, useEffect } from 'react';
-import { TrendingUp, Calendar, Award, XCircle, Clock } from 'lucide-react';
+import { TrendingUp, Calendar, Award, XCircle, Clock, Plus, Save, X } from 'lucide-react';
 import Card from './Card';
+import Button from './Button';
+import Input from './Input';
+import Modal from './Modal';
 import { useAuth } from '../hooks/useAuth';
-import { subscribeToMonitoring, checkMonitoringStatus } from '../services/monitoringService';
+import { subscribeToMonitoring, checkMonitoringStatus, startMonitoring } from '../services/monitoringService';
 import { formatDate } from '../utils/validation';
+import toast from 'react-hot-toast';
 
 const MonitoringBoard = () => {
   const { user } = useAuth();
   const [monitorings, setMonitorings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    offerTitle: '',
+    fanpageUrl: '',
+    salesPageUrl: '',
+    checkoutUrl: '',
+    creativesCount: 0,
+    monitorDays: 7
+  });
 
   // VT: Listener em tempo real
   useEffect(() => {
@@ -103,17 +116,41 @@ const MonitoringBoard = () => {
     );
   }
 
+  const handleCreateMonitoring = async () => {
+    if (!formData.offerTitle) {
+      toast.error('Digite o nome da oferta');
+      return;
+    }
+
+    try {
+      await startMonitoring(user.id, 'manual_' + Date.now(), formData.offerTitle);
+      toast.success('✅ Monitoramento criado!');
+      setShowForm(false);
+      setFormData({
+        offerTitle: '',
+        fanpageUrl: '',
+        salesPageUrl: '',
+        checkoutUrl: '',
+        creativesCount: 0,
+        monitorDays: 7
+      });
+    } catch (error) {
+      toast.error('❌ Erro ao criar monitoramento');
+    }
+  };
+
   return (
-    <Card>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-6 h-6 text-cyan-400" />
-          <h3 className="text-xl font-bold">Monitoramento de Modelagem</h3>
+    <>
+      <Card>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-6 h-6 text-cyan-400" />
+            <h3 className="text-xl font-bold">Monitoramento de Modelagem</h3>
+          </div>
+          <Button onClick={() => setShowForm(true)} icon={Plus}>
+            Nova Modelagem
+          </Button>
         </div>
-        <span className="text-xs text-gray-400">
-          {monitorings.length} {monitorings.length === 1 ? 'oferta' : 'ofertas'} em monitoramento
-        </span>
-      </div>
 
       {monitorings.length === 0 ? (
         <div className="text-center py-12">
@@ -195,7 +232,70 @@ const MonitoringBoard = () => {
           ))}
         </div>
       )}
-    </Card>
+      </Card>
+
+      {/* Modal de Nova Modelagem */}
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nova Modelagem" size="lg">
+        <div className="space-y-4">
+          <Input
+            label="Nome da Oferta"
+            value={formData.offerTitle}
+            onChange={(e) => setFormData(prev => ({ ...prev, offerTitle: e.target.value }))}
+            placeholder="Ex: Curso de Emagrecimento"
+          />
+
+          <Input
+            label="URL da Fanpage"
+            type="url"
+            value={formData.fanpageUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, fanpageUrl: e.target.value }))}
+            placeholder="https://facebook.com/..."
+          />
+
+          <Input
+            label="URL da Página de Vendas"
+            type="url"
+            value={formData.salesPageUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, salesPageUrl: e.target.value }))}
+            placeholder="https://..."
+          />
+
+          <Input
+            label="URL do Checkout"
+            type="url"
+            value={formData.checkoutUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, checkoutUrl: e.target.value }))}
+            placeholder="https://..."
+          />
+
+          <Input
+            label="Quantidade de Criativos"
+            type="number"
+            min="0"
+            value={formData.creativesCount}
+            onChange={(e) => setFormData(prev => ({ ...prev, creativesCount: parseInt(e.target.value) || 0 }))}
+          />
+
+          <Input
+            label="Dias de Monitoramento"
+            type="number"
+            min="1"
+            max="30"
+            value={formData.monitorDays}
+            onChange={(e) => setFormData(prev => ({ ...prev, monitorDays: parseInt(e.target.value) || 7 }))}
+          />
+
+          <div className="flex gap-2 pt-4">
+            <Button onClick={handleCreateMonitoring} className="flex-1" icon={Save}>
+              Salvar
+            </Button>
+            <Button onClick={() => setShowForm(false)} variant="secondary" className="flex-1" icon={X}>
+              Fechar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 
