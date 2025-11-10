@@ -130,10 +130,19 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center gap-2 text-4xl font-bold mb-2"
+            className="flex flex-col items-center gap-3 mb-2"
           >
-            <span>🎟️</span>
-            <span className="gradient-primary bg-clip-text text-transparent">
+            <img 
+              src="https://iili.io/KmWkhp1.png" 
+              alt="ViralTicket"
+              className="w-20 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'inline';
+              }}
+            />
+            <span style={{ display: 'none' }}>🎟️</span>
+            <span className="text-4xl font-bold gradient-primary bg-clip-text text-transparent">
               ViralTicket
             </span>
           </motion.div>

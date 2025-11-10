@@ -34,13 +34,22 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
       >
         {/* Logo */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 text-2xl font-bold">
-            <span>🎟️</span>
-            <span className="gradient-primary bg-clip-text text-transparent">
+          <div className="flex items-center gap-3">
+            <img 
+              src="https://iili.io/KmWkhp1.png" 
+              alt="ViralTicket"
+              className="w-10 h-10 object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'inline';
+              }}
+            />
+            <span style={{ display: 'none' }}>🎟️</span>
+            <span className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
               ViralTicket
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-400 mt-2">
             {type === 'admin' ? 'Admin Panel' : 'AI-Powered Offers'}
           </p>
         </div>
