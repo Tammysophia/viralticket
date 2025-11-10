@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare } from 'lucide-react';
+import { Youtube, Sparkles, KanbanSquare, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -7,6 +7,7 @@ import Tabs from '../components/Tabs';
 import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
+import MonitoringBoard from '../components/MonitoringBoard'; // VT: Quadro de monitoramento
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
@@ -29,6 +30,7 @@ const Dashboard = () => {
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
     { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    { id: 'monitoring', label: 'Monitoramento', icon: TrendingUp },
   ];
 
   const handleUseWithAI = (text) => {
@@ -139,6 +141,7 @@ const Dashboard = () => {
               <AIChat initialText={aiInitialText} />
             )}
             {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+            {activeTab === 'monitoring' && <MonitoringBoard />}
           </motion.div>
         </main>
       </div>

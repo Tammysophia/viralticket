@@ -117,6 +117,15 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
           monitorDays: 7
         };
         console.log('🔄 VT: Auto-iniciando monitoramento de 7 dias...');
+        
+        // VT: Criar registro de monitoramento separado
+        try {
+          const { startMonitoring } = await import('../services/monitoringService');
+          await startMonitoring(offer.userId, offer.id, offer.title);
+          console.log('📊 VT: Registro de monitoramento criado!');
+        } catch (monError) {
+          console.warn('⚠️ VT: Erro ao criar monitoramento (continuando):', monError);
+        }
       }
       
       // VT: Auto-mover status para "modelagem_ativa" se preencheu dados
