@@ -9,35 +9,125 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>ViralTicket - Transforme Comentários em Ofertas Virais</title>
     <style>
-      /* VT: DELETAR COMPLETAMENTE toolbar e warnings do Vercel */
+      /* VT: DELETAR COMPLETAMENTE toolbar, warnings e TUDO do Vercel */
       #vercel-live-feedback-button,
       [data-vercel-toolbar],
       [data-vercel-toast],
+      [data-vercel-live],
       iframe[src*="vercel"],
+      iframe[src*="speedcurve"],
       .__vercel_toolbar,
       .__vercel_speed_insights,
       .__vercel_live_feedback,
+      .__vercel_live,
       button[class*="vercel"],
+      div[class*="vercel"],
+      div[id*="vercel"],
       div[class*="INP"],
       [data-radix-popper-content-wrapper],
-      div[style*="z-index: 2147483647"] {
+      [data-radix-portal],
+      div[style*="z-index: 2147483647"],
+      div[style*="z-index: 2147483646"],
+      div[style*="z-index: 2147483645"],
+      nav[class*="toolbar"],
+      aside[class*="toolbar"],
+      button[aria-label*="menu"]:not([class*="Sidebar"]),
+      button[aria-label*="Menu"]:not([class*="Sidebar"]),
+      #__next-build-watcher,
+      nextjs-portal,
+      [data-headlessui-portal],
+      [data-floating-ui-portal] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
         pointer-events: none !important;
         position: absolute !important;
         left: -9999px !important;
+        top: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
       }
       
-      /* Desabilitar Web Vitals overlay */
-      #__next-build-watcher,
-      nextjs-portal {
+      /* Remover qualquer elemento flutuante suspeito no canto da tela */
+      body > div[style*="position: fixed"],
+      body > div[style*="position: absolute"] {
         display: none !important;
+      }
+      
+      /* Exceção: Manter apenas elementos do nosso app */
+      #root,
+      #root * {
+        /* Nossos elementos ficam visíveis */
       }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <script>
+      // VT: REMOVER COMPLETAMENTE Vercel Toolbar e elementos flutuantes
+      (function() {
+        const removeVercelElements = () => {
+          // Selecionar TODOS os elementos Vercel
+          const vercelSelectors = [
+            '#vercel-live-feedback-button',
+            '[data-vercel-toolbar]',
+            '[data-vercel-toast]',
+            'iframe[src*="vercel"]',
+            '.__vercel_toolbar',
+            '.__vercel_speed_insights',
+            '.__vercel_live_feedback',
+            'button[class*="vercel"]',
+            'div[class*="vercel"]',
+            'div[id*="vercel"]',
+            'div[class*="INP"]',
+            '[data-radix-popper-content-wrapper]',
+            'div[style*="z-index: 2147483647"]',
+            'div[style*="z-index: 2147483646"]',
+            'nextjs-portal',
+            '#__next-build-watcher',
+            // Hamburger menu específico
+            'button[aria-label*="menu"]',
+            'button[aria-label*="Menu"]',
+            'nav[class*="toolbar"]',
+            'div[class*="toolbar"]',
+            'aside[class*="toolbar"]'
+          ];
+          
+          vercelSelectors.forEach(selector => {
+            try {
+              const elements = document.querySelectorAll(selector);
+              elements.forEach(el => {
+                if (el && el.parentNode) {
+                  el.remove();
+                }
+              });
+            } catch (e) {
+              // Ignorar erros
+            }
+          });
+        };
+        
+        // Executar imediatamente
+        removeVercelElements();
+        
+        // Executar a cada 500ms (caso elementos sejam adicionados dinamicamente)
+        setInterval(removeVercelElements, 500);
+        
+        // Executar quando DOM carregar
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', removeVercelElements);
+        }
+        
+        // Observer para detectar novos elementos
+        const observer = new MutationObserver(removeVercelElements);
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      })();
+    </script>
   </body>
 </html>
