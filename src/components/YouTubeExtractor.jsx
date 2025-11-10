@@ -51,7 +51,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
     const validUrls = urls.filter(url => url && validateYouTubeUrl(url));
     
     if (validUrls.length === 0) {
-      error('Adicione pelo menos uma URL válida do YouTube');
+      error(t('addValidUrl'));
       return;
     }
 
@@ -69,7 +69,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
       console.log('VT: Comentários extraídos:', fetchedComments.length);
       
       if (fetchedComments.length === 0) {
-        error('❌ Nenhum comentário encontrado nos vídeos');
+        error(t('noCommentsExtracted'));
         return;
       }
 
@@ -84,7 +84,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
         },
       });
       
-      success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
+      success(`${fetchedComments.length} ${t('commentsExtracted')}`);
       setApiConnected(true);
     } catch (err) {
       console.error('VT: Erro ao extrair comentários:', err);
@@ -124,7 +124,7 @@ const YouTubeExtractor = ({ onUseWithAI }) => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Youtube className="w-6 h-6 text-red-500" />
-            URLs do YouTube
+            {t('youtubeUrls')}
           </h3>
           {/* VT: Badge "API Conectada" removido conforme solicitado */}
         </div>

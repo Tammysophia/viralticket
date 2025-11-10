@@ -225,12 +225,12 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 bg-black/40 text-white"
                 >
-                  <option value="pendente">Pendente</option>
-                  <option value="execucao">Em Execução</option>
-                  <option value="modelando">Modelando</option>
-                  <option value="concluido">Concluído</option>
+                  <option value="pendente" className="bg-gray-900 text-white">Pendente</option>
+                  <option value="execucao" className="bg-gray-900 text-white">Em Execução</option>
+                  <option value="modelando" className="bg-gray-900 text-white">Modelando</option>
+                  <option value="concluido" className="bg-gray-900 text-white">Concluído</option>
                 </select>
               </div>
             </div>

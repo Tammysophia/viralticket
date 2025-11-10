@@ -20,11 +20,15 @@ const translations = {
     
     // YouTube Tab
     youtubeUrl: 'URL do YouTube',
+    youtubeUrls: 'URLs do YouTube',
     extractComments: 'Extrair Comentários',
     copyAll: 'Copiar Todos',
     useWithAI: 'Usar com IA',
     comments: 'comentários',
     likes: 'curtidas',
+    noCommentsExtracted: 'Nenhum comentário encontrado nos vídeos',
+    commentsExtracted: 'comentários extraídos com sucesso',
+    addValidUrl: 'Adicione pelo menos uma URL válida do YouTube',
     
     // AI Chat
     enterText: 'Digite ou cole o comentário...',
@@ -114,11 +118,15 @@ const translations = {
     offersKanban: 'Offers Kanban',
     
     youtubeUrl: 'YouTube URL',
+    youtubeUrls: 'YouTube URLs',
     extractComments: 'Extract Comments',
     copyAll: 'Copy All',
     useWithAI: 'Use with AI',
     comments: 'comments',
     likes: 'likes',
+    noCommentsExtracted: 'No comments found in videos',
+    commentsExtracted: 'comments extracted successfully',
+    addValidUrl: 'Add at least one valid YouTube URL',
     
     enterText: 'Enter or paste comment...',
     generate: 'Generate Offer',
@@ -203,11 +211,15 @@ const translations = {
     offersKanban: 'Kanban de Ofertas',
     
     youtubeUrl: 'URL de YouTube',
+    youtubeUrls: 'URLs de YouTube',
     extractComments: 'Extraer Comentarios',
     copyAll: 'Copiar Todos',
     useWithAI: 'Usar con IA',
     comments: 'comentarios',
     likes: 'me gusta',
+    noCommentsExtracted: 'No se encontraron comentarios en los videos',
+    commentsExtracted: 'comentarios extraídos con éxito',
+    addValidUrl: 'Agrega al menos una URL válida de YouTube',
     
     enterText: 'Ingrese o pegue el comentario...',
     generate: 'Generar Oferta',
