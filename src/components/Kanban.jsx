@@ -1,19 +1,21 @@
 // VT: Kanban integrado com Firestore em tempo real
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Sparkles, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, Sparkles, Edit2, Trash2, AlertCircle, Wand2 } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer, getOffer } from '../services/offersService';
+import { generateOffer } from '../services/openaiService';
 
 const Kanban = ({ onEditOffer }) => {
-  const { t } = useLanguage();
+  const { t, getLanguageForAI } = useLanguage();
   const { user } = useAuth();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generatingCreatives, setGeneratingCreatives] = useState(null);
 
   // VT: Mapeamento de status para colunas
   const STATUS_MAP = {
@@ -147,6 +149,53 @@ const Kanban = ({ onEditOffer }) => {
     } catch (error) {
       toast.error('Erro ao excluir oferta');
       console.error('VT: Erro ao excluir:', error);
+    }
+  };
+
+  // VT: Gerar criativos direto do card do Kanban
+  const handleGenerateCreatives = async (e, offerId) => {
+    e.stopPropagation();
+    
+    setGeneratingCreatives(offerId);
+    
+    try {
+      console.log('🎨 VT: Gerando criativos para oferta:', offerId);
+      
+      // Buscar oferta completa
+      const offer = await getOffer(offerId);
+      
+      if (!offer) {
+        toast.error('Oferta não encontrada');
+        return;
+      }
+
+      // Criar contexto resumido
+      const offerContext = `OFERTA: ${offer.title}
+SUBTÍTULO: ${offer.subtitle || ''}
+BENEFÍCIOS: ${offer.bullets ? offer.bullets.join(', ') : ''}`;
+
+      // Gerar criativos
+      const creativesData = await generateOffer(
+        offerContext + '\n\nGere 5 posts estáticos (1080x1080) e 5 vídeos curtos (Reels/TikTok) com copy completo, ideias visuais e descrições detalhadas.',
+        offer.agent || 'sophia',
+        getLanguageForAI()
+      );
+
+      // Atualizar oferta com criativos
+      const creativesContent = creativesData.fullResponse || 'Criativos gerados!';
+      const updatedFullResponse = (offer.fullResponse || '') + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 🎨 CRIATIVOS (POSTS + VÍDEOS)\n\n' + creativesContent;
+      
+      await updateOffer(offerId, {
+        fullResponse: updatedFullResponse,
+        scriptVideos: (offer.scriptVideos || '') + '\n\n' + creativesContent
+      });
+
+      toast.success('✨ Criativos adicionados à oferta!');
+    } catch (error) {
+      console.error('❌ VT: Erro ao gerar criativos:', error);
+      toast.error('Erro ao gerar criativos');
+    } finally {
+      setGeneratingCreatives(null);
     }
   };
 
@@ -302,6 +351,24 @@ const Kanban = ({ onEditOffer }) => {
                                 Excluir
                               </button>
                             </div>
+                            {/* VT: Botão Gerar Criativos */}
+                            <button
+                              onClick={(e) => handleGenerateCreatives(e, item.id)}
+                              disabled={generatingCreatives === item.id}
+                              className="w-full flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {generatingCreatives === item.id ? (
+                                <>
+                                  <div className="w-3 h-3 border-2 border-yellow-300 border-t-transparent rounded-full animate-spin" />
+                                  Gerando...
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="w-3 h-3" />
+                                  Gerar Criativos
+                                </>
+                              )}
+                            </button>
                           </div>
                         </div>
                       )}
