@@ -279,27 +279,29 @@ const Kanban = ({ onEditOffer }) => {
                           )}
                           
                           {/* VT: Botões de ação */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEditOffer && onEditOffer(item.id);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                              Editar
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(item.id, item.title);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Excluir
-                            </button>
+                          <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-white/10">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditOffer && onEditOffer(item.id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Editar
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(item.id, item.title);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Excluir
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
