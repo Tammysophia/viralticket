@@ -147,6 +147,17 @@ const AIChat = ({ initialText = '' }) => {
         
         const copyContent = offerData.fullResponse || `${offerData.title}\n\n${offerData.subtitle}\n\n${offerData.bullets?.join('\n') || ''}\n\n${offerData.cta}\n\n${offerData.bonus}`;
         
+        // VT: Se tem vídeos do YouTube no input, extrair e salvar automaticamente
+        const youtubeLinks = [];
+        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/g;
+        let match;
+        while ((match = youtubeRegex.exec(inputText)) !== null) {
+          const fullUrl = match[0].startsWith('http') ? match[0] : `https://www.youtube.com/watch?v=${match[1]}`;
+          if (!youtubeLinks.includes(fullUrl)) {
+            youtubeLinks.push(fullUrl);
+          }
+        }
+        
         const offerId = await createOfferFromAI({
           userId: user.id,
           title: offerData.title || 'Nova Oferta',
@@ -175,10 +186,13 @@ const AIChat = ({ initialText = '' }) => {
             adHeadline: offerData.title,
             adDescription: offerData.subtitle
           },
-          youtubeLinks: []
+          youtubeLinks: youtubeLinks // VT: Links extraídos automaticamente
         });
         
         console.log('✅ VT: Oferta salva no Kanban com TODOS os campos:', offerId);
+        if (youtubeLinks.length > 0) {
+          console.log('🎥 VT: Links do YouTube salvos automaticamente:', youtubeLinks);
+        }
         success('📝 Oferta salva no Kanban!');
       } catch (saveError) {
         console.error('❌ VT: Erro ao salvar oferta:', saveError);
