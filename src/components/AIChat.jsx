@@ -177,6 +177,7 @@ const AIChat = ({ initialText = '' }) => {
           paginaVendas: offerData.fullResponse || '',
           scriptVideos: '',
           conteudoEbook: '',
+          criativos: '',
           fullResponse: offerData.fullResponse || '',
           
           // Campos antigos (compatibilidade)

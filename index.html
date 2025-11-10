@@ -9,16 +9,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>ViralTicket - Transforme Comentários em Ofertas Virais</title>
     <style>
-      /* VT: Esconder toolbar do Vercel */
+      /* VT: DELETAR COMPLETAMENTE toolbar e warnings do Vercel */
       #vercel-live-feedback-button,
       [data-vercel-toolbar],
-      iframe[src*="vercel.live"],
+      [data-vercel-toast],
+      iframe[src*="vercel"],
       .__vercel_toolbar,
-      .__vercel_speed_insights {
+      .__vercel_speed_insights,
+      .__vercel_live_feedback,
+      button[class*="vercel"],
+      div[class*="INP"],
+      [data-radix-popper-content-wrapper],
+      div[style*="z-index: 2147483647"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
         pointer-events: none !important;
+        position: absolute !important;
+        left: -9999px !important;
+      }
+      
+      /* Desabilitar Web Vitals overlay */
+      #__next-build-watcher,
+      nextjs-portal {
+        display: none !important;
       }
     </style>
   </head>

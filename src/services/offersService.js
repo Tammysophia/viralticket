@@ -123,6 +123,7 @@ export const createOfferFromAI = async (data) => {
       paginaVendas: data.paginaVendas || '',
       scriptVideos: data.scriptVideos || '',
       conteudoEbook: data.conteudoEbook || '',
+      criativos: data.criativos || '',
       fullResponse: data.fullResponse || '',
       
       // Campos antigos mantidos para compatibilidade

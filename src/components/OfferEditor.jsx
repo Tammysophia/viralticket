@@ -28,6 +28,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     paginaVendas: '',
     scriptVideos: '',
     conteudoEbook: '',
+    criativos: '',
     fullResponse: '',
     
     // Campos antigos (compatibilidade)
@@ -73,6 +74,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
         paginaVendas: offer.paginaVendas || '',
         scriptVideos: offer.scriptVideos || '',
         conteudoEbook: offer.conteudoEbook || '',
+        criativos: offer.criativos || '',
         fullResponse: offer.fullResponse || '',
         
         // Campos antigos
@@ -174,6 +176,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     { id: 'offer', label: 'Oferta', icon: Sparkles },
     { id: 'content', label: 'Conteúdo', icon: Sparkles },
     { id: 'videos', label: 'Vídeos', icon: LinkIcon },
+    { id: 'creatives', label: 'Criativos', icon: Sparkles },
     { id: 'modeling', label: 'Modelagem', icon: TrendingUp },
   ];
 
@@ -355,6 +358,24 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
                   readOnly
                 />
                 <p className="text-xs text-gray-500 mt-1">Somente leitura - gerado pela IA</p>
+              </div>
+            </div>
+          )}
+
+          {/* ABA: Criativos */}
+          {activeTab === 'creatives' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Criativos (Posts + Vídeos)</label>
+                <textarea
+                  value={formData.criativos}
+                  onChange={(e) => setFormData(prev => ({ ...prev, criativos: e.target.value }))}
+                  placeholder="Cole aqui os criativos gerados no painel da IA...&#10;&#10;Ex:&#10;POST 1: [descrição]&#10;VÍDEO 1: [roteiro]&#10;..."
+                  className="w-full h-96 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none font-mono text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Dica: Copie os criativos gerados no painel da IA e cole aqui para salvar na oferta
+                </p>
               </div>
             </div>
           )}
