@@ -14,6 +14,13 @@ const translations = {
     
     // Dashboard
     dashboard: 'Painel',
+    welcome: 'Bem-vindo',
+    letsCreateOffers: 'Vamos criar ofertas incríveis hoje?',
+    offersGeneratedToday: 'Ofertas Geradas Hoje',
+    youtubeExtraction: 'Extração YouTube',
+    unlimited: 'ILIMITADO',
+    urlsPerDay: 'URLs/dia',
+    extractUnlimited: 'Extraia comentários sem limites! 🎉',
     youtubeExtractor: 'Extrator YouTube',
     aiChat: 'Chat IA',
     offersKanban: 'Kanban de Ofertas',
@@ -84,6 +91,7 @@ const translations = {
     status: 'Status',
     active: 'Ativo',
     inactive: 'Inativo',
+    logout: 'Sair',
   },
   'en-US': {
     login: 'Login',
@@ -94,6 +102,13 @@ const translations = {
     alreadyHaveAccount: 'Already have an account?',
     
     dashboard: 'Dashboard',
+    welcome: 'Welcome',
+    letsCreateOffers: "Let's create amazing offers today?",
+    offersGeneratedToday: 'Offers Generated Today',
+    youtubeExtraction: 'YouTube Extraction',
+    unlimited: 'UNLIMITED',
+    urlsPerDay: 'URLs/day',
+    extractUnlimited: 'Extract comments without limits! 🎉',
     youtubeExtractor: 'YouTube Extractor',
     aiChat: 'AI Chat',
     offersKanban: 'Offers Kanban',
@@ -158,6 +173,7 @@ const translations = {
     status: 'Status',
     active: 'Active',
     inactive: 'Inactive',
+    logout: 'Logout',
   },
   'es-ES': {
     login: 'Iniciar sesión',
@@ -168,6 +184,13 @@ const translations = {
     alreadyHaveAccount: '¿Ya tienes una cuenta?',
     
     dashboard: 'Panel',
+    welcome: 'Bienvenido',
+    letsCreateOffers: '¿Creamos ofertas increíbles hoy?',
+    offersGeneratedToday: 'Ofertas Generadas Hoy',
+    youtubeExtraction: 'Extracción YouTube',
+    unlimited: 'ILIMITADO',
+    urlsPerDay: 'URLs/día',
+    extractUnlimited: '¡Extrae comentarios sin límites! 🎉',
     youtubeExtractor: 'Extractor YouTube',
     aiChat: 'Chat IA',
     offersKanban: 'Kanban de Ofertas',
@@ -232,6 +255,7 @@ const translations = {
     status: 'Estado',
     active: 'Activo',
     inactive: 'Inactivo',
+    logout: 'Salir',
   },
 };
 
