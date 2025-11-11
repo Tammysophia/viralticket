@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Webhook, Activity } from 'lucide-react';
+import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import Card from './Card';
 import Button from './Button';
 import Modal from './Modal';
@@ -7,30 +8,12 @@ import Input from './Input';
 import { useToast } from './Toast';
 import { formatDate } from '../utils/validation';
 import { useAuth } from '../hooks/useAuth';
+import { db } from '../config/firebase';
 
 const AdminWebhooks = () => {
   const { user } = useAuth();
-  const [webhooks, setWebhooks] = useState([
-    {
-      id: '1',
-      name: 'Stripe - Novo Pagamento',
-      url: 'https://api.stripe.com/webhooks/viral',
-      platform: 'Stripe',
-      status: 'active',
-      lastTriggered: new Date().toISOString(),
-      events: 1234,
-    },
-    {
-      id: '2',
-      name: 'Hotmart - Nova Venda',
-      url: 'https://hotmart.com/webhooks/viral',
-      platform: 'Hotmart',
-      status: 'active',
-      lastTriggered: new Date().toISOString(),
-      events: 856,
-    },
-  ]);
-
+  const [webhooks, setWebhooks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [newWebhook, setNewWebhook] = useState({ name: '', url: '', platform: '' });
   const { success, error } = useToast();
@@ -44,24 +27,79 @@ const AdminWebhooks = () => {
     );
   }
 
-  const handleAdd = () => {
+  useEffect(() => {
+    const loadWebhooks = async () => {
+      if (!db) {
+        console.warn('VT: Firebase indisponível, mantendo dados mockados');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const snapshot = await getDocs(collection(db, 'webhooks'));
+        const items = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            name: data.name,
+            url: data.url,
+            platform: data.platform,
+            status: data.status || 'active',
+            lastTriggered: data.lastTriggered || new Date().toISOString(),
+            events: data.events || 0,
+          };
+        });
+        setWebhooks(items);
+      } catch (err) {
+        console.error('VT: Erro ao carregar webhooks:', err);
+        error('Erro ao carregar webhooks do Firestore');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.isAdmin) {
+      loadWebhooks();
+    }
+  }, [user, error]);
+
+  const handleAdd = async () => {
     if (!newWebhook.name || !newWebhook.url || !newWebhook.platform) {
       error('Preencha todos os campos');
       return;
     }
 
-    const webhook = {
-      id: Date.now().toString(),
-      ...newWebhook,
-      status: 'active',
-      lastTriggered: new Date().toISOString(),
-      events: 0,
-    };
+    if (!db) {
+      error('Firebase não configurado');
+      return;
+    }
 
-    setWebhooks([...webhooks, webhook]);
-    success('Webhook adicionado com sucesso!');
-    setShowModal(false);
-    setNewWebhook({ name: '', url: '', platform: '' });
+    try {
+      const docRef = await addDoc(collection(db, 'webhooks'), {
+        ...newWebhook,
+        status: 'active',
+        lastTriggered: serverTimestamp(),
+        events: 0,
+      });
+
+      setWebhooks((prev) => [
+        ...prev,
+        {
+          id: docRef.id,
+          ...newWebhook,
+          status: 'active',
+          lastTriggered: new Date().toISOString(),
+          events: 0,
+        },
+      ]);
+      success('Webhook adicionado com sucesso!');
+      setShowModal(false);
+      setNewWebhook({ name: '', url: '', platform: '' });
+    } catch (err) {
+      console.error('VT: Erro ao adicionar webhook:', err);
+      error('Erro ao adicionar webhook');
+    }
   };
 
   return (
@@ -74,6 +112,12 @@ const AdminWebhooks = () => {
           </Button>
         </div>
 
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-gray-400">Carregando webhooks...</p>
+          </div>
+        ) : (
         <div className="space-y-4">
           {webhooks.map((webhook) => (
             <div key={webhook.id} className="glass border border-white/5 rounded-lg p-4">
@@ -113,6 +157,7 @@ const AdminWebhooks = () => {
             </div>
           ))}
         </div>
+        )}
       </Card>
 
       <Modal
