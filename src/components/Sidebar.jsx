@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { useNavigate } from 'react-router-dom';
+import GPTAgentsList from './GPTAgentsList';
 
 const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
   const { t } = useLanguage();
@@ -54,7 +55,7 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-2 overflow-y-auto">
           {items.map((item) => (
             <button
               key={item.id}
@@ -69,6 +70,9 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
               <span className="font-medium">{item.label}</span>
             </button>
           ))}
+          
+          {/* VT: Agentes GPT (apenas no painel de usuário) */}
+          {type === 'dashboard' && <GPTAgentsList />}
         </nav>
 
         {/* Logout */}

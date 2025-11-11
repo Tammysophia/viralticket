@@ -92,6 +92,7 @@ const translations = {
     active: 'Ativo',
     inactive: 'Inativo',
     logout: 'Sair',
+    managePlatform: 'Gerencie sua plataforma ViralTicket',
   },
   'en-US': {
     login: 'Login',
@@ -174,6 +175,7 @@ const translations = {
     active: 'Active',
     inactive: 'Inactive',
     logout: 'Logout',
+    managePlatform: 'Manage your ViralTicket platform',
   },
   'es-ES': {
     login: 'Iniciar sesión',
@@ -256,6 +258,7 @@ const translations = {
     active: 'Activo',
     inactive: 'Inactivo',
     logout: 'Salir',
+    managePlatform: 'Gestiona tu plataforma ViralTicket',
   },
 };
 
