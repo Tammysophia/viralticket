@@ -125,13 +125,27 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     toast.success('Monitoramento iniciado!');
   };
 
-  // VT: Calcular trend (placeholder - lógica completa necessita histórico)
-  const calculateTrend = () => {
-    const { creativesCount } = formData.modeling;
-    if (creativesCount > 20) return 'subindo';
-    if (creativesCount > 10) return 'estavel';
-    return 'caindo';
-  };
+  // VT: Calcular se oferta é modelável (8+ anúncios em 7 dias)
+  useEffect(() => {
+    if (formData.modeling.monitorStart && formData.modeling.creativesCount >= 8) {
+      const startDate = new Date(formData.modeling.monitorStart);
+      const today = new Date();
+      const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      
+      // Se passou 7 dias e tem 8+ anúncios = MODELÁVEL
+      if (diffDays >= 7) {
+        setFormData(prev => ({
+          ...prev,
+          modeling: {
+            ...prev.modeling,
+            modelavel: true,
+            trend: 'subindo'
+          }
+        }));
+        toast.success('✅ Oferta MODELÁVEL! Manteve 8+ anúncios em 7 dias!', { duration: 5000 });
+      }
+    }
+  }, [formData.modeling.monitorStart, formData.modeling.creativesCount]);
 
   const tabs = [
     { id: 'details', label: 'Detalhes', icon: Sparkles },
@@ -381,7 +395,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
               />
 
               <Input
-                label="Quantidade de Criativos"
+                label="Quantidade de Anúncios Ativos"
                 type="number"
                 min="0"
                 value={formData.modeling.creativesCount}
@@ -389,7 +403,17 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
                   ...prev,
                   modeling: { ...prev.modeling, creativesCount: parseInt(e.target.value) || 0 }
                 }))}
+                placeholder="Quantos anúncios estão rodando?"
               />
+              
+              {/* VT: Indicador de modelagem */}
+              {formData.modeling.creativesCount >= 8 && (
+                <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <p className="text-sm text-green-400 font-semibold">
+                    ✅ Meta atingida! 8+ anúncios = Potencial para modelar
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <Input
@@ -415,37 +439,58 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
 
               {/* VT: Status de monitoramento */}
               {formData.modeling.monitorStart && (
-                <div className="p-4 glass border border-purple-500/20 rounded-lg space-y-2">
-                  <h4 className="font-semibold text-sm">Status do Monitoramento</h4>
+                <div className="p-4 glass border border-purple-500/20 rounded-lg space-y-3">
+                  <h4 className="font-semibold text-sm">📊 Status do Monitoramento</h4>
                   <p className="text-xs text-gray-400">
                     Iniciado em: {new Date(formData.modeling.monitorStart).toLocaleDateString()}
                   </p>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* Progresso dos 7 dias */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-400">Progresso</span>
+                      <span className="text-xs text-gray-400">
+                        {Math.min(Math.floor((new Date() - new Date(formData.modeling.monitorStart)) / (1000 * 60 * 60 * 24)), 7)}/7 dias
+                      </span>
+                    </div>
                     <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                        style={{ width: '50%' }} // TODO: Calcular progresso real
+                        style={{ width: `${Math.min((Math.floor((new Date() - new Date(formData.modeling.monitorStart)) / (1000 * 60 * 60 * 24)) / 7) * 100, 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-400">3/7 dias</span>
+                  </div>
+
+                  {/* Anúncios ativos */}
+                  <div className="p-3 bg-purple-500/10 rounded-lg">
+                    <p className="text-sm font-semibold mb-1">
+                      {formData.modeling.creativesCount >= 8 ? '✅' : '⚠️'} 
+                      {' '}{formData.modeling.creativesCount} Anúncios Ativos
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {formData.modeling.creativesCount >= 8 
+                        ? 'Meta atingida! Oferta com potencial de modelagem.' 
+                        : `Faltam ${8 - formData.modeling.creativesCount} anúncios para atingir meta de modelagem.`}
+                    </p>
                   </div>
                   
-                  {formData.modeling.trend && (
-                    <div className="mt-2">
-                      {formData.modeling.trend === 'subindo' && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
-                          📈 Tendência: Subindo
-                        </span>
-                      )}
-                      {formData.modeling.trend === 'estavel' && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-sm">
-                          ➡️ Tendência: Estável
-                        </span>
-                      )}
-                      {formData.modeling.trend === 'caindo' && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm">
-                          📉 Tendência: Caindo
-                        </span>
+                  {/* Resultado: MODELÁVEL ou NÃO */}
+                  {Math.floor((new Date() - new Date(formData.modeling.monitorStart)) / (1000 * 60 * 60 * 24)) >= 7 && (
+                    <div className={`p-4 rounded-lg ${formData.modeling.creativesCount >= 8 ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'}`}>
+                      {formData.modeling.creativesCount >= 8 ? (
+                        <>
+                          <p className="font-bold text-green-400 mb-1">🏆 OFERTA MODELÁVEL!</p>
+                          <p className="text-xs text-green-300">
+                            Manteve {formData.modeling.creativesCount} anúncios por 7 dias. Pronta para escalar!
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-bold text-red-400 mb-1">🚫 NÃO MODELÁVEL</p>
+                          <p className="text-xs text-red-300">
+                            Apenas {formData.modeling.creativesCount} anúncios. Precisa de 8+ para ser modelável.
+                          </p>
+                        </>
                       )}
                     </div>
                   )}

@@ -106,45 +106,22 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     
     console.log(`🔍 VT: agentPrompt tipo=${typeof agentPrompt}, vazio=${!agentPrompt}, length=${agentPrompt?.length || 0}`);
     
-    // 2️⃣ Se não encontrar no Firestore, usar prompts fixos como fallback
+    // 2️⃣ Se não encontrar no Firestore, usar prompt fallback simplificado
     if (!agentPrompt) {
       console.log(`📝 VT: Usando prompt fixo para ${agent} (fallback)`);
       const agentPrompts = {
-        sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto que convertem. 
-Analise os seguintes comentários e crie uma oferta irresistível que atenda às dores e desejos do público.
+        sophia: `Você é Sophia Fênix, especialista em criar ofertas de alto impacto.
 
-Comentários:
-${comments}
+IMPORTANTE: Gere a análise APENAS até a seção "4️⃣ ESTRUTURA DA OFERTA CAMPEÃ" (incluída).
+NÃO gere Quiz, Página de Vendas, Ebook ou Criativos - isso será gerado depois quando o usuário clicar nos botões específicos.
 
-Crie uma oferta com:
-1. Título impactante (emoji + frase poderosa)
-2. Subtítulo persuasivo
-3. 4 bullets de benefícios (começando com ✅)
-4. Call-to-action convincente
-5. Bônus irresistível
+Analise os comentários e siga sua metodologia completa até a seção 4.`,
+        sofia: `Você é Sofia Universal, IA versátil para todos os nichos.
 
-Formato JSON:
-{
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
-}`,
-        sofia: `Você é Sofia Universal, IA versátil especializada em todos os nichos.
-Analise os comentários abaixo e crie uma oferta personalizada e persuasiva.
+IMPORTANTE: Gere a análise APENAS até a seção "4️⃣ ESTRUTURA DA OFERTA CAMPEÃ" (incluída).
+NÃO gere Quiz, Página de Vendas, Ebook ou Criativos - isso será gerado depois quando o usuário clicar nos botões específicos.
 
-Comentários:
-${comments}
-
-Crie uma oferta completa com elementos persuasivos em formato JSON:
-{
-  "title": "",
-  "subtitle": "",
-  "bullets": ["", "", "", ""],
-  "cta": "",
-  "bonus": ""
-}`
+Analise os comentários e siga sua metodologia completa até a seção 4.`
       };
       agentPrompt = agentPrompts[agent] || agentPrompts.sophia;
     }
@@ -160,19 +137,24 @@ Crie uma oferta completa com elementos persuasivos em formato JSON:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // VT: Modelo mais recente (conforme solicitado: equivalente ao gpt-5)
+        model: 'gpt-4o', // VT: Modelo mais recente
         messages: [
           {
             role: 'system',
-            content: agentPrompt + `\n\nIMPORTANTE: Gere TODA a resposta em ${targetLanguage}. Mantenha consistência no idioma em toda a análise.`, // VT: Prompt completo da IA do Firestore (OCULTO, base fixa) + idioma
+            content: agentPrompt + `\n\nREGRAS CRÍTICAS DE GERAÇÃO:
+1. Gere APENAS as seções de 1️⃣ a 4️⃣ (Diagnóstico + Ofertas + Seleção + Estrutura Campeã)
+2. NÃO gere Quiz, Página de Vendas, Ebook ou Criativos nesta etapa
+3. Pare após completar a seção "4️⃣ ESTRUTURA DA OFERTA CAMPEÃ"
+4. Responda em ${targetLanguage}
+5. Seja conciso e direto para economizar tokens`, // VT: Prompt + limite de seções
           },
           {
             role: 'user',
-            content: `Analise estes comentários e gere a oferta completa seguindo TODO o seu protocolo em ${targetLanguage}:\n\n${comments}`, // VT: Comentários do usuário + instrução de idioma
+            content: `Analise estes comentários e gere até a seção 4️⃣ (Estrutura da Oferta Campeã) em ${targetLanguage}:\n\n${comments}`, // VT: Comentários + limite claro
           },
         ],
-        temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas (conforme solicitado)
-        max_tokens: 2500, // VT: 2500 tokens conforme especificado
+        temperature: 0.0, // VT: Temperatura 0.0 para respostas determinísticas
+        max_tokens: 3000, // VT: Aumentado para caber a análise completa até seção 4
       }),
     });
 

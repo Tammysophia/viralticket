@@ -311,17 +311,25 @@ BÔNUS: ${output.bonus || ''}`;
 ✅ Layout e hierarquia visual clara
 ✅ Pronto para copiar e colar direto no Elementor`;
       } else if (format === 'quiz') {
-        specificInstructions = `Gere o QUIZ DIAGNÓSTICO completo (funil):
+        specificInstructions = `Gere o QUIZ DE VENDAS DIRETAS completo (15 perguntas):
 
-✅ 15 PERGUNTAS com lógica emocional
+IMPORTANTE: Este é um QUIZ DE VENDAS, não educacional.
+
+✅ 15 PERGUNTAS focadas em VENDER o produto
 ✅ Para cada pergunta:
-   - Pergunta emocional estratégica
-   - 3-4 opções de resposta
-   - Lógica de pontuação (alta/média/baixa dor)
-   - Insights do que cada resposta revela
-✅ Resultado final personalizado por score
-✅ CTA específico por perfil identificado
-✅ Estrutura completa pronta para implementar`;
+   - Pergunta que qualifica o lead e aumenta desejo
+   - 3-4 opções de resposta que levam à compra
+   - Lógica de pontuação (alta/média/baixa intenção de compra)
+   - Cada resposta aumenta a vontade de comprar
+✅ Resultado final: CTA DIRETO de compra por perfil
+✅ NÃO é quiz educacional - é funil de vendas!
+✅ Ao final, pessoa deve COMPRAR não apenas aprender
+
+Exemplo de pergunta de VENDAS:
+"Quanto você está disposta a investir para resolver isso HOJE?"
+- R$ 47 (pronta para comprar)
+- R$ 27 (precisa de mais valor)
+- Ainda não sei (precisa de mais aquecimento)`;
       } else if (format === 'ia-builder') {
         specificInstructions = `Gere o PROMPT COMPLETO para IA construtora (Lovable/Gama):
 
