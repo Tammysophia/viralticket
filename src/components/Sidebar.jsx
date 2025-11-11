@@ -35,8 +35,17 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
         } fixed lg:static inset-y-0 left-0 z-40 w-64 glass border-r border-white/10 p-6 flex flex-col transition-transform duration-300`}
       >
         {/* Logo */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-2xl font-bold">
+        <div className="mb-8 flex justify-center">
+          <img 
+            src="https://iili.io/KmWkhp1.png" 
+            alt="ViralTicket"
+            className="w-24 h-24 object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+          <div style={{ display: 'none' }} className="flex items-center gap-2 text-2xl font-bold">
             <span>🎟️</span>
             <span className="gradient-primary bg-clip-text text-transparent">
               ViralTicket
