@@ -18,7 +18,7 @@ const Admin = () => {
     { id: 'overview', label: t('overview'), icon: LayoutDashboard },
     { id: 'users', label: t('users'), icon: Users },
     { id: 'apiKeys', label: t('apiKeys'), icon: Key },
-    { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
+    { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
     { id: 'webhooks', label: t('webhooks'), icon: Webhook },
   ];
 
@@ -61,7 +61,7 @@ const Admin = () => {
               {menuItems.find(item => item.id === activePage)?.label}
             </h1>
             <p className="text-gray-400 mt-1">
-              Gerencie sua plataforma ViralTicket
+              {t('managePlatform')}
             </p>
           </motion.div>
 
