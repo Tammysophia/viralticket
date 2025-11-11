@@ -259,5 +259,128 @@ const Kanban = ({ onEditOffer }) => {
                           {/* VT: ÁREA VISUAL DE MODELAGEM (quando tem dados preenchidos) */}
                           {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
                             <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
-... 116 lines not shown ...</output>
-</result>
+                              <div className="flex items-center gap-2 mb-2">
+                                <TrendingUp className="w-4 h-4 text-cyan-400" />
+                                <span className="text-xs font-bold text-cyan-300">Dados de Modelagem</span>
+                              </div>
+                              
+                              <div className="space-y-1 text-xs">
+                                {item.modeling.creativesCount > 0 && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-400">Criativos:</span>
+                                    <span className={`font-semibold ${item.modeling.creativesCount >= 10 ? 'text-green-400' : 'text-white'}`}>
+                                      {item.modeling.creativesCount}/10
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {item.modeling.fanpageUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-green-400">✓</span>
+                                    <span className="text-green-400 text-xs">Fanpage</span>
+                                  </div>
+                                )}
+                                
+                                {item.modeling.salesPageUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-green-400">✓</span>
+                                    <span className="text-green-400 text-xs">PV</span>
+                                  </div>
+                                )}
+                                
+                                {item.modeling.checkoutUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-green-400">✓</span>
+                                    <span className="text-green-400 text-xs">Checkout</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* VT: Info e barra de progresso para modelagem */}
+                          {column.id === 'modeling' && item.modeling && (
+                            <div className="mb-3 space-y-2">
+                              {/* Badges */}
+                              <div className="flex gap-2 flex-wrap">
+                                {item.modeling.modelavel && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                    ✅ Modelável
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'caindo' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
+                                    🚫 Parar
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'subindo' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                    📈 Subindo
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'estavel' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
+                                    ➡️ Estável
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Barra de progresso */}
+                              {item.modeling.monitorStart && (
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between text-xs text-gray-400">
+                                    <span>Monitoramento</span>
+                                    <span>{item.modeling.monitorDays || 7} dias</span>
+                                  </div>
+                                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                                      style={{ 
+                                        width: `${Math.min(100, ((Date.now() - new Date(item.modeling.monitorStart).getTime()) / (item.modeling.monitorDays * 24 * 60 * 60 * 1000)) * 100)}%` 
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* VT: Botões de ação */}
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditOffer && onEditOffer(item.id);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              Editar
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(item.id, item.title);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+        ))}
+      </div>
+    </DragDropContext>
+  );
+};
+
+export default Kanban;
