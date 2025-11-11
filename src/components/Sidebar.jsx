@@ -3,6 +3,7 @@ import { Home, Users, Key, Webhook, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import GPTAgentsList from './GPTAgentsList';
 
 const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -62,6 +63,8 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
             </button>
           ))}
         </nav>
+
+      {type === 'dashboard' && <GPTAgentsList />}
 
         {/* Logout */}
         <button
