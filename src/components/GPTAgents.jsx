@@ -66,7 +66,7 @@ const GPTAgents = () => {
           <h2 className="text-2xl font-bold">Agentes GPTs Bônus</h2>
         </div>
         <p className="text-gray-400">
-          Agentes especializados powered by ChatGPT para potencializar suas ofertas!
+          Assistentes especializados para complementar suas estratégias!
         </p>
       </Card>
 

@@ -244,15 +244,20 @@ const AIChat = ({ initialText = '' }) => {
     try {
       console.log('🎨 VT: Gerando criativos...');
 
-      // Criar contexto resumido da oferta
-      const offerContext = `OFERTA: ${output.title}
-SUBTÍTULO: ${output.subtitle || ''}
-BENEFÍCIOS: ${output.bullets ? output.bullets.join(', ') : ''}
-CTA: ${output.cta || ''}
-BÔNUS: ${output.bonus || ''}`;
+      // NÃO repetir análise - só gerar criativos
+      const creativesPrompt = `Você já fez a análise. AGORA gere APENAS os CRIATIVOS:
+
+✅ 5 POSTS ESTÁTICOS (1080x1080) numerados
+✅ 5 VÍDEOS CURTOS (Reels/TikTok) numerados
+✅ Para cada: Copy + Ideia visual + Descrição
+✅ NÃO repita análise anterior
+
+COMECE DIRETO:
+POST 1:
+[conteúdo do post]`;
 
       // Chamar IA para gerar criativos no idioma selecionado
-      const creativesData = await generateOffer(offerContext + '\n\nGere 5 posts estáticos (1080x1080) e 5 vídeos curtos (Reels/TikTok) com copy completo, ideias visuais e descrições detalhadas para cada criativo.', selectedAgent, getLanguageForAI());
+      const creativesData = await generateOffer(creativesPrompt, selectedAgent, getLanguageForAI());
 
       // Adicionar ao output existente
       setOutput(prev => ({
@@ -287,69 +292,64 @@ BÔNUS: ${output.bonus || ''}`;
         'ia-builder': 'IA Builder (Lovable/Gama)'
       };
 
-      // ✅ CONTEXTO RESUMIDO (economizar tokens - não repetir toda análise)
-      const offerContext = `OFERTA JÁ IDENTIFICADA:
-TÍTULO: ${output.title}
-SUBTÍTULO: ${output.subtitle}
-BENEFÍCIOS: ${output.bullets ? output.bullets.join(', ') : ''}
-CTA: ${output.cta || ''}
-BÔNUS: ${output.bonus || ''}`;
+      // ✅ IMPORTANTE: NÃO repetir análise - só gerar formato específico
+      const offerContext = `Você já fez a análise completa e definiu a OFERTA CAMPEÃ.
+
+AGORA gere APENAS a PÁGINA DE VENDAS no formato escolhido, SEM repetir diagnóstico, micro-ofertas ou seleção.
+
+Use as informações da oferta campeã já identificada anteriormente.`;
 
       // ✅ INSTRUÇÕES ESPECÍFICAS POR FORMATO
       let specificInstructions = '';
       
       if (format === 'wordpress') {
-        specificInstructions = `Gere a PÁGINA DE VENDAS completa em formato WordPress/Elementor:
+        specificInstructions = `Gere APENAS a PÁGINA DE VENDAS em formato WordPress/Elementor:
 
-✅ Divida em BLOCOS NUMERADOS prontos para copiar/colar
-✅ Cada bloco deve ter:
-   - Número do bloco (ex: BLOCO 1, BLOCO 2)
-   - Copy completa do bloco
-   - Instruções de onde colocar no WordPress
-✅ Siga a estrutura de 17 blocos do protocolo
-✅ Inclua cores do nicho emocional
-✅ Layout e hierarquia visual clara
-✅ Pronto para copiar e colar direto no Elementor`;
+✅ 17 BLOCOS numerados (BLOCO 1, BLOCO 2, etc)
+✅ Cada bloco: Copy completa + Instruções Elementor
+✅ NÃO repita análise, diagnóstico ou micro-ofertas
+✅ Vá DIRETO para os blocos da página
+✅ Cores do nicho emocional
+✅ Layout pronto para copiar/colar
+
+COMECE DIRETO:
+BLOCO 1 – HEADER FIXO:
+Copy: [sua copy aqui]
+Instruções: [instruções aqui]`;
       } else if (format === 'quiz') {
-        specificInstructions = `Gere o QUIZ DE VENDAS DIRETAS completo (15 perguntas):
+        specificInstructions = `Gere APENAS o QUIZ DE VENDAS DIRETAS (15 perguntas):
 
-IMPORTANTE: Este é um QUIZ DE VENDAS, não educacional.
+✅ NÃO repita análise ou diagnóstico
+✅ Vá DIRETO para as 15 perguntas
+✅ Perguntas focadas em VENDER (não educar)
+✅ Cada pergunta qualifica lead e aumenta desejo de compra
+✅ 3-4 opções que levam à compra
+✅ Resultado final: CTA DIRETO por perfil
+✅ Ao final pessoa COMPRA
 
-✅ 15 PERGUNTAS focadas em VENDER o produto
-✅ Para cada pergunta:
-   - Pergunta que qualifica o lead e aumenta desejo
-   - 3-4 opções de resposta que levam à compra
-   - Lógica de pontuação (alta/média/baixa intenção de compra)
-   - Cada resposta aumenta a vontade de comprar
-✅ Resultado final: CTA DIRETO de compra por perfil
-✅ NÃO é quiz educacional - é funil de vendas!
-✅ Ao final, pessoa deve COMPRAR não apenas aprender
-
-Exemplo de pergunta de VENDAS:
-"Quanto você está disposta a investir para resolver isso HOJE?"
-- R$ 47 (pronta para comprar)
-- R$ 27 (precisa de mais valor)
-- Ainda não sei (precisa de mais aquecimento)`;
+COMECE DIRETO:
+PERGUNTA 1:
+[sua pergunta aqui]
+Opções: [opções aqui]`;
       } else if (format === 'ia-builder') {
-        specificInstructions = `Gere o PROMPT COMPLETO para IA construtora (Lovable/Gama):
+        specificInstructions = `Gere APENAS o PROMPT para IA construtora (Lovable/Gama):
 
-✅ Prompt detalhado e estruturado para a IA gerar automaticamente
-✅ Inclua:
-   - Estrutura HTML/componentes
-   - Todos os 17 blocos da página
-   - Cores, tipografia, espaçamentos
-   - Copy completa de cada seção
-   - Instruções de responsividade
-✅ Prompt pronto para copiar e colar no Lovable ou Gama
-✅ IA construtora deve gerar página completa e funcional`;
+✅ NÃO repita análise ou diagnóstico
+✅ Vá DIRETO para o prompt de construção
+✅ Prompt estruturado com todos os 17 blocos
+✅ Pronto para copiar e colar no Lovable/Gama
+
+COMECE DIRETO:
+PROMPT PARA LOVABLE/GAMA:
+[seu prompt aqui]`;
       }
 
-      // ✅ PROMPT OTIMIZADO (curto, direto, sem repetir)
+      // ✅ PROMPT OTIMIZADO (NÃO repetir - economizar tokens)
       const optimizedPrompt = `${offerContext}
 
 ${specificInstructions}
 
-IMPORTANTE: Gere APENAS este formato específico, sem repetir análises anteriores.`;
+REGRA CRÍTICA: NÃO repita nada já gerado. Vá DIRETO ao ponto. Seja conciso.`;
 
       const pageData = await generateOffer(optimizedPrompt, selectedAgent, getLanguageForAI());
 
@@ -385,50 +385,41 @@ IMPORTANTE: Gere APENAS este formato específico, sem repetir análises anterior
         'gama': 'Gama (estrutura completa)'
       };
 
-      // ✅ CONTEXTO RESUMIDO (economizar tokens - não repetir toda análise)
-      const offerContext = `OFERTA JÁ IDENTIFICADA:
-TÍTULO: ${output.title}
-SUBTÍTULO: ${output.subtitle}
-BENEFÍCIOS: ${output.bullets ? output.bullets.join(', ') : ''}`;
+      // ✅ NÃO repetir análise - só gerar ebook
+      const offerContext = `Você já fez a análise. AGORA gere APENAS o EBOOK no formato escolhido, SEM repetir nada.`;
 
       // ✅ INSTRUÇÕES ESPECÍFICAS POR FORMATO
       let specificInstructions = '';
       
       if (format === 'canva') {
-        specificInstructions = `Gere o EBOOK em formato CANVA (design visual):
+        specificInstructions = `Gere APENAS o EBOOK em formato CANVA:
 
-✅ ESTRUTURA VISUAL dividida página por página
-✅ Para cada página/slide:
-   - Número da página (ex: PÁGINA 1, PÁGINA 2)
-   - Título da página
-   - Copy/texto completo
-   - Sugestões de layout (onde colocar cada elemento)
-   - Elementos visuais (ícones, imagens, cores)
-   - Tamanho das fontes e hierarquia
-✅ Ebook de 20+ páginas
-✅ Design simples e direto para Canva
-✅ Textos prontos para copiar/colar`;
+✅ NÃO repita análise
+✅ Vá DIRETO para as páginas do ebook
+✅ 20+ páginas numeradas
+✅ Copy completa de cada página
+
+COMECE DIRETO:
+PÁGINA 1:
+[conteúdo aqui]`;
       } else if (format === 'gama') {
-        specificInstructions = `Gere o EBOOK em formato GAMA (estrutura modular):
+        specificInstructions = `Gere APENAS o EBOOK em formato GAMA:
 
-✅ SUMÁRIO COMPLETO com todos os módulos e capítulos
-✅ Para cada capítulo:
-   - Nome do módulo
-   - Título do capítulo
-   - Conteúdo detalhado e estruturado
-   - Subcapítulos organizados
-✅ Tom e posicionamento estratégico
-✅ Blocos modulares prontos para exportar no Gama
-✅ Ebook de 20+ páginas bem estruturado
-✅ Conteúdo rico e completo`;
+✅ NÃO repita análise
+✅ Vá DIRETO para o sumário e capítulos
+✅ 20+ páginas bem estruturadas
+
+COMECE DIRETO:
+SUMÁRIO:
+[sumário aqui]`;
       }
 
-      // ✅ PROMPT OTIMIZADO (curto, direto, sem repetir)
+      // ✅ PROMPT OTIMIZADO (NÃO repetir)
       const optimizedPrompt = `${offerContext}
 
 ${specificInstructions}
 
-IMPORTANTE: Gere APENAS este formato específico de ebook, sem repetir análises anteriores.`;
+REGRA CRÍTICA: NÃO repita nada. Vá DIRETO ao ponto.`;
 
       const ebookData = await generateOffer(optimizedPrompt, selectedAgent, getLanguageForAI());
 

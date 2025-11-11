@@ -38,11 +38,17 @@ const Dashboard = () => {
 
   // VT: Abrir editor de oferta
   const handleEditOffer = async (offerId) => {
-    const offers = await getUserOffers(user.id);
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
-      setEditingOffer(offer);
-      setShowOfferEditor(true);
+    try {
+      const offers = await getUserOffers(user.id);
+      const offer = offers.find(o => o.id === offerId);
+      if (offer) {
+        setEditingOffer(offer);
+        setShowOfferEditor(true);
+      } else {
+        console.error('VT: Oferta não encontrada:', offerId);
+      }
+    } catch (error) {
+      console.error('VT: Erro ao abrir editor:', error);
     }
   };
 
