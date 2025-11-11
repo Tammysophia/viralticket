@@ -136,12 +136,7 @@ const Login = () => {
               src="https://iili.io/KmWkhp1.png" 
               alt="ViralTicket"
               className="w-32 h-32 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'block';
-              }}
             />
-            <div style={{ display: 'none' }} className="text-6xl">🎟️</div>
           </motion.div>
         </div>
 

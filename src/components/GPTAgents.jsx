@@ -81,9 +81,22 @@ const GPTAgents = () => {
           >
             <Card hover gradient>
               <div className="flex flex-col h-full">
-                {/* Ícone e Nome */}
+                {/* Ícone/Imagem e Nome */}
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="text-5xl">{agent.icon || '🤖'}</div>
+                  <div className="flex-shrink-0">
+                    {agent.imageUrl ? (
+                      <img 
+                        src={agent.imageUrl} 
+                        alt={agent.name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/30"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <div className={agent.imageUrl ? 'text-5xl hidden' : 'text-5xl'}>{agent.icon || '🤖'}</div>
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent">
                       {agent.name}

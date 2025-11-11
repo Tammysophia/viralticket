@@ -91,63 +91,15 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     
     const apiKey = await getServiceAPIKey('openai');
     
-    // MODO MOCK: Se não tiver chave válida, retornar oferta de exemplo
-    const isValidKey = apiKey && apiKey.startsWith('sk-') && apiKey.length > 40;
-    
-    if (!isValidKey) {
-      console.log('🎭 VT: MODO MOCK - Retornando oferta de exemplo (sem gastar tokens)');
-      
-      return {
-        title: '🚀 Transforme Sua Vida Agora!',
-        subtitle: 'Descubra o método comprovado que já ajudou milhares de pessoas',
-        bullets: [
-          '✅ Sistema completo e testado por especialistas',
-          '✅ Resultados comprovados em até 30 dias',
-          '✅ Suporte dedicado e comunidade exclusiva',
-          '✅ Garantia incondicional de 7 dias'
-        ],
-        cta: '🎯 QUERO COMEÇAR AGORA!',
-        bonus: '🎁 BÔNUS: Acesso vitalício + Material complementar grátis',
-        fullResponse: `# 🎭 MODO MOCK - Exemplo de Análise Completa
-
-Esta é uma oferta de exemplo gerada em modo mock (sem usar API).
-
-## 📊 Análise do Público
-
-### Dores Identificadas:
-1. Falta de tempo para resultados
-2. Dificuldade em encontrar métodos que funcionam
-3. Necessidade de suporte durante o processo
-
-### Desejos do Público:
-1. Transformação rápida e efetiva
-2. Método testado e comprovado
-3. Garantia de resultados
-
-## 🎯 Oferta Campeã
-
-**Título:** Transforme Sua Vida em 30 Dias
-
-**Promessa:** Sistema completo testado por milhares de pessoas com resultados comprovados.
-
-### Benefícios Principais:
-- ✅ Método passo a passo simplificado
-- ✅ Suporte dedicado 24/7
-- ✅ Comunidade exclusiva de apoio
-- ✅ Garantia total de satisfação
-
-### Bônus Incluídos:
-🎁 Acesso vitalício a todas as atualizações
-🎁 Material complementar exclusivo
-🎁 Sessão de mentoria em grupo
-
----
-
-💡 **Configure uma chave OpenAI real para gerar ofertas personalizadas com sua IA!**`
-      };
+    // ✅ VT: Validar se tem chave configurada
+    if (!apiKey || apiKey.trim() === '') {
+      console.error('❌ VT: Nenhuma chave OpenAI configurada');
+      throw new Error('Configure uma chave OpenAI válida no painel administrativo');
     }
 
     console.log('🔑 VT: API Key obtida com sucesso');
+    console.log('🔑 VT: Chave começa com:', apiKey.substring(0, 7) + '...');
+    console.log('🔑 VT: Tamanho da chave:', apiKey.length, 'caracteres');
 
     // 1️⃣ Buscar prompt do Firestore primeiro
     let agentPrompt = await getAgentTemplate(agent);

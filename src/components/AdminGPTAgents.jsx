@@ -21,6 +21,7 @@ const AdminGPTAgents = () => {
     name: '',
     description: '',
     icon: '🤖',
+    imageUrl: '',
     url: '',
     active: false,
     order: 1
@@ -58,6 +59,7 @@ const AdminGPTAgents = () => {
       name: agent.name,
       description: agent.description,
       icon: agent.icon || '🤖',
+      imageUrl: agent.imageUrl || '',
       url: agent.url || '',
       active: agent.active,
       order: agent.order
@@ -71,6 +73,7 @@ const AdminGPTAgents = () => {
       name: '',
       description: '',
       icon: '🤖',
+      imageUrl: '',
       url: '',
       active: false,
       order: 1
@@ -184,6 +187,14 @@ const AdminGPTAgents = () => {
             />
 
             <Input
+              label="🖼️ URL da Imagem PNG"
+              type="url"
+              value={formData.imageUrl}
+              onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+              placeholder="https://exemplo.com/imagem-agente.png"
+            />
+
+            <Input
               label="URL do ChatGPT"
               type="url"
               value={formData.url}
@@ -237,8 +248,21 @@ const AdminGPTAgents = () => {
                 } rounded-lg p-4 transition-all`}
               >
                 <div className="flex items-start gap-4">
-                  {/* Ícone */}
-                  <div className="text-4xl">{agent.icon || '🤖'}</div>
+                  {/* Ícone/Imagem */}
+                  <div className="flex-shrink-0">
+                    {agent.imageUrl ? (
+                      <img 
+                        src={agent.imageUrl} 
+                        alt={agent.name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/30"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <div className={agent.imageUrl ? 'text-4xl hidden' : 'text-4xl'}>{agent.icon || '🤖'}</div>
+                  </div>
                   
                   {/* Info */}
                   <div className="flex-1 min-w-0">
