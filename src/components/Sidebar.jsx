@@ -2,9 +2,11 @@ import { motion } from 'framer-motion';
 import { Home, Users, Key, Webhook, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../hooks/useLanguage';
 import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -40,9 +42,6 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
               ViralTicket
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {type === 'admin' ? 'Admin Panel' : 'AI-Powered Offers'}
-          </p>
         </div>
 
         {/* Navigation */}
@@ -69,7 +68,7 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg glass-hover text-red-400 mt-4"
         >
           <LogOut className="w-5 h-5" />
-          <span className="font-medium">Sair</span>
+          <span className="font-medium">{t('logout')}</span>
         </button>
       </motion.aside>
     </>

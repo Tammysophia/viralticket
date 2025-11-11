@@ -112,7 +112,9 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
-        toast.success('🎉 Login efetuado com sucesso!');
+        toast.success('Login efetuado com sucesso!', {
+          icon: '🎉'
+        });
         return mockUser;
       }
 
@@ -166,7 +168,9 @@ export const AuthProvider = ({ children }) => {
       setUser(userProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
       setLoading(false);
-      toast.success('🎉 Login efetuado com sucesso!');
+      toast.success('Login efetuado com sucesso!', {
+        icon: '🎉'
+      });
       return userProfile;
     } catch (error) {
       setLoading(false);
@@ -214,7 +218,9 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
-        toast.success('✅ Cadastro realizado com sucesso!');
+        toast.success('Cadastro realizado com sucesso!', {
+          icon: '✅'
+        });
         return mockUser;
       }
 
@@ -254,7 +260,9 @@ export const AuthProvider = ({ children }) => {
       setUser(fullUserProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
       setLoading(false);
-      toast.success('✅ Cadastro realizado com sucesso!');
+      toast.success('Cadastro realizado com sucesso!', {
+        icon: '✅'
+      });
       return fullUserProfile;
     } catch (error) {
       setLoading(false);

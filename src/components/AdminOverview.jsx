@@ -1,10 +1,19 @@
+import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Key, Activity } from 'lucide-react';
 import Card from './Card';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../hooks/useLanguage';
+import { getSystemStats, getPlanDistribution, getRecentActivities, getUserGrowth } from '../services/statsService';
 
 const AdminOverview = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const [stats, setStats] = useState([]);
+  const [planDistribution, setPlanDistribution] = useState({ FREE: 0, BRONZE: 0, PRATA: 0, OURO: 0 });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [userGrowth, setUserGrowth] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [loading, setLoading] = useState(true);
 
   // Proteção adicional - não renderizar se não for admin
   if (!user?.isAdmin) {
@@ -14,43 +23,79 @@ const AdminOverview = () => {
       </Card>
     );
   }
-  const stats = [
-    {
-      icon: Users,
-      label: 'Total de Usuários',
-      value: '1,234',
-      change: '+12%',
-      color: 'from-blue-500 to-cyan-500',
-    },
-    {
-      icon: Activity,
-      label: 'Ofertas Geradas Hoje',
-      value: '567',
-      change: '+8%',
-      color: 'from-purple-500 to-pink-500',
-    },
-    {
-      icon: Key,
-      label: 'APIs Ativas',
-      value: '8',
-      change: '0%',
-      color: 'from-green-500 to-emerald-500',
-    },
-    {
-      icon: TrendingUp,
-      label: 'Taxa de Conversão',
-      value: '23%',
-      change: '+5%',
-      color: 'from-yellow-500 to-orange-500',
-    },
-  ];
 
-  const recentActivity = [
-    { user: 'João Silva', action: 'Gerou oferta', time: 'há 5 min', plan: 'OURO' },
-    { user: 'Maria Santos', action: 'Novo cadastro', time: 'há 12 min', plan: 'FREE' },
-    { user: 'Pedro Costa', action: 'Upgrade para PRATA', time: 'há 23 min', plan: 'PRATA' },
-    { user: 'Ana Lima', action: 'Extraiu comentários', time: 'há 35 min', plan: 'BRONZE' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Buscar estatísticas reais
+        const systemStats = await getSystemStats();
+        
+        setStats([
+          {
+            icon: Users,
+            label: t('totalUsers'),
+            value: systemStats.totalUsers.toString(),
+            change: '+0%',
+            color: 'from-blue-500 to-cyan-500',
+          },
+          {
+            icon: Activity,
+            label: t('offersToday'),
+            value: systemStats.offersToday.toString(),
+            change: '+0%',
+            color: 'from-purple-500 to-pink-500',
+          },
+          {
+            icon: Key,
+            label: t('activeAPIs'),
+            value: systemStats.activeAPIs.toString(),
+            change: '0%',
+            color: 'from-green-500 to-emerald-500',
+          },
+          {
+            icon: TrendingUp,
+            label: t('conversionRate'),
+            value: `${systemStats.conversionRate}%`,
+            change: '+0%',
+            color: 'from-yellow-500 to-orange-500',
+          },
+        ]);
+
+        // Buscar distribuição de planos
+        const plans = await getPlanDistribution();
+        setPlanDistribution(plans);
+
+        // Buscar atividades recentes
+        const activities = await getRecentActivities();
+        setRecentActivity(activities.length > 0 ? activities : [
+          { user: 'Nenhuma', action: 'atividade recente', time: '-', plan: '-' }
+        ]);
+
+        // Buscar crescimento de usuários
+        const growth = await getUserGrowth();
+        setUserGrowth(growth);
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados do painel:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <div className="text-center py-8">
+          <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">{t('loadingRealData')}</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -75,9 +120,9 @@ const AdminOverview = () => {
       {/* Charts Mock */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
-          <h3 className="text-xl font-bold mb-4">Crescimento de Usuários</h3>
+          <h3 className="text-xl font-bold mb-4">{t('userGrowth')}</h3>
           <div className="h-64 flex items-end justify-around gap-2">
-            {[65, 45, 75, 85, 60, 90, 95].map((height, i) => (
+            {userGrowth.map((height, i) => (
               <motion.div
                 key={i}
                 initial={{ height: 0 }}
@@ -90,14 +135,17 @@ const AdminOverview = () => {
         </Card>
 
         <Card>
-          <h3 className="text-xl font-bold mb-4">Distribuição de Planos</h3>
+          <h3 className="text-xl font-bold mb-4">{t('planDistribution')}</h3>
           <div className="space-y-3">
-            {[
-              { plan: 'FREE', percentage: 45, color: 'gray' },
-              { plan: 'BRONZE', percentage: 25, color: 'orange' },
-              { plan: 'PRATA', percentage: 20, color: 'gray' },
-              { plan: 'OURO', percentage: 10, color: 'yellow' },
-            ].map((item, i) => (
+            {(() => {
+              const total = Object.values(planDistribution).reduce((a, b) => a + b, 0);
+              return [
+                { plan: 'FREE', count: planDistribution.FREE, percentage: total > 0 ? Math.round((planDistribution.FREE / total) * 100) : 0, color: 'gray' },
+                { plan: 'BRONZE', count: planDistribution.BRONZE, percentage: total > 0 ? Math.round((planDistribution.BRONZE / total) * 100) : 0, color: 'orange' },
+                { plan: 'PRATA', count: planDistribution.PRATA, percentage: total > 0 ? Math.round((planDistribution.PRATA / total) * 100) : 0, color: 'gray' },
+                { plan: 'OURO', count: planDistribution.OURO, percentage: total > 0 ? Math.round((planDistribution.OURO / total) * 100) : 0, color: 'yellow' },
+              ];
+            })().map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span>{item.plan}</span>
@@ -119,7 +167,7 @@ const AdminOverview = () => {
 
       {/* Recent Activity */}
       <Card>
-        <h3 className="text-xl font-bold mb-4">Atividades Recentes</h3>
+        <h3 className="text-xl font-bold mb-4">{t('recentActivities')}</h3>
         <div className="space-y-3">
           {recentActivity.map((activity, i) => (
             <div key={i} className="flex items-center justify-between glass border border-white/5 rounded-lg p-3">

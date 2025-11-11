@@ -194,9 +194,10 @@ export const verifyAPIConnection = async () => {
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} language - Idioma da resposta (pt-BR, en-US, es-ES)
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia') => {
+export const generateOffer = async (comments, agent = 'sophia', language = 'pt-BR') => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
@@ -227,12 +228,78 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     if (!systemPrompt) {
       console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
       
+      // Definir idioma da resposta
+      const languageInstructions = {
+        'pt-BR': 'RESPONDA EM PORTUGUÊS BRASILEIRO.',
+        'en-US': 'RESPOND IN ENGLISH.',
+        'es-ES': 'RESPONDA EN ESPAÑOL.'
+      };
+      
+      const langInstruction = languageInstructions[language] || languageInstructions['pt-BR'];
+      
       const fallbackPrompts = {
-        sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
+        sophia: `Você é Sophia Fênix, especialista em criar ofertas irresistíveis e persuasivas.
+
+${langInstruction}
+
+INSTRUÇÕES CRÍTICAS:
+1. Analise PROFUNDAMENTE os comentários fornecidos
+2. Identifique dores, desejos e objeções do público
+3. Crie uma oferta magnética baseada nessa análise
+4. SEMPRE retorne APENAS um JSON válido no formato EXATO abaixo
+
+FORMATO DE RESPOSTA (OBRIGATÓRIO):
+{
+  "title": "Título principal impactante da oferta",
+  "subtitle": "Subtítulo complementar que aumenta o desejo",
+  "bullets": [
+    "✅ Benefício claro 1",
+    "✅ Benefício claro 2",
+    "✅ Benefício claro 3",
+    "✅ Benefício claro 4"
+  ],
+  "cta": "Call to action irresistível",
+  "bonus": "Bônus especial incluído"
+}
+
+IMPORTANTE: Não adicione texto antes ou depois do JSON. Retorne APENAS o JSON puro.`,
+        sofia: `Você é Sofia Universal, IA versátil especializada em criar ofertas para qualquer nicho.
+
+${langInstruction}
+
+INSTRUÇÕES CRÍTICAS:
+1. Analise PROFUNDAMENTE os comentários fornecidos
+2. Identifique dores, desejos e objeções do público
+3. Crie uma oferta personalizada baseada nessa análise
+4. SEMPRE retorne APENAS um JSON válido no formato EXATO abaixo
+
+FORMATO DE RESPOSTA (OBRIGATÓRIO):
+{
+  "title": "Título principal impactante da oferta",
+  "subtitle": "Subtítulo complementar que aumenta o desejo",
+  "bullets": [
+    "✅ Benefício claro 1",
+    "✅ Benefício claro 2",
+    "✅ Benefício claro 3",
+    "✅ Benefício claro 4"
+  ],
+  "cta": "Call to action irresistível",
+  "bonus": "Bônus especial incluído"
+}
+
+IMPORTANTE: Não adicione texto antes ou depois do JSON. Retorne APENAS o JSON puro.`
       };
       
       systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
+    } else {
+      // Se veio do Firestore, adicionar instrução de idioma
+      const languageInstructions = {
+        'pt-BR': '\n\nIMPORTANTE: RESPONDA TODO O CONTEÚDO EM PORTUGUÊS BRASILEIRO.',
+        'en-US': '\n\nIMPORTANT: RESPOND ALL CONTENT IN ENGLISH.',
+        'es-ES': '\n\nIMPORTANTE: RESPONDA TODO EL CONTENIDO EN ESPAÑOL.'
+      };
+      
+      systemPrompt += languageInstructions[language] || languageInstructions['pt-BR'];
     }
     
     console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
@@ -261,10 +328,11 @@ export const generateOffer = async (comments, agent = 'sophia') => {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',  // Modelo mais recente
+        model: 'gpt-4o-mini',  // Modelo mais estável e rápido
         messages: messages,
-        temperature: 0.0,  // Mais determinístico
-        max_tokens: 2500,  // Mais tokens para respostas completas
+        temperature: 0.7,  // Mais criativo mas consistente
+        max_tokens: 1500,  // Suficiente para ofertas
+        response_format: { type: "json_object" }  // Força resposta em JSON
       }),
     });
 

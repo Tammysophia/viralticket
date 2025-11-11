@@ -73,10 +73,10 @@ const Dashboard = () => {
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold mb-1">
-                    Bem-vindo, {user?.name}! 👋
+                    {t('welcome')}, {user?.name}! 👋
                   </h1>
                   <p className="text-gray-400">
-                    Vamos criar ofertas incríveis hoje?
+                    {t('letsCreateOffers')}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -89,18 +89,18 @@ const Dashboard = () => {
                 <ProgressBar
                   value={user?.dailyUsage.offers || 0}
                   max={user?.limits.offers || 2}
-                  label="Ofertas Geradas Hoje"
+                  label={t('offersGeneratedToday')}
                 />
                 <div className="glass border border-purple-500/20 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-400">Extração YouTube</span>
-                    <span className="text-xs text-green-400 font-bold">ILIMITADO</span>
+                    <span className="text-sm text-gray-400">{t('youtubeExtraction')}</span>
+                    <span className="text-xs text-green-400 font-bold">{t('unlimited')}</span>
                   </div>
                   <div className="text-2xl font-bold text-green-400">
-                    ∞ URLs/dia
+                    ∞ {t('urlsPerDay')}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Extraia comentários sem limites! 🎉
+                    {t('extractUnlimited')}
                   </p>
                 </div>
               </div>

@@ -130,10 +130,10 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center gap-2 text-4xl font-bold mb-2"
+            className="inline-flex items-center gap-3 text-6xl font-bold mb-3"
           >
-            <span>🎟️</span>
-            <span className="gradient-primary bg-clip-text text-transparent">
+            <span className="text-7xl">🎟️</span>
+            <span className="gradient-primary bg-clip-text text-transparent text-5xl">
               ViralTicket
             </span>
           </motion.div>

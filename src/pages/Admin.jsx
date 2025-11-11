@@ -57,7 +57,7 @@ const Admin = () => {
               {menuItems.find(item => item.id === activePage)?.label}
             </h1>
             <p className="text-gray-400 mt-1">
-              Gerencie sua plataforma ViralTicket
+              {t('managePlatform')}
             </p>
           </motion.div>
 

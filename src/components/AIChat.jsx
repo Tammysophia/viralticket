@@ -18,7 +18,7 @@ const AIChat = ({ initialText = '' }) => {
   const [verifying, setVerifying] = useState(false);
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Atualizar inputText apenas quando initialText mudar
   useEffect(() => {
@@ -30,16 +30,16 @@ const AIChat = ({ initialText = '' }) => {
   const agents = [
     {
       id: 'sophia',
-      name: 'Sophia Fênix',
+      name: t('sophiaPhoenix'),
       emoji: '🔥',
-      description: 'Especialista em ofertas de alto impacto',
+      description: t('sophiaDesc'),
       color: 'from-orange-500 to-red-600',
     },
     {
       id: 'sofia',
-      name: 'Sofia Universal',
+      name: t('sofiaUniversal'),
       emoji: '🌟',
-      description: 'IA versátil para todos os nichos',
+      description: t('sofiaDesc'),
       color: 'from-purple-500 to-pink-600',
     },
   ];
@@ -93,7 +93,8 @@ const AIChat = ({ initialText = '' }) => {
       console.log('VT: Iniciando geração de oferta...');
       
       // Gerar oferta com OpenAI (a verificação de API key está dentro do generateOffer)
-      const offerData = await generateOffer(inputText, selectedAgent);
+      // Passar o idioma atual para a IA responder no idioma correto
+      const offerData = await generateOffer(inputText, selectedAgent, language);
       console.log('VT: Oferta gerada:', offerData);
 
       setOutput(offerData);
@@ -154,7 +155,7 @@ const AIChat = ({ initialText = '' }) => {
     
     const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
-    success('Oferta copiada!');
+    success(t('offerCopied'));
   };
 
   return (
@@ -162,7 +163,7 @@ const AIChat = ({ initialText = '' }) => {
       {/* Agent Selection */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">Selecione a IA</h3>
+          <h3 className="text-xl font-bold">{t('selectAI')}</h3>
           {/* VT: Badge "API Conectada" removido conforme solicitado */}
         </div>
         
@@ -199,7 +200,7 @@ const AIChat = ({ initialText = '' }) => {
 
       {/* Input */}
       <Card>
-        <h3 className="text-xl font-bold mb-4">Comentário ou Texto</h3>
+        <h3 className="text-xl font-bold mb-4">{t('commentOrText')}</h3>
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
@@ -220,7 +221,7 @@ const AIChat = ({ initialText = '' }) => {
       {output && (
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Oferta Gerada</h3>
+            <h3 className="text-xl font-bold">{t('generatedOffer')}</h3>
             <Button variant="secondary" onClick={handleCopy} icon={Copy}>
               {t('copy')}
             </Button>
