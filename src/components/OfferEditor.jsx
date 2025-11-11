@@ -57,13 +57,22 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
   }, [offer]);
 
   // VT: Salvar alterações
-  const handleSave = async () => {
+  const handleSave = async (moveToModeling = false) => {
     if (!offer?.id) return;
     
     setSaving(true);
     try {
-      await updateOffer(offer.id, formData);
-      toast.success('💾 Oferta salva com sucesso!');
+      const updateData = moveToModeling 
+        ? { ...formData, status: 'modelando' }
+        : formData;
+      
+      await updateOffer(offer.id, updateData);
+      
+      if (moveToModeling) {
+        toast.success('📊 Oferta movida para Modelagem!');
+      } else {
+        toast.success('💾 Oferta salva com sucesso!');
+      }
       onClose();
     } catch (error) {
       toast.error('❌ Erro ao salvar oferta');
@@ -141,8 +150,8 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Editor de Oferta" size="xl">
-      <div className="flex flex-col h-[600px]">
+    <Modal isOpen={isOpen} onClose={onClose} title="Editor de Oferta" size="full">
+      <div className="flex flex-col h-[80vh] min-h-[600px]">
         {/* VT: Tabs */}
         <div className="flex gap-2 mb-6 border-b border-white/10 pb-2">
           {tabs.map(tab => {
@@ -456,12 +465,25 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
         </div>
 
         {/* VT: Rodapé com botões */}
-        <div className="flex gap-2 pt-4 border-t border-white/10 mt-4">
-          <Button onClick={handleSave} loading={saving} className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-white/10 mt-4">
+          <Button 
+            onClick={() => handleSave(false)} 
+            loading={saving} 
+            className="flex-1"
+          >
             <Save className="w-4 h-4 mr-2" />
             Salvar
           </Button>
+          <Button 
+            onClick={() => handleSave(true)} 
+            loading={saving}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Modelar
+          </Button>
           <Button onClick={onClose} variant="secondary" className="flex-1">
+            <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
         </div>
