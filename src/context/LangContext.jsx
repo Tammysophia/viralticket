@@ -90,6 +90,29 @@ const translations = {
     logout: 'Sair',
     online: 'Online',
     adminPanel: 'Painel Admin',
+    
+    // AI Chat Extended
+    clearPanel: 'Limpar Painel',
+    completeAnalysis: 'Análise Completa de',
+    copyCompleteAnalysis: 'Copiar Análise Completa',
+    chooseDeliveryFormats: 'Escolha os Formatos de Entrega',
+    clickOptionsBelow: 'Clique nas opções abaixo para gerar',
+    howBuildSalesPage: 'Como deseja construir a Página de Vendas?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Funil diagnóstico',
+    iaBuilder: 'IA Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    howStructureEbook: 'Como deseja estruturar o Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Design visual simples',
+    gama: 'Gama',
+    gamaDesc: 'Estrutura completa',
+    generateCreativesCopy: 'Gerar Criativos e Copy?',
+    creativesDesc: '5 posts estáticos + 5 vídeos curtos',
+    generateCreatives: 'Gerar Criativos',
+    creativesCount: '5 Posts + 5 Vídeos',
   },
   'en-US': {
     login: 'Login',
@@ -170,6 +193,29 @@ const translations = {
     logout: 'Logout',
     online: 'Online',
     adminPanel: 'Admin Panel',
+    
+    // AI Chat Extended
+    clearPanel: 'Clear Panel',
+    completeAnalysis: 'Complete Analysis by',
+    copyCompleteAnalysis: 'Copy Complete Analysis',
+    chooseDeliveryFormats: 'Choose Delivery Formats',
+    clickOptionsBelow: 'Click on options below to generate',
+    howBuildSalesPage: 'How do you want to build the Sales Page?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Diagnostic funnel',
+    iaBuilder: 'AI Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    howStructureEbook: 'How do you want to structure the Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Simple visual design',
+    gama: 'Gama',
+    gamaDesc: 'Complete structure',
+    generateCreativesCopy: 'Generate Creatives & Copy?',
+    creativesDesc: '5 static posts + 5 short videos',
+    generateCreatives: 'Generate Creatives',
+    creativesCount: '5 Posts + 5 Videos',
   },
   'es-ES': {
     login: 'Iniciar sesión',
@@ -250,6 +296,29 @@ const translations = {
     logout: 'Salir',
     online: 'En línea',
     adminPanel: 'Panel Admin',
+    
+    // AI Chat Extended
+    clearPanel: 'Limpiar Panel',
+    completeAnalysis: 'Análisis Completo de',
+    copyCompleteAnalysis: 'Copiar Análisis Completo',
+    chooseDeliveryFormats: 'Elige los Formatos de Entrega',
+    clickOptionsBelow: 'Haz clic en las opciones para generar',
+    howBuildSalesPage: '¿Cómo deseas construir la Página de Ventas?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Embudo diagnóstico',
+    iaBuilder: 'AI Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    howStructureEbook: '¿Cómo deseas estructurar el Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Diseño visual simple',
+    gama: 'Gama',
+    gamaDesc: 'Estructura completa',
+    generateCreativesCopy: '¿Generar Creativos y Copy?',
+    creativesDesc: '5 posts estáticos + 5 videos cortos',
+    generateCreatives: 'Generar Creativos',
+    creativesCount: '5 Posts + 5 Videos',
   },
 };
 
@@ -272,8 +341,13 @@ export const LangProvider = ({ children }) => {
     return translations[language][key] || key;
   };
 
+  // Retornar idioma formatado para a IA (pt-BR, en-US, es-ES)
+  const getLanguageForAI = () => {
+    return language;
+  };
+
   return (
-    <LangContext.Provider value={{ language, changeLanguage, t }}>
+    <LangContext.Provider value={{ language, changeLanguage, t, getLanguageForAI }}>
       {children}
     </LangContext.Provider>
   );
