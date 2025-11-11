@@ -58,13 +58,17 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
 
   // VT: Salvar alterações
   const handleSave = async () => {
-    if (!offer?.id) return;
+    if (!offer?.id) {
+      toast.error('Oferta inválida');
+      return;
+    }
     
     setSaving(true);
     try {
+      console.log('VT: Salvando oferta:', offer.id, formData);
       await updateOffer(offer.id, formData);
       toast.success('💾 Oferta salva com sucesso!');
-      onClose();
+      setTimeout(() => onClose(), 500);
     } catch (error) {
       toast.error('❌ Erro ao salvar oferta');
       console.error('VT: Erro ao salvar:', error);

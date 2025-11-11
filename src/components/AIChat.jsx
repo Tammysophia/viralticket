@@ -303,19 +303,33 @@ Use as informações da oferta campeã já identificada anteriormente.`;
       let specificInstructions = '';
       
       if (format === 'wordpress') {
-        specificInstructions = `Gere APENAS a PÁGINA DE VENDAS em formato WordPress/Elementor:
+        specificInstructions = `Gere APENAS os 17 BLOCOS da página WordPress/Elementor:
 
-✅ 17 BLOCOS numerados (BLOCO 1, BLOCO 2, etc)
-✅ Cada bloco: Copy completa + Instruções Elementor
-✅ NÃO repita análise, diagnóstico ou micro-ofertas
-✅ Vá DIRETO para os blocos da página
-✅ Cores do nicho emocional
-✅ Layout pronto para copiar/colar
+REGRAS:
+✅ Retorne APENAS os blocos (sem explicações)
+✅ Cada bloco: Número + Copy completa + Instruções Elementor
+✅ Bônus devem ter: Mockup + Descrição + Valor
+✅ NÃO incluir bloco de vídeo
+✅ Lowticket (até R$100)
+
+ESTRUTURA DOS BÔNUS:
+- BLOCO 12: 3 Bônus com mockup + descrição completa + valor individual
+- Cada bônus: [Mockup] + Título + Descrição (3-4 linhas) + Valor (R$X)
 
 COMECE DIRETO:
 BLOCO 1 – HEADER FIXO:
-Copy: [sua copy aqui]
-Instruções: [instruções aqui]`;
+Copy:
+- Logo à esquerda
+- Frase central: [frase]
+- Botão: [CTA]
+
+Instruções Elementor:
+- Widget cabeçalho
+- Altura 60px
+- Sombra sutil
+
+BLOCO 2 – HERO:
+[continuar...]`;
       } else if (format === 'quiz') {
         specificInstructions = `Gere APENAS o QUIZ DE VENDAS DIRETAS (15 perguntas):
 
@@ -332,16 +346,37 @@ PERGUNTA 1:
 [sua pergunta aqui]
 Opções: [opções aqui]`;
       } else if (format === 'ia-builder') {
-        specificInstructions = `Gere APENAS o PROMPT para IA construtora (Lovable/Gama):
+        specificInstructions = `Gere o PROMPT COMPLETO para copiar e colar no Lovable/Gama.
 
-✅ NÃO repita análise ou diagnóstico
-✅ Vá DIRETO para o prompt de construção
-✅ Prompt estruturado com todos os 17 blocos
-✅ Pronto para copiar e colar no Lovable/Gama
+REGRAS CRÍTICAS:
+✅ Retorne APENAS o PROMPT (sem explicações antes ou depois)
+✅ Prompt deve incluir: Paleta de cores, Tipografia, Mockups, 17 blocos numerados com copy completa
+✅ Cada bloco: Layout + Elementos + Copy pronta
+✅ Bônus devem ter: Mockup + Descrição completa + Valor
+✅ NÃO coloque vídeo na página (remover bloco 8 de vídeo)
+✅ Formato: Lowticket (oferta até R$100)
 
-COMECE DIRETO:
-PROMPT PARA LOVABLE/GAMA:
-[seu prompt aqui]`;
+ESTRUTURA DOS BÔNUS:
+- Remover BLOCO 8 (vídeo)
+- BLOCO 12: 3 Bônus com mockup + descrição completa (3-4 linhas) + valor individual
+- Total bônus deve justificar valor âncora
+
+COMECE DIRETO COM:
+PRODUTO: [nome]
+TAGLINE: [tagline]
+PREÇO: R$[valor]
+VALOR ÂNCORA: R$[valor_original]
+
+🎨 PALETA DE CORES:
+[cores aqui]
+
+📐 TIPOGRAFIA:
+[tipografia aqui]
+
+📦 ESTRUTURA DA PÁGINA (17 BLOCOS - SEM BLOCO 8):
+BLOCO 1 – HEADER:
+[layout + copy]
+..."`;
       }
 
       // ✅ PROMPT OTIMIZADO (NÃO repetir - economizar tokens)
