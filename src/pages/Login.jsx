@@ -135,7 +135,7 @@ const Login = () => {
             <img 
               src="https://iili.io/KmWkhp1.png" 
               alt="ViralTicket"
-              className="w-32 h-32 object-contain"
+              className="w-48 h-48 object-contain"
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'block';

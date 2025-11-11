@@ -39,7 +39,7 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
           <img 
             src="https://iili.io/KmWkhp1.png" 
             alt="ViralTicket"
-            className="w-24 h-24 object-contain"
+            className="w-32 h-32 object-contain"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
