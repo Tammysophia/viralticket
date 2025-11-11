@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
-        toast.success('🎉 Login efetuado com sucesso!');
+        toast.success('Login efetuado com sucesso!');
         return mockUser;
       }
 
@@ -166,26 +166,26 @@ export const AuthProvider = ({ children }) => {
       setUser(userProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
       setLoading(false);
-      toast.success('🎉 Login efetuado com sucesso!');
+      toast.success('Login efetuado com sucesso!');
       return userProfile;
     } catch (error) {
       setLoading(false);
       
       // Tratamento específico de erros Firebase
       if (error.code === 'auth/user-not-found') {
-        toast.error('❌ Usuário não encontrado. Crie uma conta primeiro!');
+        toast.error('Usuário não encontrado. Crie uma conta primeiro!');
       } else if (error.code === 'auth/wrong-password') {
-        toast.error('🔐 Senha incorreta. Tente novamente.');
+        toast.error('Senha incorreta. Tente novamente.');
       } else if (error.code === 'auth/invalid-email') {
-        toast.error('📧 E-mail inválido. Verifique o formato.');
+        toast.error('E-mail inválido. Verifique o formato.');
       } else if (error.code === 'auth/invalid-credential') {
-        toast.error('❌ E-mail ou senha incorretos.');
+        toast.error('E-mail ou senha incorretos.');
       } else if (error.code === 'auth/too-many-requests') {
-        toast.error('⚠️ Muitas tentativas. Aguarde alguns minutos.');
+        toast.error('Muitas tentativas. Aguarde alguns minutos.');
       } else if (error.code === 'auth/network-request-failed') {
-        toast.error('📡 Sem conexão com a internet.');
+        toast.error('Sem conexão com a internet.');
       } else {
-        toast.error('⚠️ Erro ao processar o login. Tente novamente.');
+        toast.error('Erro ao processar o login. Tente novamente.');
       }
       
       throw error;
@@ -214,7 +214,7 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
-        toast.success('✅ Cadastro realizado com sucesso!');
+        toast.success('Cadastro realizado com sucesso!');
         return mockUser;
       }
 
@@ -254,24 +254,24 @@ export const AuthProvider = ({ children }) => {
       setUser(fullUserProfile);
       localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
       setLoading(false);
-      toast.success('✅ Cadastro realizado com sucesso!');
+      toast.success('Cadastro realizado com sucesso!');
       return fullUserProfile;
     } catch (error) {
       setLoading(false);
       
       // Tratamento específico de erros Firebase
       if (error.code === 'auth/email-already-in-use') {
-        toast.error('❌ Este e-mail já está em uso. Faça login!');
+        toast.error('Este e-mail já está em uso. Faça login!');
       } else if (error.code === 'auth/invalid-email') {
-        toast.error('📧 E-mail inválido. Verifique o formato.');
+        toast.error('E-mail inválido. Verifique o formato.');
       } else if (error.code === 'auth/weak-password') {
-        toast.error('🔐 Senha muito fraca. Use pelo menos 6 caracteres.');
+        toast.error('Senha muito fraca. Use pelo menos 6 caracteres.');
       } else if (error.code === 'auth/operation-not-allowed') {
-        toast.error('⚠️ Cadastro desabilitado. Contate o suporte.');
+        toast.error('Cadastro desabilitado. Contate o suporte.');
       } else if (error.code === 'auth/network-request-failed') {
-        toast.error('📡 Sem conexão com a internet.');
+        toast.error('Sem conexão com a internet.');
       } else {
-        toast.error('⚠️ Erro ao cadastrar. Tente novamente.');
+        toast.error('Erro ao cadastrar. Tente novamente.');
       }
       
       throw error;

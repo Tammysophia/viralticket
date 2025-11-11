@@ -4,24 +4,46 @@
 
 @layer base {
   body {
-    @apply bg-gray-900 text-white font-sans;
+    @apply text-white font-sans;
+    background-color: #181825; /* VT: Preto profundo */
   }
 }
 
 @layer utilities {
+  /* VT: Nova paleta ViralTicket */
   .glass {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+    background-color: rgba(34, 20, 87, 0.4); /* #221457 com transparência */
+    backdrop-filter: blur(20px);
+    border: 1px solid #4B3A74; /* Borda roxo-azulado */
   }
   
   .glass-hover {
-    @apply hover:bg-white/15 transition-all duration-300;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-hover:hover {
+    background-color: rgba(35, 33, 74, 0.6); /* #23214A hover */
+    border-color: #8B5CF6; /* Roxo vibrante no hover */
   }
   
   .gradient-primary {
-    @apply bg-gradient-to-r from-purple-600 to-pink-600;
+    background: linear-gradient(135deg, #8B5CF6 0%, #D946EF 50%, #F59E0B 100%); /* Roxo vibrante → Rosa → Dourado */
   }
   
   .gradient-bg {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(135deg, #181825 0%, #221457 30%, #23214A 70%, #181825 100%);
+  }
+  
+  /* VT: Cards com nova identidade */
+  .card-modern {
+    background-color: #221457; /* Roxo escuro para cards */
+    border: 1px solid #4B3A74; /* Borda fina roxo-azulado */
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(75, 58, 116, 0.15);
+  }
+  
+  /* VT: Áreas internas/menus */
+  .menu-bg {
+    background-color: #23214A; /* Azul petróleo para detalhes */
   }
 }

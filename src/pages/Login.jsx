@@ -125,22 +125,19 @@ const Login = () => {
         className="glass border border-white/20 rounded-2xl p-8 max-w-md w-full relative z-10"
       >
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center gap-2 text-4xl font-bold mb-2"
+            className="flex justify-center"
           >
-            <span>🎟️</span>
-            <span className="gradient-primary bg-clip-text text-transparent">
-              ViralTicket
-            </span>
+            <img 
+              src="https://iili.io/KmWkhp1.png" 
+              alt="ViralTicket"
+              className="w-48 h-48 object-contain"
+            />
           </motion.div>
-          <p className="text-gray-400 flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4" />
-            <span>Transforme comentários em ofertas virais</span>
-          </p>
         </div>
 
         {/* Form */}
@@ -196,27 +193,6 @@ const Login = () => {
               {isLogin ? t('register') : t('login')}
             </span>
           </button>
-        </div>
-
-        {/* Features */}
-        <div className="mt-8 pt-8 border-t border-white/10 space-y-3">
-          <p className="text-sm text-gray-400 font-semibold mb-3">O que você terá acesso:</p>
-          {[
-            '✨ Extração de comentários do YouTube',
-            '🤖 IA para criar ofertas virais',
-            '📊 Kanban para organizar ofertas',
-            '🌐 Multi-idioma (PT, EN, ES)',
-          ].map((feature, i) => (
-            <motion.p
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="text-sm text-gray-300"
-            >
-              {feature}
-            </motion.p>
-          ))}
         </div>
       </motion.div>
     </div>
