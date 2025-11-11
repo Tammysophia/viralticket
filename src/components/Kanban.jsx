@@ -136,7 +136,7 @@ const Kanban = ({ onEditOffer }) => {
 
   // VT: Excluir oferta com confirmação
   const handleDelete = async (offerId, offerTitle) => {
-    if (!confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
+    if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
       return;
     }
 
@@ -185,77 +185,83 @@ const Kanban = ({ onEditOffer }) => {
                     snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
                   }`}
                 >
-                  {column.items.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                      <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
-                      <p className="text-sm">Nenhuma oferta</p>
-                    </div>
-                  )}
-                  
-                  {column.items.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
-                            snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
-                          }`}
-                        >
-                          <h4 className="font-bold mb-2">{item.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                            <Sparkles className="w-4 h-4" />
-                            <span>{item.agent}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                            <Calendar className="w-3 h-3" />
-                            <span>{formatDate(item.date)}</span>
-                          </div>
-                          
-                          {/* VT: Badge de modelagem na coluna "Modelando" */}
-                          {column.id === 'modeling' && item.modeling && (
-                            <div className="mb-3">
-                              {item.modeling.modelavel && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                  ✅ Modelável
-                                </span>
-                              )}
-                              {item.modeling.trend === 'caindo' && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
-                                  🚫 Parar
-                                </span>
-                              )}
+                    {column.items.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                        <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                        <p className="text-sm">Nenhuma oferta</p>
+                      </div>
+                    )}
+                    
+                    {column.items.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
+                              snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
+                            }`}
+                          >
+                            <h4
+                              className="font-bold mb-2 cursor-grab active:cursor-grabbing"
+                              {...provided.dragHandleProps}
+                            >
+                              {item.title}
+                            </h4>
+                            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                              <Sparkles className="w-4 h-4" />
+                              <span>{item.agent}</span>
                             </div>
-                          )}
-                          
-                          {/* VT: Botões de ação */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEditOffer && onEditOffer(item.id);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                              Editar
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(item.id, item.title);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Excluir
-                            </button>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                              <Calendar className="w-3 h-3" />
+                              <span>{formatDate(item.date)}</span>
+                            </div>
+                            
+                            {/* VT: Badge de modelagem na coluna "Modelando" */}
+                            {column.id === 'modeling' && item.modeling && (
+                              <div className="mb-3">
+                                {item.modeling.modelavel && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                    ✅ Modelável
+                                  </span>
+                                )}
+                                {item.modeling.trend === 'caindo' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
+                                    🚫 Parar
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* VT: Botões de ação */}
+                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditOffer && onEditOffer(item.id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(item.id, item.title);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Excluir
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                        )}
+                      </Draggable>
+                    ))}
                   {provided.placeholder}
                 </div>
               )}
