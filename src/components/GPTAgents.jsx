@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { ExternalLink, Sparkles, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Card from './Card';
-import Button from './Button';
 import { subscribeToActiveAgents } from '../services/agentsService';
 import toast from 'react-hot-toast';
 
@@ -101,14 +100,18 @@ const GPTAgents = () => {
                   </div>
                 </div>
 
-                <Button
-                  onClick={() => handleOpenAgent(agent)}
-                  disabled={!agent.url || agent.url.trim() === ''}
-                  className="mt-auto"
-                  icon={ExternalLink}
-                >
-                  {agent.url && agent.url.trim() !== '' ? 'Abrir Agente' : 'Em Breve'}
-                </Button>
+                  <button
+                    onClick={() => handleOpenAgent(agent)}
+                    disabled={!agent.url || agent.url.trim() === ''}
+                    className={`w-full mt-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                      agent.url && agent.url.trim() !== ''
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg hover:shadow-purple-500/50'
+                        : 'bg-gray-600/20 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    {agent.url && agent.url.trim() !== '' ? 'Abrir Agente' : 'Em Breve'}
+                  </button>
               </div>
             </Card>
           </motion.div>
