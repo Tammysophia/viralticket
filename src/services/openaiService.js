@@ -194,9 +194,10 @@ export const verifyAPIConnection = async () => {
  * Gera uma oferta irresistível usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo (pt-BR, en-US, es-ES)
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia') => {
+export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR') => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
@@ -238,10 +239,16 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
     
     // PASSO 3: Estruturar mensagens corretamente
+    const languageInstructions = {
+      'pt-BR': 'Responda em português do Brasil.',
+      'en-US': 'Respond in American English.',
+      'es-ES': 'Responde en español de España.'
+    };
+    const languageInstruction = languageInstructions[targetLanguage] || languageInstructions['pt-BR'];
     const messages = [
       {
         role: 'system',
-        content: systemPrompt
+        content: `${systemPrompt}\n\n${languageInstruction}`
       },
       {
         role: 'user',
@@ -300,7 +307,7 @@ export const generateOffer = async (comments, agent = 'sophia') => {
     console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
     
     // PASSO 5: Parse seguro do JSON
-    const offerData = safeJsonParse(content);
+    let offerData = safeJsonParse(content);
     
     // PASSO 6: Validar estrutura
     if (!offerData.title || !offerData.subtitle || !offerData.bullets || !offerData.cta) {
@@ -309,7 +316,7 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       // Se for formato completo da Sophia (com sections, pains, etc), converter
       if (offerData.offer) {
         console.log('🔄 VT: Convertendo formato completo para formato simples...');
-        return {
+        offerData = {
           title: offerData.offer.headline || '🎯 Oferta Especial',
           subtitle: offerData.offer.subheadline || 'Transforme sua realidade',
           bullets: offerData.offer.benefits?.map(b => `✅ ${b}`) || [
@@ -324,8 +331,21 @@ export const generateOffer = async (comments, agent = 'sophia') => {
       }
     }
     
+    const normalized = {
+      title: offerData.title || '🎯 Oferta Especial',
+      subtitle: offerData.subtitle || '',
+      bullets: Array.isArray(offerData.bullets)
+        ? offerData.bullets
+        : offerData.bullets
+          ? [offerData.bullets].flat().map(String)
+          : [],
+      cta: offerData.cta || '🚀 QUERO AGORA!',
+      bonus: offerData.bonus || '',
+      fullResponse: offerData.fullResponse || content
+    };
+    
     console.log('✅ VT: Oferta gerada com sucesso!');
-    return offerData;
+    return normalized;
   } catch (error) {
     console.error('Erro ao gerar oferta:', error);
     throw error;

@@ -30,6 +30,30 @@ const translations = {
     enterText: 'Digite ou cole o comentário...',
     generate: 'Gerar Oferta',
     copy: 'Copiar',
+    selectAI: 'Selecione a IA',
+    commentOrText: 'Comentário ou Texto',
+    offerGenerated: 'Oferta Gerada',
+    clearPanel: 'Limpar painel',
+    completeAnalysis: 'Análise completa da',
+    chooseDeliveryFormats: 'Escolha os formatos de entrega',
+    clickOptionsBelow: 'Clique nas opções abaixo para gerar formatos específicos',
+    howBuildSalesPage: 'Como você quer construir a página de vendas?',
+    wordpress: 'WordPress',
+    wordpressDesc: '17 blocos prontos para Elementor/WordPress',
+    quiz: 'Quiz',
+    quizDesc: 'Funil diagnóstico com 15 perguntas',
+    iaBuilder: 'IA Builder',
+    iaBuilderDesc: 'Prompt completo para builders de IA',
+    howStructureEbook: 'Como você quer estruturar o ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Layout visual simples para Canva',
+    gama: 'Gama',
+    gamaDesc: 'Estrutura detalhada para Gama',
+    generateCreativesCopy: 'Gerar criativos (posts + vídeos)',
+    creativesDesc: 'Receba 5 posts estáticos e 5 roteiros de vídeos prontos',
+    generateCreatives: 'Gerar criativos',
+    creativesCount: '5 posts + 5 vídeos',
+    copyCompleteAnalysis: 'Copiar análise completa',
     
     // Kanban
     pending: 'Pendente',
@@ -84,6 +108,30 @@ const translations = {
     enterText: 'Enter or paste comment...',
     generate: 'Generate Offer',
     copy: 'Copy',
+    selectAI: 'Select the AI',
+    commentOrText: 'Comment or Text',
+    offerGenerated: 'Offer Generated',
+    clearPanel: 'Clear panel',
+    completeAnalysis: 'Complete analysis by',
+    chooseDeliveryFormats: 'Choose delivery formats',
+    clickOptionsBelow: 'Click the options below to generate specific formats',
+    howBuildSalesPage: 'How do you want to build the sales page?',
+    wordpress: 'WordPress',
+    wordpressDesc: '17 blocks ready for Elementor/WordPress',
+    quiz: 'Quiz',
+    quizDesc: 'Diagnostic funnel with 15 questions',
+    iaBuilder: 'AI Builder',
+    iaBuilderDesc: 'Full prompt for AI page builders',
+    howStructureEbook: 'How do you want to structure the ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Simple visual layout for Canva',
+    gama: 'Gama',
+    gamaDesc: 'Detailed structure for Gama',
+    generateCreativesCopy: 'Generate creatives (posts + videos)',
+    creativesDesc: 'Get 5 static posts and 5 video scripts ready to use',
+    generateCreatives: 'Generate creatives',
+    creativesCount: '5 posts + 5 videos',
+    copyCompleteAnalysis: 'Copy complete analysis',
     
     pending: 'Pending',
     inExecution: 'In Progress',
@@ -134,6 +182,30 @@ const translations = {
     enterText: 'Ingrese o pegue el comentario...',
     generate: 'Generar Oferta',
     copy: 'Copiar',
+    selectAI: 'Selecciona la IA',
+    commentOrText: 'Comentario o Texto',
+    offerGenerated: 'Oferta Generada',
+    clearPanel: 'Limpiar panel',
+    completeAnalysis: 'Análisis completo de',
+    chooseDeliveryFormats: 'Elige los formatos de entrega',
+    clickOptionsBelow: 'Haz clic en las opciones abajo para generar formatos específicos',
+    howBuildSalesPage: '¿Cómo quieres construir la página de ventas?',
+    wordpress: 'WordPress',
+    wordpressDesc: '17 bloques listos para Elementor/WordPress',
+    quiz: 'Quiz',
+    quizDesc: 'Embudo diagnóstico con 15 preguntas',
+    iaBuilder: 'IA Builder',
+    iaBuilderDesc: 'Prompt completo para builders de IA',
+    howStructureEbook: '¿Cómo quieres estructurar el ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Layout visual simple para Canva',
+    gama: 'Gama',
+    gamaDesc: 'Estructura detallada para Gama',
+    generateCreativesCopy: 'Generar creativos (posts + videos)',
+    creativesDesc: 'Recibe 5 posts estáticos y 5 guiones de videos listos',
+    generateCreatives: 'Generar creativos',
+    creativesCount: '5 posts + 5 videos',
+    copyCompleteAnalysis: 'Copiar análisis completo',
     
     pending: 'Pendiente',
     inExecution: 'En Ejecución',
@@ -182,8 +254,21 @@ export const LangProvider = ({ children }) => {
     return translations[language][key] || key;
   };
 
+  const getLanguageForAI = () => {
+    switch (language) {
+      case 'pt-BR':
+        return 'pt-BR';
+      case 'en-US':
+        return 'en-US';
+      case 'es-ES':
+        return 'es-ES';
+      default:
+        return 'pt-BR';
+    }
+  };
+
   return (
-    <LangContext.Provider value={{ language, changeLanguage, t }}>
+    <LangContext.Provider value={{ language, changeLanguage, t, getLanguageForAI }}>
       {children}
     </LangContext.Provider>
   );
