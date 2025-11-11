@@ -152,15 +152,16 @@ const Kanban = ({ onEditOffer }) => {
 
   // VT: Excluir oferta com confirmação
   const handleDelete = async (offerId, offerTitle) => {
-    if (!confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
+    if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
       return;
     }
 
     try {
+      console.log('VT: Excluindo oferta:', offerId);
       await deleteOffer(offerId);
-      toast.success('Oferta excluída!');
+      toast.success('✅ Oferta excluída!');
     } catch (error) {
-      toast.error('Erro ao excluir oferta');
+      toast.error('❌ Erro ao excluir oferta');
       console.error('VT: Erro ao excluir:', error);
     }
   };
@@ -349,8 +350,15 @@ const Kanban = ({ onEditOffer }) => {
                           <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
                             <button
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
-                                onEditOffer && onEditOffer(item.id);
+                                console.log('VT: Clicou em Editar, ID:', item.id);
+                                if (onEditOffer) {
+                                  onEditOffer(item.id);
+                                } else {
+                                  console.error('VT: onEditOffer não está definido!');
+                                  toast.error('Erro ao abrir editor');
+                                }
                               }}
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
                             >
@@ -359,7 +367,9 @@ const Kanban = ({ onEditOffer }) => {
                             </button>
                             <button
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
+                                console.log('VT: Clicou em Excluir, ID:', item.id, 'Título:', item.title);
                                 handleDelete(item.id, item.title);
                               }}
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
