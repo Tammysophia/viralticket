@@ -57,18 +57,18 @@ const AIChat = ({ initialText = '' }) => {
   const agents = [
     {
       id: 'sophia',
-      name: t('sophiaPhoenix'),
+      name: 'Sophia Fênix',
       emoji: '🔥',
       image: 'https://iili.io/KbegFWu.png',
-      description: t('sophiaDesc'),
+      description: 'Especialista em ofertas de alto impacto',
       color: 'from-orange-500 to-red-600',
     },
     {
       id: 'sofia',
-      name: t('sofiaUniversal'),
+      name: 'Sofia Universal',
       emoji: '🌟',
       image: 'https://iili.io/KieLs1V.png',
-      description: t('sofiaDesc'),
+      description: 'IA versátil para todos os nichos',
       color: 'from-purple-500 to-pink-600',
     },
   ];
@@ -217,7 +217,7 @@ const AIChat = ({ initialText = '' }) => {
     // VT: Se tem fullResponse, copiar ela; senão copiar o formato antigo
     const text = output.fullResponse || `${output.title}\n\n${output.subtitle}\n\n${output.bullets?.join('\n') || ''}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
-    success(t('offerCopied'));
+    success('Oferta copiada!');
   };
 
   // VT: Limpar oferta do painel (botão lixeira)
@@ -513,7 +513,7 @@ IMPORTANTE: Gere APENAS este formato específico de ebook, sem repetir análises
       {output && (
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">{t('generatedOffer')}</h3>
+            <h3 className="text-xl font-bold">{t('offerGenerated')}</h3>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={handleCopy} icon={Copy}>
                 {t('copy')}
