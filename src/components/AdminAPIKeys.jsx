@@ -121,7 +121,7 @@ const AdminAPIKeys = () => {
       }
 
       // Atualizar estado local (sempre funciona)
-      encryptAPIKey(keyId);
+      encryptAPIKey(keyId, encryptedKey);
       toast.success('🔒 Chave criptografada com sucesso!');
     } catch (err) {
       toast.error('❌ Erro ao criptografar: ' + err.message);
