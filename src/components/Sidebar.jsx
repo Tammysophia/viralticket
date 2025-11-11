@@ -34,14 +34,15 @@ const Sidebar = ({ items, activePage, onNavigate, type = 'dashboard' }) => {
       >
         {/* Logo */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 text-2xl font-bold">
-            <span>🎟️</span>
-            <span className="gradient-primary bg-clip-text text-transparent">
-              ViralTicket
-            </span>
+          <div className="flex items-center justify-center">
+            <img 
+              src="https://iili.io/KmWkhp1.png" 
+              alt="ViralTicket"
+              className="w-24 h-24 object-contain"
+            />
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {type === 'admin' ? 'Admin Panel' : 'AI-Powered Offers'}
+          <p className="text-xs text-gray-400 mt-2 text-center">
+            {type === 'admin' ? 'Admin Panel' : ''}
           </p>
         </div>
 

@@ -115,21 +115,12 @@ const AIChat = ({ initialText = '' }) => {
     setLoading(true);
 
     try {
-      // Verificar conexão antes de gerar
-      const connectionCheck = await verifyAPIConnection();
+      console.log('🚀 VT: Iniciando geração de oferta...');
       
-      if (!connectionCheck.success) {
-        if (user.isAdmin) {
-          error(`⚠️ ${connectionCheck.message}`);
-        } else {
-          error('🎯 O sistema está em operação normal. Por favor, tente novamente.');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Gerar oferta com OpenAI no idioma selecionado
+      // ✅ VT: Gerar oferta diretamente (validação interna em generateOffer)
       const offerData = await generateOffer(inputText, selectedAgent, getLanguageForAI());
+      
+      console.log('✅ VT: Oferta gerada com sucesso:', offerData);
 
       setOutput(offerData);
       updateUser({
