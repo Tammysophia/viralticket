@@ -212,18 +212,12 @@ export const useAPIKeys = () => {
     });
   };
 
-  const encryptAPIKey = (id, encryptedValue) => {
+  const encryptAPIKey = (id) => {
     if (!user?.isAdmin) return;
-
-    const updates = {
+    
+    updateAPIKey(id, {
       encrypted: true,
-    };
-
-    if (encryptedValue) {
-      updates.key = encryptedValue;
-    }
-
-    updateAPIKey(id, updates);
+    });
   };
 
   return {
