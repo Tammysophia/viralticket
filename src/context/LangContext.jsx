@@ -67,6 +67,7 @@ const translations = {
     users: 'Usuários',
     apiKeys: 'Chaves API',
     webhooks: 'Webhooks',
+    gptAgents: 'Agentes GPT',
     
     // Plans
     plan: 'Plano',
@@ -143,6 +144,7 @@ const translations = {
     users: 'Users',
     apiKeys: 'API Keys',
     webhooks: 'Webhooks',
+    gptAgents: 'GPT Agents',
     
     plan: 'Plan',
     free: 'FREE',
@@ -217,6 +219,7 @@ const translations = {
     users: 'Usuarios',
     apiKeys: 'Claves API',
     webhooks: 'Webhooks',
+    gptAgents: 'Agentes GPT',
     
     plan: 'Plan',
     free: 'GRATIS',
