@@ -150,15 +150,19 @@ const Kanban = ({ onEditOffer }) => {
     }
   };
 
-  // VT: Excluir oferta com confirmação
+  // VT: Excluir oferta com confirmação e atualização local imediata
   const handleDelete = async (offerId, offerTitle) => {
     if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
       return;
     }
 
     try {
-      console.log('VT: Excluindo oferta:', offerId);
       await deleteOffer(offerId);
+
+      // Atualiza as ofertas localmente para refletir a exclusão imediatamente
+      setOffers(prevOffers => prevOffers.filter(o => o.id !== offerId));
+      organizeOffersByStatus(offers.filter(o => o.id !== offerId));
+
       toast.success('✅ Oferta excluída!');
     } catch (error) {
       toast.error('❌ Erro ao excluir oferta');
