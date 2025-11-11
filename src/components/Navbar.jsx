@@ -5,7 +5,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
-  const { language, changeLanguage } = useLanguage();
+  const { language, changeLanguage, t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
 

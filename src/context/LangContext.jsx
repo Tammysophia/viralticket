@@ -14,6 +14,13 @@ const translations = {
     
     // Dashboard
     dashboard: 'Painel',
+    welcome: 'Bem-vindo',
+    letsCreateOffers: 'Vamos criar ofertas incríveis hoje?',
+    offersGeneratedToday: 'Ofertas Geradas Hoje',
+    youtubeExtraction: 'Extração YouTube',
+    unlimited: 'ILIMITADO',
+    urlsPerDay: 'URLs/dia',
+    extractUnlimited: 'Extraia comentários sem limites! 🎉',
     youtubeExtractor: 'Extrator YouTube',
     aiChat: 'Chat IA',
     offersKanban: 'Kanban de Ofertas',
@@ -27,9 +34,33 @@ const translations = {
     likes: 'curtidas',
     
     // AI Chat
+    selectAI: 'Selecione a IA',
+    commentOrText: 'Comentário ou Texto',
     enterText: 'Digite ou cole o comentário...',
     generate: 'Gerar Oferta',
     copy: 'Copiar',
+    offerGenerated: 'Oferta Gerada',
+    clearPanel: 'Limpar Painel',
+    completeAnalysis: 'Análise Completa de',
+    copyCompleteAnalysis: 'Copiar Análise Completa',
+    chooseDeliveryFormats: 'Escolha os Formatos de Entrega',
+    clickOptionsBelow: 'Clique nas opções abaixo para gerar',
+    howBuildSalesPage: 'Como deseja construir a Página de Vendas?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Funil diagnóstico',
+    iaBuilder: 'IA Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    howStructureEbook: 'Como deseja estruturar o Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Design visual simples',
+    gama: 'Gama',
+    gamaDesc: 'Estrutura completa',
+    generateCreativesCopy: 'Gerar Criativos e Copy?',
+    creativesDesc: '5 posts estáticos + 5 vídeos curtos',
+    generateCreatives: 'Gerar Criativos',
+    creativesCount: '5 Posts + 5 Vídeos',
     
     // Kanban
     pending: 'Pendente',
@@ -60,6 +91,8 @@ const translations = {
     status: 'Status',
     active: 'Ativo',
     inactive: 'Inativo',
+    logout: 'Sair',
+    managePlatform: 'Gerencie sua plataforma ViralTicket',
   },
   'en-US': {
     login: 'Login',
@@ -70,6 +103,13 @@ const translations = {
     alreadyHaveAccount: 'Already have an account?',
     
     dashboard: 'Dashboard',
+    welcome: 'Welcome',
+    letsCreateOffers: "Let's create amazing offers today?",
+    offersGeneratedToday: 'Offers Generated Today',
+    youtubeExtraction: 'YouTube Extraction',
+    unlimited: 'UNLIMITED',
+    urlsPerDay: 'URLs/day',
+    extractUnlimited: 'Extract comments without limits! 🎉',
     youtubeExtractor: 'YouTube Extractor',
     aiChat: 'AI Chat',
     offersKanban: 'Offers Kanban',
@@ -81,9 +121,33 @@ const translations = {
     comments: 'comments',
     likes: 'likes',
     
+    selectAI: 'Select AI',
+    commentOrText: 'Comment or Text',
     enterText: 'Enter or paste comment...',
     generate: 'Generate Offer',
     copy: 'Copy',
+    offerGenerated: 'Offer Generated',
+    clearPanel: 'Clear Panel',
+    completeAnalysis: 'Complete Analysis by',
+    copyCompleteAnalysis: 'Copy Complete Analysis',
+    chooseDeliveryFormats: 'Choose Delivery Formats',
+    clickOptionsBelow: 'Click options below to generate',
+    howBuildSalesPage: 'How do you want to build the Sales Page?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Diagnostic funnel',
+    iaBuilder: 'AI Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    howStructureEbook: 'How do you want to structure the Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Simple visual design',
+    gama: 'Gama',
+    gamaDesc: 'Complete structure',
+    generateCreativesCopy: 'Generate Creatives & Copy?',
+    creativesDesc: '5 static posts + 5 short videos',
+    generateCreatives: 'Generate Creatives',
+    creativesCount: '5 Posts + 5 Videos',
     
     pending: 'Pending',
     inExecution: 'In Progress',
@@ -110,6 +174,8 @@ const translations = {
     status: 'Status',
     active: 'Active',
     inactive: 'Inactive',
+    logout: 'Logout',
+    managePlatform: 'Manage your ViralTicket platform',
   },
   'es-ES': {
     login: 'Iniciar sesión',
@@ -120,6 +186,13 @@ const translations = {
     alreadyHaveAccount: '¿Ya tienes una cuenta?',
     
     dashboard: 'Panel',
+    welcome: 'Bienvenido',
+    letsCreateOffers: '¿Creamos ofertas increíbles hoy?',
+    offersGeneratedToday: 'Ofertas Generadas Hoy',
+    youtubeExtraction: 'Extracción YouTube',
+    unlimited: 'ILIMITADO',
+    urlsPerDay: 'URLs/día',
+    extractUnlimited: '¡Extrae comentarios sin límites! 🎉',
     youtubeExtractor: 'Extractor YouTube',
     aiChat: 'Chat IA',
     offersKanban: 'Kanban de Ofertas',
@@ -131,9 +204,33 @@ const translations = {
     comments: 'comentarios',
     likes: 'me gusta',
     
+    selectAI: 'Seleccionar IA',
+    commentOrText: 'Comentario o Texto',
     enterText: 'Ingrese o pegue el comentario...',
     generate: 'Generar Oferta',
     copy: 'Copiar',
+    offerGenerated: 'Oferta Generada',
+    clearPanel: 'Limpiar Panel',
+    completeAnalysis: 'Análisis Completo de',
+    copyCompleteAnalysis: 'Copiar Análisis Completo',
+    chooseDeliveryFormats: 'Elige los Formatos de Entrega',
+    clickOptionsBelow: 'Haz clic en las opciones para generar',
+    howBuildSalesPage: '¿Cómo deseas construir la Página de Ventas?',
+    wordpress: 'WordPress',
+    wordpressDesc: 'Manual/Elementor',
+    quiz: 'Quiz',
+    quizDesc: 'Embudo diagnóstico',
+    iaBuilder: 'AI Builder',
+    iaBuilderDesc: 'Lovable/Gama',
+    howStructureEbook: '¿Cómo deseas estructurar el Ebook?',
+    canva: 'Canva',
+    canvaDesc: 'Diseño visual simple',
+    gama: 'Gama',
+    gamaDesc: 'Estructura completa',
+    generateCreativesCopy: '¿Generar Creativos y Copy?',
+    creativesDesc: '5 posts estáticos + 5 videos cortos',
+    generateCreatives: 'Generar Creativos',
+    creativesCount: '5 Posts + 5 Videos',
     
     pending: 'Pendiente',
     inExecution: 'En Ejecución',
@@ -160,6 +257,8 @@ const translations = {
     status: 'Estado',
     active: 'Activo',
     inactive: 'Inactivo',
+    logout: 'Salir',
+    managePlatform: 'Gestiona tu plataforma ViralTicket',
   },
 };
 
@@ -182,8 +281,13 @@ export const LangProvider = ({ children }) => {
     return translations[language][key] || key;
   };
 
+  // Função para retornar o idioma atual para a IA
+  const getLanguageForAI = () => {
+    return language;
+  };
+
   return (
-    <LangContext.Provider value={{ language, changeLanguage, t }}>
+    <LangContext.Provider value={{ language, changeLanguage, t, getLanguageForAI }}>
       {children}
     </LangContext.Provider>
   );
