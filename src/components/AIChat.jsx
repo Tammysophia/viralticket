@@ -27,6 +27,30 @@ const AIChat = ({ initialText = '' }) => {
     }
   }, [initialText]);
 
+  // VT: Carregar última oferta gerada do localStorage ao montar
+  useEffect(() => {
+    const savedOutput = localStorage.getItem('vt_last_offer_output');
+    if (savedOutput) {
+      try {
+        const parsed = JSON.parse(savedOutput);
+        // Verificar se a oferta foi gerada nas últimas 24 horas
+        const savedTime = parsed.timestamp || 0;
+        const now = Date.now();
+        const ONE_DAY = 24 * 60 * 60 * 1000;
+        
+        if (now - savedTime < ONE_DAY) {
+          setOutput(parsed.data);
+          console.log('VT: Última oferta carregada do localStorage');
+        } else {
+          // Limpar oferta antiga
+          localStorage.removeItem('vt_last_offer_output');
+        }
+      } catch (e) {
+        console.error('VT: Erro ao carregar oferta do localStorage', e);
+      }
+    }
+  }, []);
+
   const agents = [
     {
       id: 'sophia',
@@ -98,6 +122,12 @@ const AIChat = ({ initialText = '' }) => {
 
       setOutput(offerData);
       
+      // VT: Salvar oferta no localStorage para persistir entre navegações
+      localStorage.setItem('vt_last_offer_output', JSON.stringify({
+        data: offerData,
+        timestamp: Date.now()
+      }));
+      
       // Atualizar apenas uso DIÁRIO (sem limite mensal)
       updateUser({
         dailyUsage: {
@@ -155,6 +185,13 @@ const AIChat = ({ initialText = '' }) => {
     const text = `${output.title}\n\n${output.subtitle}\n\n${output.bullets.join('\n')}\n\n${output.cta}\n\n${output.bonus}`;
     navigator.clipboard.writeText(text);
     success('Oferta copiada!');
+  };
+
+  // VT: Limpar oferta da visualização
+  const handleClearOutput = () => {
+    setOutput(null);
+    localStorage.removeItem('vt_last_offer_output');
+    success('Oferta removida da visualização');
   };
 
   return (
@@ -221,9 +258,17 @@ const AIChat = ({ initialText = '' }) => {
         <Card gradient>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Oferta Gerada</h3>
-            <Button variant="secondary" onClick={handleCopy} icon={Copy}>
-              {t('copy')}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={handleCopy} icon={Copy}>
+                {t('copy')}
+              </Button>
+              <button
+                onClick={handleClearOutput}
+                className="px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm font-medium transition-colors flex items-center gap-2"
+              >
+                🗑️ Limpar
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">
