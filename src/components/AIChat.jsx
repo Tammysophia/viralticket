@@ -468,7 +468,7 @@ IMPORTANTE: Gere APENAS este formato específico de ebook, sem repetir análises
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedAgent === agent.id
                   ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-white/10 glass-hover'
+                  : 'border-white/10 hover:border-purple-400 hover:bg-transparent'
               }`}
             >
               <div className="flex items-center justify-center mb-3">
@@ -483,8 +483,8 @@ IMPORTANTE: Gere APENAS este formato específico de ebook, sem repetir análises
                 />
                 <div className="text-4xl" style={{ display: 'none' }}>{agent.emoji}</div>
               </div>
-              <h4 className="font-bold mb-1">{agent.name}</h4>
-              <p className="text-sm text-gray-400">{agent.description}</p>
+              <h4 className="font-bold mb-1 text-white">{agent.name}</h4>
+              <p className="text-sm text-gray-300">{agent.description}</p>
             </button>
           ))}
         </div>
