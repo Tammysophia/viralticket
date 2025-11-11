@@ -8,6 +8,8 @@ import {
   deleteDoc,
   query,
   orderBy,
+  where,
+  onSnapshot,
 } from 'firebase/firestore';
 import { serverTimestamp } from './firebaseService';
 
@@ -145,4 +147,36 @@ export const initializeDefaultAgents = async () => {
     }));
     saveLocalAgents(seeded);
   }
+};
+
+export const subscribeToActiveAgents = (callback) => {
+  if (isUsingFirestore()) {
+    const q = query(
+      collection(db, COLLECTION),
+      where('active', '==', true),
+      orderBy('order', 'asc'),
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const agents = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+        callback(agents);
+      },
+      (error) => {
+        console.error('VT: Listener de agentes falhou:', error);
+        callback([]);
+      },
+    );
+    return unsubscribe;
+  }
+
+  let active = [];
+  active = getLocalAgents()
+    .filter((agent) => agent.active)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+  callback(active);
+  return () => {};
 };
