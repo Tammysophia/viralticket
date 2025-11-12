@@ -1,68 +1,147 @@
 // VT: Editor completo de ofertas com 4 abas
 import { useState, useEffect } from 'react';
-import { X, Save, Sparkles, Link as LinkIcon, Upload, TrendingUp, Trash2 } from 'lucide-react';
+import { X, Save, Sparkles, Link as LinkIcon, TrendingUp, Trash2 } from 'lucide-react';
 import Modal from './Modal';
 import Input from './Input';
 import Button from './Button';
 import toast from 'react-hot-toast';
 import { updateOffer, addYoutubeLink, removeYoutubeLink } from '../services/offersService';
-import { getServiceAPIKey } from '../hooks/useAPIKeys';
+
+const INITIAL_FORM = {
+  title: '',
+  status: 'execucao',
+  copy: {
+    page: '',
+    adPrimary: '',
+    adHeadline: '',
+    adDescription: '',
+  },
+  modeling: {
+    fanpageUrl: '',
+    salesPageUrl: '',
+    checkoutUrl: '',
+    creativesCount: 0,
+    monitorStart: null,
+    monitorDays: 7,
+    trend: null,
+    modelavel: false,
+  },
+  youtubeLinks: [],
+};
+
+// VT: Helper para garantir que cada abertura do editor tenha um objeto novo (evitando mutações compartilhadas)
+const createInitialForm = () => ({
+  ...INITIAL_FORM,
+  copy: { ...INITIAL_FORM.copy },
+  modeling: { ...INITIAL_FORM.modeling },
+  youtubeLinks: [],
+});
 
 const OfferEditor = ({ isOpen, onClose, offer }) => {
   const [activeTab, setActiveTab] = useState('details');
-  const [formData, setFormData] = useState({
-    title: '',
-    status: 'execucao',
-    copy: {
-      page: '',
-      adPrimary: '',
-      adHeadline: '',
-      adDescription: ''
-    },
-    modeling: {
-      fanpageUrl: '',
-      salesPageUrl: '',
-      checkoutUrl: '',
-      creativesCount: 0,
-      monitorStart: null,
-      monitorDays: 7,
-      trend: null,
-      modelavel: false
-    },
-    youtubeLinks: []
-  });
+  const [formData, setFormData] = useState(createInitialForm);
   const [newLink, setNewLink] = useState('');
   const [saving, setSaving] = useState(false);
+  const [monitorAutoStarted, setMonitorAutoStarted] = useState(false);
 
-  // VT: Carregar dados da oferta
+  // VT: Carregar dados da oferta (e resetar tudo quando fechar o editor)
   useEffect(() => {
     if (offer) {
       setFormData({
         title: offer.title || '',
         status: offer.status || 'execucao',
-        copy: offer.copy || { page: '', adPrimary: '', adHeadline: '', adDescription: '' },
-        modeling: offer.modeling || {
-          fanpageUrl: '',
-          salesPageUrl: '',
-          checkoutUrl: '',
-          creativesCount: 0,
-          monitorStart: null,
-          monitorDays: 7,
-          trend: null,
-          modelavel: false
-        },
-        youtubeLinks: offer.youtubeLinks || []
+        copy: offer.copy || { ...INITIAL_FORM.copy },
+        modeling: offer.modeling || { ...INITIAL_FORM.modeling },
+        youtubeLinks: offer.youtubeLinks ? [...offer.youtubeLinks] : [],
       });
+      setMonitorAutoStarted(Boolean(offer?.modeling?.monitorStart));
+    } else {
+      setFormData(createInitialForm());
+      setMonitorAutoStarted(false);
     }
   }, [offer]);
 
-  // VT: Salvar alterações
+  // VT: Iniciamos automaticamente o monitoramento ao receber criativos e validamos quando a oferta se torna modelável
+  useEffect(() => {
+    if (
+      formData.modeling.creativesCount >= 1 &&
+      !formData.modeling.monitorStart
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        modeling: {
+          ...prev.modeling,
+          monitorStart: new Date().toISOString(),
+          monitorDays: prev.modeling.monitorDays || 7,
+        },
+      }));
+      if (!monitorAutoStarted) {
+        setMonitorAutoStarted(true);
+        toast.success('Monitoramento iniciado automaticamente por 7 dias.');
+      }
+    }
+  }, [
+    formData.modeling.creativesCount,
+    formData.modeling.monitorStart,
+    monitorAutoStarted,
+  ]);
+
+  useEffect(() => {
+    if (!formData.modeling.monitorStart) {
+      if (formData.modeling.modelavel) {
+        setFormData((prev) => ({
+          ...prev,
+          modeling: { ...prev.modeling, modelavel: false },
+        }));
+      }
+      return;
+    }
+
+    const daysConfigured = formData.modeling.monitorDays || 7;
+    const elapsedMs =
+      Date.now() - new Date(formData.modeling.monitorStart).getTime();
+    const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+    const meetsCreatives = formData.modeling.creativesCount >= 7;
+
+    if (elapsedDays >= daysConfigured && meetsCreatives) {
+      if (!formData.modeling.modelavel) {
+        setFormData((prev) => ({
+          ...prev,
+          modeling: { ...prev.modeling, modelavel: true, trend: 'subindo' },
+        }));
+        toast.success(
+          'Oferta marcada como modelável após 7 dias de monitoramento!',
+        );
+      }
+    } else if (formData.modeling.modelavel) {
+      setFormData((prev) => ({
+        ...prev,
+        modeling: { ...prev.modeling, modelavel: false },
+      }));
+    }
+  }, [
+    formData.modeling.monitorStart,
+    formData.modeling.monitorDays,
+    formData.modeling.creativesCount,
+    formData.modeling.modelavel,
+  ]);
+
+    // VT: Salvar alterações
   const handleSave = async () => {
     if (!offer?.id) return;
     
     setSaving(true);
     try {
-      await updateOffer(offer.id, formData);
+      const offerType =
+        formData.status === 'modelando' || formData.modeling?.modelavel
+          ? 'modelagem'
+          : 'oferta';
+
+      // VT: Salvamos explicitamente o tipo para que a oferta vá para o Kanban correto
+      await updateOffer(offer.id, {
+        ...formData,
+        type: offerType,
+      });
       toast.success('💾 Oferta salva com sucesso!');
       onClose();
     } catch (error) {
@@ -107,12 +186,6 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     }
   };
 
-  // VT: Gerar texto com IA (placeholder - integrar com openaiService)
-  const handleGenerateWithAI = async (field) => {
-    toast('🤖 Geração com IA em breve...', { icon: '⚙️' });
-    // TODO: Integrar com openaiService para gerar texto específico
-  };
-
   // VT: Iniciar monitoramento
   const handleStartMonitoring = () => {
     setFormData(prev => ({
@@ -123,14 +196,6 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
       }
     }));
     toast.success('Monitoramento iniciado!');
-  };
-
-  // VT: Calcular trend (placeholder - lógica completa necessita histórico)
-  const calculateTrend = () => {
-    const { creativesCount } = formData.modeling;
-    if (creativesCount > 20) return 'subindo';
-    if (creativesCount > 10) return 'estavel';
-    return 'caindo';
   };
 
   const tabs = [
@@ -192,105 +257,73 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
             </div>
           )}
 
-          {/* ABA: Cópias */}
-          {activeTab === 'copy' && (
-            <div className="space-y-6">
-              {/* Página de Vendas */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Página de Vendas</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('page')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
+            {/* ABA: Cópias */}
+            {activeTab === 'copy' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Página de Vendas
+                  </label>
+                  <textarea
+                    value={formData.copy.page}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        copy: { ...prev.copy, page: e.target.value },
+                      }))
+                    }
+                    placeholder="Cole a copy da página de vendas..."
+                    className="w-full h-32 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                  />
                 </div>
-                <textarea
-                  value={formData.copy.page}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, page: e.target.value }
-                  }))}
-                  placeholder="Cole ou gere a copy da página de vendas..."
-                  className="w-full h-32 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
-                />
-              </div>
 
-              {/* Criativo - Texto Principal */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Criativo - Texto Principal</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('adPrimary')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Criativo - Texto Principal
+                  </label>
+                  <textarea
+                    value={formData.copy.adPrimary}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        copy: { ...prev.copy, adPrimary: e.target.value },
+                      }))
+                    }
+                    placeholder="Texto principal do anúncio..."
+                    className="w-full h-24 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                  />
                 </div>
-                <textarea
-                  value={formData.copy.adPrimary}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, adPrimary: e.target.value }
-                  }))}
-                  placeholder="Texto principal do anúncio..."
-                  className="w-full h-24 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
-                />
-              </div>
 
-              {/* Headline */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Headline</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('adHeadline')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Headline</label>
+                  <Input
+                    value={formData.copy.adHeadline}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        copy: { ...prev.copy, adHeadline: e.target.value },
+                      }))
+                    }
+                    placeholder="Headline do anúncio..."
+                  />
                 </div>
-                <Input
-                  value={formData.copy.adHeadline}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, adHeadline: e.target.value }
-                  }))}
-                  placeholder="Headline do anúncio..."
-                />
-              </div>
 
-              {/* Descrição */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Descrição</label>
-                  <Button
-                    onClick={() => handleGenerateWithAI('adDescription')}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Gerar com IA
-                  </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Descrição</label>
+                  <textarea
+                    value={formData.copy.adDescription}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        copy: { ...prev.copy, adDescription: e.target.value },
+                      }))
+                    }
+                    placeholder="Descrição do anúncio..."
+                    className="w-full h-20 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                  />
                 </div>
-                <textarea
-                  value={formData.copy.adDescription}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    copy: { ...prev.copy, adDescription: e.target.value }
-                  }))}
-                  placeholder="Descrição do anúncio..."
-                  className="w-full h-20 glass border border-purple-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
-                />
               </div>
-            </div>
-          )}
+            )}
 
           {/* ABA: Vídeos */}
           {activeTab === 'videos' && (

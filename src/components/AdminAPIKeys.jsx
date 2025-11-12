@@ -120,8 +120,12 @@ const AdminAPIKeys = () => {
         console.warn('Firestore save failed, using localStorage:', firestoreError);
       }
 
-      // Atualizar estado local (sempre funciona)
-      encryptAPIKey(keyId);
+        // Atualizar estado local (sempre funciona)
+        updateAPIKey(keyId, {
+          key: encryptedKey,
+          encrypted: true,
+        });
+        encryptAPIKey(keyId);
       toast.success('🔒 Chave criptografada com sucesso!');
     } catch (err) {
       toast.error('❌ Erro ao criptografar: ' + err.message);

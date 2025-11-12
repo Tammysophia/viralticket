@@ -18,6 +18,50 @@ import {
 // VT: Flag para usar mocks (ler do .env)
 const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
 
+const normalizeOfferType = (offer) =>
+  offer?.type || (offer?.status === 'modelando' ? 'modelagem' : 'oferta');
+
+const toMillis = (value) => {
+  if (!value) return 0;
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+  }
+  if (value?.toDate) return value.toDate().getTime();
+  return 0;
+};
+
+const normalizeOffer = (offer) => ({
+  ...offer,
+  type: normalizeOfferType(offer),
+});
+
+const dedupeAndSortOffers = (offers) => {
+  const map = new Map();
+  offers.forEach((offer) => {
+    if (offer?.id) {
+      map.set(offer.id, normalizeOffer(offer));
+    }
+  });
+  return Array.from(map.values()).sort(
+    (a, b) => toMillis(b.updatedAt) - toMillis(a.updatedAt),
+  );
+};
+
+const logIndexReminder = (error) => {
+  if (
+    error?.code === 'failed-precondition' &&
+    typeof error?.message === 'string' &&
+    error.message.includes('index')
+  ) {
+    console.warn(
+      'VT: Crie o índice composto no Firestore com userId (Asc), type (Asc) e updatedAt (Desc).',
+    );
+  }
+};
+
 /**
  * VT: Estrutura de uma oferta no Firestore
  * offers/{offerId}
@@ -45,32 +89,36 @@ export const createOfferFromAI = async (data) => {
     const mockId = `mock_${Date.now()}`;
     // VT: Salvar no localStorage para simular
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    offers.push({
-      id: mockId,
-      ...data,
-      status: 'execucao',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      modeling: {
-        fanpageUrl: '',
-        salesPageUrl: '',
-        checkoutUrl: '',
-        creativesCount: 0,
-        monitorStart: null,
-        monitorDays: 7,
-        trend: null,
-        modelavel: false
-      },
-      attachments: { files: [] }
-    });
+      offers.push({
+        id: mockId,
+        ...data,
+        // VT: Tipamos explicitamente a oferta criada pela IA para separação nos Kanbans
+        type: 'oferta',
+        status: 'execucao',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        modeling: {
+          fanpageUrl: '',
+          salesPageUrl: '',
+          checkoutUrl: '',
+          creativesCount: 0,
+          monitorStart: null,
+          monitorDays: 7,
+          trend: null,
+          modelavel: false
+        },
+        attachments: { files: [] }
+      });
     localStorage.setItem('vt_offers', JSON.stringify(offers));
     return mockId;
   }
 
   try {
     const offerRef = doc(collection(db, 'offers'));
-    const offerData = {
+      const offerData = {
       ...data,
+        // VT: Tipamos explicitamente a oferta criada pela IA para separação nos Kanbans
+        type: 'oferta',
       status: 'execucao', // VT: Nova oferta começa em execução
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -108,23 +156,34 @@ export const updateOffer = async (id, patch) => {
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
     const index = offers.findIndex(o => o.id === id);
     if (index !== -1) {
-      offers[index] = { ...offers[index], ...patch, updatedAt: new Date().toISOString() };
+      offers[index] = {
+        ...offers[index],
+        ...patch,
+        // VT: Garante que o tipo sempre permaneça definido mesmo durante atualizações parciais
+        type: patch.type || offers[index].type || 'oferta',
+        updatedAt: new Date().toISOString()
+      };
       localStorage.setItem('vt_offers', JSON.stringify(offers));
     }
     return;
   }
 
-  try {
-    const offerRef = doc(db, 'offers', id);
-    await updateDoc(offerRef, {
-      ...patch,
-      updatedAt: Timestamp.now()
-    });
-    console.log('VT: Oferta atualizada:', id);
-  } catch (error) {
-    console.error('VT: Erro ao atualizar oferta:', error);
-    throw error;
-  }
+    try {
+      const offerRef = doc(db, 'offers', id);
+      const currentSnapshot = await getDoc(offerRef);
+      const currentData = currentSnapshot.exists() ? currentSnapshot.data() : {};
+
+      await updateDoc(offerRef, {
+        ...patch,
+        // VT: Garante que o tipo sempre permaneça definido mesmo durante atualizações parciais
+        type: patch.type || currentData.type || 'oferta',
+        updatedAt: Timestamp.now(),
+      });
+      console.log('VT: Oferta atualizada:', id);
+    } catch (error) {
+      console.error('VT: Erro ao atualizar oferta:', error);
+      throw error;
+    }
 };
 
 /**
@@ -255,25 +314,78 @@ export const attachFiles = async (offerId, filesMeta) => {
  * @param {string} userId - ID do usuário
  * @returns {Promise<Array>} - Lista de ofertas
  */
-export const getUserOffers = async (userId) => {
+export const getUserOffers = async (userId, type) => {
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Buscando ofertas do usuário:', userId);
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    return offers.filter(o => o.userId === userId);
+    return dedupeAndSortOffers(
+      offers.filter((o) => {
+        const offerType = normalizeOfferType(o);
+        const matchesUser = o.userId === userId;
+        const matchesType = type ? offerType === type : true;
+        return matchesUser && matchesType;
+      }),
+    );
   }
 
-  try {
+  const collected = [];
+  const runQuery = async (constraints) => {
     const q = query(
       collection(db, 'offers'),
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
+      ...constraints,
+      orderBy('updatedAt', 'desc'),
     );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const snapshot = await getDocs(q);
+      collected.push(
+        ...snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      );
+    } catch (error) {
+      logIndexReminder(error);
+      throw error;
+    }
+  };
+
+  try {
+    const mainConstraints = [where('userId', '==', userId)];
+    if (type) {
+      mainConstraints.push(where('type', '==', type));
+    }
+    await runQuery(mainConstraints);
+
+    // VT: Incluímos ofertas antigas sem campo `type` quando o filtro é para ofertas da IA
+    if (type === 'oferta') {
+      try {
+        await runQuery([where('userId', '==', userId), where('type', '==', null)]);
+      } catch (fallbackError) {
+        // VT: Já registramos o lembrete de índice dentro de runQuery
+      }
+    }
   } catch (error) {
     console.error('VT: Erro ao buscar ofertas:', error);
-    return [];
+    try {
+      const legacySnapshot = await getDocs(
+        query(
+          collection(db, 'offers'),
+          where('userId', '==', userId),
+          orderBy('updatedAt', 'desc'),
+        ),
+      );
+      collected.push(
+        ...legacySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      );
+    } catch (legacyError) {
+      console.error('VT: Erro no fallback de ofertas:', legacyError);
+      return [];
+    }
   }
+
+  const filtered = collected.filter((offer) => {
+    const offerType = normalizeOfferType(offer);
+    return type ? offerType === type : true;
+  });
+
+  return dedupeAndSortOffers(filtered);
 };
 
 /**
@@ -282,25 +394,116 @@ export const getUserOffers = async (userId) => {
  * @param {Function} callback - Função chamada quando ofertas mudam
  * @returns {Function} - Função para cancelar o listener
  */
-export const subscribeToUserOffers = (userId, callback) => {
+export const subscribeToUserOffers = (userId, callback, type = 'oferta') => {
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Listener de ofertas iniciado');
     // VT: Simular listener com setInterval
     const interval = setInterval(() => {
       const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-      callback(offers.filter(o => o.userId === userId));
+      const filtered = offers.filter((o) => {
+        const offerType = normalizeOfferType(o);
+        return o.userId === userId && (type ? offerType === type : true);
+      });
+
+      callback(dedupeAndSortOffers(filtered));
     }, 2000);
     return () => clearInterval(interval);
   }
 
-  const q = query(
-    collection(db, 'offers'),
-    where('userId', '==', userId),
-    orderBy('updatedAt', 'desc')
-  );
-  
-  return onSnapshot(q, (snapshot) => {
-    const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(offers);
-  });
+  const unsubscribers = [];
+  const listenerState = {
+    main: [],
+    legacy: [],
+  };
+
+  const emit = () => {
+    const merged = dedupeAndSortOffers([
+      ...listenerState.main,
+      ...listenerState.legacy,
+    ]).filter((offer) => {
+      const offerType = normalizeOfferType(offer);
+      return type ? offerType === type : true;
+    });
+    callback(merged);
+  };
+
+  const registerListener = (constraints, key) => {
+    const q = query(
+      collection(db, 'offers'),
+      ...constraints,
+      orderBy('updatedAt', 'desc'),
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        listenerState[key] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        emit();
+      },
+      (error) => {
+        logIndexReminder(error);
+        console.error('VT: Erro no listener de ofertas:', error);
+      },
+    );
+
+    unsubscribers.push(unsubscribe);
+  };
+
+  const mainConstraints = [where('userId', '==', userId)];
+  if (type) {
+    mainConstraints.push(where('type', '==', type));
+  }
+  registerListener(mainConstraints, 'main');
+
+  if (type === 'oferta') {
+    registerListener([where('userId', '==', userId), where('type', '==', null)], 'legacy');
+  }
+
+  return () => {
+    unsubscribers.forEach((unsubscribe) => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    });
+  };
+};
+
+/**
+ * VT: Duplica uma oferta de IA para modelagem
+ * @param {Object} offer - Oferta original
+ * @returns {Promise<string>} - ID da nova oferta duplicada
+ */
+export const duplicateOfferForModeling = async (offer) => {
+  if (!offer || !offer.id) {
+    throw new Error('VT: Oferta inválida para duplicação');
+  }
+
+  const createdAtValue = USE_MOCKS ? new Date().toISOString() : Timestamp.now();
+  const updatedAtValue = USE_MOCKS ? createdAtValue : Timestamp.now();
+  const duplicated = {
+    ...offer,
+    status: 'pendente',
+    type: 'modelagem',
+    createdAt: createdAtValue,
+    updatedAt: updatedAtValue,
+  };
+  delete duplicated.id;
+
+  if (USE_MOCKS) {
+    const mockId = `mock_model_${Date.now()}`;
+    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    offers.push({
+      id: mockId,
+      ...duplicated,
+    });
+    localStorage.setItem('vt_offers', JSON.stringify(offers));
+    return mockId;
+  }
+
+  const newDocRef = doc(collection(db, 'offers'));
+  await setDoc(newDocRef, duplicated);
+  return newDocRef.id;
 };

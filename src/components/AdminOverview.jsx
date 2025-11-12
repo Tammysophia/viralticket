@@ -1,10 +1,52 @@
+import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Key, Activity } from 'lucide-react';
 import Card from './Card';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 const AdminOverview = () => {
   const { user } = useAuth();
+  const [stats, setStats] = useState([
+    {
+      icon: Users,
+      label: 'Total de Usuários',
+      value: '0',
+      change: '+0%',
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      icon: Activity,
+      label: 'Ofertas Geradas Hoje',
+      value: '0',
+      change: '+0%',
+      color: 'from-purple-500 to-pink-500',
+    },
+    {
+      icon: Key,
+      label: 'APIs Ativas',
+      value: '0',
+      change: '0%',
+      color: 'from-green-500 to-emerald-500',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Taxa de Conversão',
+      value: '0%',
+      change: '+0%',
+      color: 'from-yellow-500 to-orange-500',
+    },
+  ]);
+  const [planDistribution, setPlanDistribution] = useState([
+    { plan: 'FREE', percentage: 0, color: 'gray' },
+    { plan: 'BRONZE', percentage: 0, color: 'orange' },
+    { plan: 'PRATA', percentage: 0, color: 'gray' },
+    { plan: 'OURO', percentage: 0, color: 'yellow' },
+  ]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [userGrowth, setUserGrowth] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [loading, setLoading] = useState(true);
 
   // Proteção adicional - não renderizar se não for admin
   if (!user?.isAdmin) {
@@ -14,43 +56,200 @@ const AdminOverview = () => {
       </Card>
     );
   }
-  const stats = [
-    {
-      icon: Users,
-      label: 'Total de Usuários',
-      value: '1,234',
-      change: '+12%',
-      color: 'from-blue-500 to-cyan-500',
-    },
-    {
-      icon: Activity,
-      label: 'Ofertas Geradas Hoje',
-      value: '567',
-      change: '+8%',
-      color: 'from-purple-500 to-pink-500',
-    },
-    {
-      icon: Key,
-      label: 'APIs Ativas',
-      value: '8',
-      change: '0%',
-      color: 'from-green-500 to-emerald-500',
-    },
-    {
-      icon: TrendingUp,
-      label: 'Taxa de Conversão',
-      value: '23%',
-      change: '+5%',
-      color: 'from-yellow-500 to-orange-500',
-    },
-  ];
+  useEffect(() => {
+    const fetchRealData = async () => {
+      if (!db) {
+        console.warn('VT: Firebase indisponível, mantendo dados mockados');
+        setLoading(false);
+        return;
+      }
 
-  const recentActivity = [
-    { user: 'João Silva', action: 'Gerou oferta', time: 'há 5 min', plan: 'OURO' },
-    { user: 'Maria Santos', action: 'Novo cadastro', time: 'há 12 min', plan: 'FREE' },
-    { user: 'Pedro Costa', action: 'Upgrade para PRATA', time: 'há 23 min', plan: 'PRATA' },
-    { user: 'Ana Lima', action: 'Extraiu comentários', time: 'há 35 min', plan: 'BRONZE' },
-  ];
+      try {
+        setLoading(true);
+
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const totalUsers = usersSnapshot.size;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const offersSnapshot = await getDocs(collection(db, 'offers'));
+        let offersToday = 0;
+        offersSnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const offerDate = data.createdAt?.toDate?.() || new Date(data.createdAt);
+          if (offerDate && offerDate >= today) {
+            offersToday += 1;
+          }
+        });
+
+        const apiKeysSnapshot = await getDocs(collection(db, 'apiKeys'));
+        let activeAPIs = 0;
+        apiKeysSnapshot.forEach((docSnap) => {
+          if (docSnap.data().status === 'active') activeAPIs += 1;
+        });
+
+        const conversionRate =
+          totalUsers > 0 ? Math.round((offersToday / totalUsers) * 100) : 0;
+
+        const plans = { FREE: 0, BRONZE: 0, PRATA: 0, OURO: 0 };
+        usersSnapshot.forEach((docSnap) => {
+          const plan = docSnap.data().plan || 'FREE';
+          if (plans[plan] !== undefined) {
+            plans[plan] += 1;
+          }
+        });
+        const totalPlans = Object.values(plans).reduce((a, b) => a + b, 0);
+        setPlanDistribution([
+          {
+            plan: 'FREE',
+            percentage:
+              totalPlans > 0 ? Math.round((plans.FREE / totalPlans) * 100) : 0,
+            color: 'gray',
+          },
+          {
+            plan: 'BRONZE',
+            percentage:
+              totalPlans > 0 ? Math.round((plans.BRONZE / totalPlans) * 100) : 0,
+            color: 'orange',
+          },
+          {
+            plan: 'PRATA',
+            percentage:
+              totalPlans > 0 ? Math.round((plans.PRATA / totalPlans) * 100) : 0,
+            color: 'gray',
+          },
+          {
+            plan: 'OURO',
+            percentage:
+              totalPlans > 0 ? Math.round((plans.OURO / totalPlans) * 100) : 0,
+            color: 'yellow',
+          },
+        ]);
+
+        const recentOffers = [];
+        offersSnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          recentOffers.push({
+            id: docSnap.id,
+            userId: data.userId,
+            createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+          });
+        });
+        recentOffers.sort((a, b) => b.createdAt - a.createdAt);
+
+        const activities = [];
+        for (let i = 0; i < Math.min(4, recentOffers.length); i += 1) {
+          const offer = recentOffers[i];
+          const userQuery = query(
+            collection(db, 'users'),
+            where('__name__', '==', offer.userId),
+          );
+          const userDoc = await getDocs(userQuery);
+          if (!userDoc.empty) {
+            const userData = userDoc.docs[0].data();
+            const diffMinutes = Math.floor(
+              (new Date().getTime() - offer.createdAt.getTime()) / 60000,
+            );
+            activities.push({
+              user:
+                userData.name ||
+                userData.email?.split('@')[0] ||
+                'Usuário',
+              action: 'Gerou oferta',
+              time:
+                diffMinutes < 60
+                  ? `há ${diffMinutes} min`
+                  : `há ${Math.floor(diffMinutes / 60)}h`,
+              plan: userData.plan || 'FREE',
+            });
+          }
+        }
+
+        const growth = [0, 0, 0, 0, 0, 0, 0];
+        usersSnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.createdAt) {
+            const createdDate = new Date(data.createdAt);
+            const diffDays = Math.floor(
+              (today.getTime() - createdDate.getTime()) /
+                (1000 * 60 * 60 * 24),
+            );
+            if (diffDays >= 0 && diffDays < 7) {
+              growth[6 - diffDays] += 1;
+            }
+          }
+        });
+        const maxGrowth = Math.max(...growth, 1);
+        const growthPercent = growth.map((value) =>
+          Math.round((value / maxGrowth) * 100),
+        );
+
+        setStats([
+          {
+            icon: Users,
+            label: 'Total de Usuários',
+            value: totalUsers.toString(),
+            change: '+0%',
+            color: 'from-blue-500 to-cyan-500',
+          },
+          {
+            icon: Activity,
+            label: 'Ofertas Geradas Hoje',
+            value: offersToday.toString(),
+            change: '+0%',
+            color: 'from-purple-500 to-pink-500',
+          },
+          {
+            icon: Key,
+            label: 'APIs Ativas',
+            value: activeAPIs.toString(),
+            change: '0%',
+            color: 'from-green-500 to-emerald-500',
+          },
+          {
+            icon: TrendingUp,
+            label: 'Taxa de Conversão',
+            value: `${conversionRate}%`,
+            change: '+0%',
+            color: 'from-yellow-500 to-orange-500',
+          },
+        ]);
+
+        setRecentActivity(
+          activities.length > 0
+            ? activities
+            : [
+                {
+                  user: 'Nenhuma',
+                  action: 'atividade ainda',
+                  time: '-',
+                  plan: '-',
+                },
+              ],
+        );
+        setUserGrowth(growthPercent);
+      } catch (error) {
+        console.error('VT: Erro ao carregar dados reais:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRealData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <div className="text-center py-8">
+          <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Carregando dados reais...</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

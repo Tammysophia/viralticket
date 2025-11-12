@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, Key, Webhook } from 'lucide-react';
+import { LayoutDashboard, Users, Key, Webhook, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -7,6 +7,7 @@ import AdminOverview from '../components/AdminOverview';
 import AdminUsers from '../components/AdminUsers';
 import AdminAPIKeys from '../components/AdminAPIKeys';
 import AdminWebhooks from '../components/AdminWebhooks';
+import AdminGPTAgents from '../components/AdminGPTAgents';
 import { useLanguage } from '../hooks/useLanguage';
 
 const Admin = () => {
@@ -17,6 +18,7 @@ const Admin = () => {
     { id: 'overview', label: t('overview'), icon: LayoutDashboard },
     { id: 'users', label: t('users'), icon: Users },
     { id: 'apiKeys', label: t('apiKeys'), icon: Key },
+    { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
     { id: 'webhooks', label: t('webhooks'), icon: Webhook },
   ];
 
@@ -28,6 +30,8 @@ const Admin = () => {
         return <AdminUsers />;
       case 'apiKeys':
         return <AdminAPIKeys />;
+      case 'gptAgents':
+        return <AdminGPTAgents />;
       case 'webhooks':
         return <AdminWebhooks />;
       default:
@@ -57,7 +61,7 @@ const Admin = () => {
               {menuItems.find(item => item.id === activePage)?.label}
             </h1>
             <p className="text-gray-400 mt-1">
-              Gerencie sua plataforma ViralTicket
+              {t('managePlatform')}
             </p>
           </motion.div>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare } from 'lucide-react';
+import { Youtube, Sparkles, KanbanSquare, Bot, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -7,7 +7,9 @@ import Tabs from '../components/Tabs';
 import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
+import GPTAgents from '../components/GPTAgents';
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
+import OfferMonitoring from '../components/OfferMonitoring';
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
@@ -27,6 +29,9 @@ const Dashboard = () => {
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
     { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    // VT: Nova aba focada em monitoramento/modelagem separado do Kanban de ofertas
+    { id: 'monitoring', label: t('offerMonitoring'), icon: Clock },
+    { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
   ];
 
   const handleUseWithAI = (text) => {
@@ -35,12 +40,25 @@ const Dashboard = () => {
   };
 
   // VT: Abrir editor de oferta
-  const handleEditOffer = async (offerId) => {
-    const offers = await getUserOffers(user.id);
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
+  const handleEditOffer = async (offerId, offerData) => {
+    try {
+      if (offerData) {
+        setEditingOffer(offerData);
+        setShowOfferEditor(true);
+        return;
+      }
+
+      const offers = await getUserOffers(user.id, 'oferta');
+      const offer = offers.find((o) => o.id === offerId);
+      if (!offer) {
+        console.error('VT: Oferta não encontrada:', offerId);
+        return;
+      }
+
       setEditingOffer(offer);
       setShowOfferEditor(true);
+    } catch (error) {
+      console.error('VT: Erro ao abrir editor:', error);
     }
   };
 
@@ -73,10 +91,10 @@ const Dashboard = () => {
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold mb-1">
-                    Bem-vindo, {user?.name}! 👋
+                    {t('welcome')}, {user?.name}! 👋
                   </h1>
                   <p className="text-gray-400">
-                    Vamos criar ofertas incríveis hoje?
+                    {t('letsCreateOffers')}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -89,18 +107,18 @@ const Dashboard = () => {
                 <ProgressBar
                   value={user?.dailyUsage.offers || 0}
                   max={user?.limits.offers || 2}
-                  label="Ofertas Geradas Hoje"
+                  label={t('offersGeneratedToday')}
                 />
                 <div className="glass border border-purple-500/20 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-400">Extração YouTube</span>
-                    <span className="text-xs text-green-400 font-bold">ILIMITADO</span>
+                    <span className="text-sm text-gray-400">{t('youtubeExtraction')}</span>
+                    <span className="text-xs text-green-400 font-bold">{t('unlimited')}</span>
                   </div>
                   <div className="text-2xl font-bold text-green-400">
-                    ∞ URLs/dia
+                    ∞ {t('urlsPerDay')}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Extraia comentários sem limites! 🎉
+                    {t('extractUnlimited')}
                   </p>
                 </div>
               </div>
@@ -123,7 +141,11 @@ const Dashboard = () => {
             {activeTab === 'ai' && (
               <AIChat initialText={aiInitialText} />
             )}
-            {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+              {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+              {activeTab === 'monitoring' && (
+                <OfferMonitoring onEditOffer={handleEditOffer} />
+              )}
+            {activeTab === 'gptAgents' && <GPTAgents />}
           </motion.div>
         </main>
       </div>

@@ -1,22 +1,34 @@
 import { motion } from 'framer-motion';
-import { getPlanColor, PLANS } from '../utils/plans';
+import { getPlanColor } from '../utils/plans';
+import { useLanguage } from '../hooks/useLanguage';
+
+const PLAN_LABEL_MAP = {
+  FREE: 'planFree',
+  BRONZE: 'planBronze',
+  PRATA: 'planSilver',
+  OURO: 'planGold',
+  ADMIN: 'planAdmin',
+};
 
 const PlanBadge = ({ plan, size = 'md' }) => {
-  const planData = PLANS[plan] || PLANS.FREE;
-  
+  const { t } = useLanguage();
+  const normalizedPlan = (plan || 'FREE').toUpperCase();
+
   const sizes = {
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-3 py-1.5',
     lg: 'text-base px-4 py-2',
   };
 
+  const planLabelKey = PLAN_LABEL_MAP[normalizedPlan] || PLAN_LABEL_MAP.FREE;
+  const planLabel = t(planLabelKey);
+
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r ${getPlanColor(plan)} font-bold ${sizes[size]}`}
+      className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${getPlanColor(normalizedPlan)} font-bold ${sizes[size]}`}
     >
-      <span>{planData.badge}</span>
-      <span>{planData.name}</span>
+      <span>{planLabel}</span>
     </motion.div>
   );
 };

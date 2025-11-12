@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { MoreVertical, Edit, Ban, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MoreVertical, Edit, Ban } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import Card from './Card';
 import PlanBadge from './PlanBadge';
 import Button from './Button';
@@ -9,48 +11,49 @@ import { useAuth } from '../hooks/useAuth';
 
 const AdminUsers = () => {
   const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState([
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao@email.com',
-      plan: 'OURO',
-      dailyOffers: 45,
-      dailyUrls: 32,
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria@email.com',
-      plan: 'PRATA',
-      dailyOffers: 8,
-      dailyUrls: 7,
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'Pedro Costa',
-      email: 'pedro@email.com',
-      plan: 'BRONZE',
-      dailyOffers: 4,
-      dailyUrls: 3,
-      status: 'active',
-    },
-    {
-      id: '4',
-      name: 'Ana Lima',
-      email: 'ana@email.com',
-      plan: 'FREE',
-      dailyOffers: 2,
-      dailyUrls: 2,
-      status: 'active',
-    },
-  ]);
-
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const { success } = useToast();
+  const { success, error } = useToast();
+
+  useEffect(() => {
+    if (currentUser?.isAdmin) {
+      loadUsers();
+    }
+  }, [currentUser]);
+
+  const loadUsers = async () => {
+    if (!db) {
+      console.warn('VT: Firebase indisponível, mantendo dados mockados');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const snapshot = await getDocs(collection(db, 'users'));
+      const usersFromFirestore = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          name: data.name || data.email?.split('@')[0] || 'Sem nome',
+          email: data.email || 'Sem email',
+          plan: data.plan || 'FREE',
+          dailyOffers: data.dailyUsage?.offers || 0,
+          dailyUrls: data.dailyUsage?.urls || 0,
+          status: data.status || 'active',
+        };
+      });
+      setUsers(usersFromFirestore);
+      success('✅ Usuários carregados do Firestore');
+    } catch (err) {
+      console.error('VT: Erro ao carregar usuários:', err);
+      error('Erro ao carregar usuários do Firestore');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Proteção adicional - não renderizar se não for admin
   if (!currentUser?.isAdmin) {
@@ -61,16 +64,46 @@ const AdminUsers = () => {
     );
   }
 
-  const handleChangePlan = (userId, newPlan) => {
-    setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
-    success(`Plano alterado para ${newPlan}`);
-    setShowModal(false);
+  const handleChangePlan = async (userId, newPlan) => {
+    if (!db) {
+      error('Firebase não configurado');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        plan: newPlan,
+        updatedAt: new Date().toISOString(),
+      });
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, plan: newPlan } : u)),
+      );
+      success(`✅ Plano alterado para ${newPlan}`);
+      setShowModal(false);
+    } catch (err) {
+      console.error('VT: Erro ao alterar plano:', err);
+      error('Erro ao alterar plano');
+    }
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-gray-400">Carregando usuários...</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <>
       <Card>
-        <h3 className="text-xl font-bold mb-4">Gerenciar Usuários</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Gerenciar Usuários</h3>
+          <p className="text-sm text-gray-400">Total: {users.length} usuários</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
