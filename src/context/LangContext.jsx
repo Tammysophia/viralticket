@@ -11,13 +11,21 @@ const translations = {
     password: 'Senha',
     dontHaveAccount: 'Não tem uma conta?',
     alreadyHaveAccount: 'Já tem uma conta?',
-    
+    online: 'Online',
+
     // Dashboard
     dashboard: 'Painel',
     youtubeExtractor: 'Extrator YouTube',
     aiChat: 'Chat IA',
     offersKanban: 'Kanban de Ofertas',
-    
+    welcome: 'Bem-vindo(a)',
+    letsCreateOffers: 'Vamos criar ofertas incríveis hoje?',
+    offersGeneratedToday: 'Ofertas geradas hoje',
+    youtubeExtraction: 'Extração do YouTube',
+    unlimited: 'Ilimitado',
+    urlsPerDay: 'URLs por dia',
+    extractUnlimited: 'Extraia sem limites',
+
     // YouTube Tab
     youtubeUrl: 'URL do YouTube',
     extractComments: 'Extrair Comentários',
@@ -25,7 +33,7 @@ const translations = {
     useWithAI: 'Usar com IA',
     comments: 'comentários',
     likes: 'curtidas',
-    
+
     // AI Chat
     enterText: 'Digite ou cole o comentário...',
     generate: 'Gerar Oferta',
@@ -54,13 +62,13 @@ const translations = {
     generateCreatives: 'Gerar criativos',
     creativesCount: '5 posts + 5 vídeos',
     copyCompleteAnalysis: 'Copiar análise completa',
-    
+
     // Kanban
     pending: 'Pendente',
     inExecution: 'Em Execução',
     modeling: 'Modelando',
     completed: 'Concluído',
-    
+
     // Admin
     admin: 'Administrador',
     overview: 'Visão Geral',
@@ -68,14 +76,19 @@ const translations = {
     apiKeys: 'Chaves API',
     webhooks: 'Webhooks',
     gptAgents: 'Agentes GPT',
-    
+
     // Plans
     plan: 'Plano',
     free: 'FREE',
     bronze: 'BRONZE',
     silver: 'PRATA',
     gold: 'OURO',
-    
+    planFree: 'Grátis',
+    planBronze: 'Bronze',
+    planSilver: 'Prata',
+    planGold: 'Ouro',
+    planAdmin: 'Admin',
+
     // Common
     loading: 'Carregando...',
     save: 'Salvar',
@@ -93,19 +106,27 @@ const translations = {
     password: 'Password',
     dontHaveAccount: "Don't have an account?",
     alreadyHaveAccount: 'Already have an account?',
-    
+    online: 'Online',
+
     dashboard: 'Dashboard',
     youtubeExtractor: 'YouTube Extractor',
     aiChat: 'AI Chat',
     offersKanban: 'Offers Kanban',
-    
+    welcome: 'Welcome',
+    letsCreateOffers: "Let's create winning offers today?",
+    offersGeneratedToday: 'Offers generated today',
+    youtubeExtraction: 'YouTube extraction',
+    unlimited: 'Unlimited',
+    urlsPerDay: 'URLs per day',
+    extractUnlimited: 'Extract without limits',
+
     youtubeUrl: 'YouTube URL',
     extractComments: 'Extract Comments',
     copyAll: 'Copy All',
     useWithAI: 'Use with AI',
     comments: 'comments',
     likes: 'likes',
-    
+
     enterText: 'Enter or paste comment...',
     generate: 'Generate Offer',
     copy: 'Copy',
@@ -133,25 +154,30 @@ const translations = {
     generateCreatives: 'Generate creatives',
     creativesCount: '5 posts + 5 videos',
     copyCompleteAnalysis: 'Copy complete analysis',
-    
+
     pending: 'Pending',
     inExecution: 'In Progress',
     modeling: 'Modeling',
     completed: 'Completed',
-    
+
     admin: 'Admin',
     overview: 'Overview',
     users: 'Users',
     apiKeys: 'API Keys',
     webhooks: 'Webhooks',
     gptAgents: 'GPT Agents',
-    
+
     plan: 'Plan',
     free: 'FREE',
     bronze: 'BRONZE',
     silver: 'SILVER',
     gold: 'GOLD',
-    
+    planFree: 'Free',
+    planBronze: 'Bronze',
+    planSilver: 'Silver',
+    planGold: 'Gold',
+    planAdmin: 'Admin',
+
     loading: 'Loading...',
     save: 'Save',
     cancel: 'Cancel',
@@ -168,19 +194,27 @@ const translations = {
     password: 'Contraseña',
     dontHaveAccount: '¿No tienes una cuenta?',
     alreadyHaveAccount: '¿Ya tienes una cuenta?',
-    
+    online: 'En línea',
+
     dashboard: 'Panel',
     youtubeExtractor: 'Extractor YouTube',
     aiChat: 'Chat IA',
     offersKanban: 'Kanban de Ofertas',
-    
+    welcome: 'Bienvenido(a)',
+    letsCreateOffers: '¿Creamos ofertas ganadoras hoy?',
+    offersGeneratedToday: 'Ofertas generadas hoy',
+    youtubeExtraction: 'Extracción de YouTube',
+    unlimited: 'Ilimitado',
+    urlsPerDay: 'URLs por día',
+    extractUnlimited: 'Extrae sin límites',
+
     youtubeUrl: 'URL de YouTube',
     extractComments: 'Extraer Comentarios',
     copyAll: 'Copiar Todos',
     useWithAI: 'Usar con IA',
     comments: 'comentarios',
     likes: 'me gusta',
-    
+
     enterText: 'Ingrese o pegue el comentario...',
     generate: 'Generar Oferta',
     copy: 'Copiar',
@@ -208,25 +242,30 @@ const translations = {
     generateCreatives: 'Generar creativos',
     creativesCount: '5 posts + 5 videos',
     copyCompleteAnalysis: 'Copiar análisis completo',
-    
+
     pending: 'Pendiente',
     inExecution: 'En Ejecución',
     modeling: 'Modelando',
     completed: 'Completado',
-    
+
     admin: 'Administrador',
     overview: 'Resumen',
     users: 'Usuarios',
     apiKeys: 'Claves API',
     webhooks: 'Webhooks',
     gptAgents: 'Agentes GPT',
-    
+
     plan: 'Plan',
     free: 'GRATIS',
     bronze: 'BRONCE',
     silver: 'PLATA',
     gold: 'ORO',
-    
+    planFree: 'Gratis',
+    planBronze: 'Bronce',
+    planSilver: 'Plata',
+    planGold: 'Oro',
+    planAdmin: 'Admin',
+
     loading: 'Cargando...',
     save: 'Guardar',
     cancel: 'Cancelar',

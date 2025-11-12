@@ -147,78 +147,88 @@ const Kanban = ({ onEditOffer }) => {
   };
 
   // VT: Excluir oferta com confirmação
-  const handleDelete = async (offerId, offerTitle) => {
-    if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
-      return;
+    const handleDelete = async (offerId, offerTitle) => {
+      if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
+        return;
+      }
+
+      try {
+        await deleteOffer(offerId);
+
+        setOffers((prevOffers) => prevOffers.filter((o) => o.id !== offerId));
+        organizeOffersByStatus(offers.filter((o) => o.id !== offerId));
+
+        toast.success('✅ Oferta excluída!');
+      } catch (error) {
+        toast.error('❌ Erro ao excluir oferta');
+        console.error('VT: Erro ao excluir:', error);
+      }
+    };
+
+    const columnColors = {
+      pending: 'border-yellow-500/30',
+      inExecution: 'border-blue-500/30',
+      modeling: 'border-purple-500/30',
+      activeModeling: 'border-cyan-500/30',
+      completed: 'border-green-500/30',
+    };
+
+    const handleEditClick = (offerId) => {
+      if (!onEditOffer) {
+        toast.error('Erro ao abrir editor');
+        return;
+      }
+
+      const fullOffer = offers.find((offer) => offer.id === offerId);
+      onEditOffer(offerId, fullOffer);
+    };
+
+    if (loading) {
+      return (
+        <Card>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-400">Carregando ofertas...</p>
+          </div>
+        </Card>
+      );
     }
 
-    try {
-      await deleteOffer(offerId);
-
-      setOffers(prevOffers => prevOffers.filter(o => o.id !== offerId));
-      organizeOffersByStatus(offers.filter(o => o.id !== offerId));
-
-      toast.success('✅ Oferta excluída!');
-    } catch (error) {
-      toast.error('❌ Erro ao excluir oferta');
-      console.error('VT: Erro ao excluir:', error);
-    }
-  };
-
-  const columnColors = {
-    pending: 'border-yellow-500/30',
-    inExecution: 'border-blue-500/30',
-    modeling: 'border-purple-500/30',
-    activeModeling: 'border-cyan-500/30',
-    completed: 'border-green-500/30',
-  };
-
-  if (loading) {
     return (
-      <Card>
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-400">Carregando ofertas...</p>
-        </div>
-      </Card>
-    );
-  }
-
-  return (
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 px-2">
-        {Object.values(columns).map((column) => (
-          <div key={column.id} className="space-y-3">
-            <h3 className="font-bold text-lg px-2 flex items-center gap-2">
-              {column.title}
-              <span className="text-xs text-gray-500">({column.items.length})</span>
-            </h3>
-            <Droppable droppableId={column.id}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors ${
-                    snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
-                  }`}
-                >
+          {Object.values(columns).map((column) => (
+            <div key={column.id} className="space-y-3">
+              <h3 className="font-bold text-lg px-2 flex items-center gap-2">
+                {column.title}
+                <span className="text-xs text-gray-500">({column.items.length})</span>
+              </h3>
+              <Droppable droppableId={column.id}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors ${
+                      snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
+                    }`}
+                  >
                     {column.items.length === 0 && (
                       <div className="flex flex-col items-center justify-center py-8 text-gray-500">
                         <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
                         <p className="text-sm">Nenhuma oferta</p>
                       </div>
                     )}
-                    
-                  {column.items.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
-                            snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
-                          }`}
-                        >
+
+                    {column.items.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
+                              snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
+                            }`}
+                          >
                           <div className="flex items-center gap-2 mb-2">
                             <img
                               src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
@@ -353,18 +363,12 @@ const Kanban = ({ onEditOffer }) => {
                           )}
 
                           <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log('VT: Clicou em Editar, ID:', item.id);
-                                if (onEditOffer) {
-                                  onEditOffer(item.id);
-                                } else {
-                                  console.error('VT: onEditOffer não está definido!');
-                                  toast.error('Erro ao abrir editor');
-                                }
-                              }}
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleEditClick(item.id);
+                                }}
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
                             >
                               <Edit2 className="w-3 h-3" />

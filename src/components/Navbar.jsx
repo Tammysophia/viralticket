@@ -5,7 +5,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
-  const { language, changeLanguage } = useLanguage();
+  const { language, changeLanguage, t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -24,18 +24,18 @@ const Navbar = () => {
       <div className="flex items-center gap-3">
         {user && (
           <>
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-10 h-10 rounded-full ring-2 ring-purple-500/50"
-            />
-            <div>
-              <p className="font-semibold">{user.name}</p>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-gray-400">Online</span>
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-10 h-10 rounded-full ring-2 ring-purple-500/50"
+              />
+              <div>
+                <p className="font-semibold">{user.name}</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-400">{t('online')}</span>
+                </div>
               </div>
-            </div>
           </>
         )}
       </div>

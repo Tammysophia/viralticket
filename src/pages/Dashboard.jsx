@@ -24,12 +24,12 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
 
-  const tabs = [
-    { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
-    { id: 'ai', label: t('aiChat'), icon: Sparkles },
-    { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
-    { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
-  ];
+    const tabs = [
+      { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
+      { id: 'ai', label: t('aiChat'), icon: Sparkles },
+      { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+      { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
+    ];
 
   const handleUseWithAI = (text) => {
     setAiInitialText(text);
@@ -37,16 +37,23 @@ const Dashboard = () => {
   };
 
   // VT: Abrir editor de oferta
-  const handleEditOffer = async (offerId) => {
+  const handleEditOffer = async (offerId, offerData) => {
     try {
-      const offers = await getUserOffers(user.id);
-      const offer = offers.find(o => o.id === offerId);
-      if (offer) {
-        setEditingOffer(offer);
+      if (offerData) {
+        setEditingOffer(offerData);
         setShowOfferEditor(true);
-      } else {
-        console.error('VT: Oferta não encontrada:', offerId);
+        return;
       }
+
+      const offers = await getUserOffers(user.id);
+      const offer = offers.find((o) => o.id === offerId);
+      if (!offer) {
+        console.error('VT: Oferta não encontrada:', offerId);
+        return;
+      }
+
+      setEditingOffer(offer);
+      setShowOfferEditor(true);
     } catch (error) {
       console.error('VT: Erro ao abrir editor:', error);
     }
