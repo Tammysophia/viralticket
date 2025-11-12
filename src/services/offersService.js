@@ -1,11 +1,10 @@
-// VT: Serviço de gerenciamento de ofertas com Firestore
 import { db } from '../config/firebase';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
+import {
+  collection,
+  doc,
+  getDoc,
   getDocs,
-  setDoc, 
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -19,22 +18,6 @@ import {
 const USE_MOCKS = import.meta.env.VITE_VT_MOCKS === 'true';
 
 /**
- * VT: Estrutura de uma oferta no Firestore
- * offers/{offerId}
- * {
- *   userId: string,
- *   title: string,
- *   status: 'pendente' | 'execucao' | 'modelando' | 'concluido',
- *   createdAt: Timestamp,
- *   updatedAt: Timestamp,
- *   copy: { page, adPrimary, adHeadline, adDescription },
- *   modeling: { fanpageUrl, salesPageUrl, checkoutUrl, creativesCount, monitorStart, monitorDays, trend, modelavel },
- *   youtubeLinks: string[],
- *   attachments: { files: [] }
- * }
- */
-
-/**
  * VT: Cria uma oferta a partir da IA
  * @param {Object} data - { title, copy: { page, adPrimary, adHeadline, adDescription }, youtubeLinks, userId }
  * @returns {Promise<string>} - ID da oferta criada
@@ -43,11 +26,10 @@ export const createOfferFromAI = async (data) => {
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Criando oferta:', data);
     const mockId = `mock_${Date.now()}`;
-    // VT: Salvar no localStorage para simular
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
     offers.push({
       id: mockId,
-      type: 'oferta', // VT: Tipo da oferta (oferta ou modelagem)
+      type: 'oferta',
       ...data,
       status: 'execucao',
       createdAt: new Date().toISOString(),
@@ -72,8 +54,8 @@ export const createOfferFromAI = async (data) => {
     const offerRef = doc(collection(db, 'offers'));
     const offerData = {
       ...data,
-      type: data.type || 'oferta', // VT: Tipo padrão é "oferta" (ofertas da IA)
-      status: 'execucao', // VT: Nova oferta começa em execução
+      type: data.type || 'oferta',
+      status: 'execucao',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       modeling: {
@@ -95,6 +77,31 @@ export const createOfferFromAI = async (data) => {
     return offerRef.id;
   } catch (error) {
     console.error('VT: Erro ao criar oferta:', error);
+    throw error;
+  }
+};
+
+/**
+ * VT: Função para duplicar uma oferta para modelagem
+ * @param {Object} offer - A oferta a ser duplicada
+ * @returns {Promise<string>} - ID da nova oferta de modelagem criada
+ */
+export const duplicateOfferForModeling = async (offer) => {
+  try {
+    const offerRef = doc(collection(db, 'offers'));
+    const newOffer = {
+      ...offer,
+      type: 'modelagem',  // Alterando o tipo para modelagem
+      status: 'pendente', // Definindo status como pendente
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+
+    await setDoc(offerRef, newOffer);
+    console.log('VT: Oferta duplicada para modelagem com sucesso!');
+    return offerRef.id;
+  } catch (error) {
+    console.error('VT: Erro ao duplicar oferta para modelagem:', error);
     throw error;
   }
 };
@@ -151,183 +158,4 @@ export const deleteOffer = async (id) => {
   }
 };
 
-/**
- * VT: Adiciona link do YouTube a uma oferta
- * @param {string} offerId - ID da oferta
- * @param {string} url - URL do YouTube
- */
-export const addYoutubeLink = async (offerId, url) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Adicionando link:', offerId, url);
-    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
-      if (!offer.youtubeLinks) offer.youtubeLinks = [];
-      if (!offer.youtubeLinks.includes(url)) {
-        offer.youtubeLinks.push(url);
-      }
-      localStorage.setItem('vt_offers', JSON.stringify(offers));
-    }
-    return;
-  }
-
-  try {
-    const offerRef = doc(db, 'offers', offerId);
-    const offerSnap = await getDoc(offerRef);
-    if (offerSnap.exists()) {
-      const links = offerSnap.data().youtubeLinks || [];
-      if (!links.includes(url)) {
-        links.push(url);
-        await updateDoc(offerRef, { youtubeLinks: links, updatedAt: Timestamp.now() });
-      }
-    }
-  } catch (error) {
-    console.error('VT: Erro ao adicionar link:', error);
-    throw error;
-  }
-};
-
-/**
- * VT: Remove link do YouTube de uma oferta
- * @param {string} offerId - ID da oferta
- * @param {string} url - URL do YouTube
- */
-export const removeYoutubeLink = async (offerId, url) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Removendo link:', offerId, url);
-    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    const offer = offers.find(o => o.id === offerId);
-    if (offer && offer.youtubeLinks) {
-      offer.youtubeLinks = offer.youtubeLinks.filter(l => l !== url);
-      localStorage.setItem('vt_offers', JSON.stringify(offers));
-    }
-    return;
-  }
-
-  try {
-    const offerRef = doc(db, 'offers', offerId);
-    const offerSnap = await getDoc(offerRef);
-    if (offerSnap.exists()) {
-      const links = offerSnap.data().youtubeLinks || [];
-      const filtered = links.filter(l => l !== url);
-      await updateDoc(offerRef, { youtubeLinks: filtered, updatedAt: Timestamp.now() });
-    }
-  } catch (error) {
-    console.error('VT: Erro ao remover link:', error);
-    throw error;
-  }
-};
-
-/**
- * VT: Anexa metadados de arquivos à oferta
- * @param {string} offerId - ID da oferta
- * @param {Array} filesMeta - [{ name, url, size, type }]
- */
-export const attachFiles = async (offerId, filesMeta) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Anexando arquivos:', offerId, filesMeta);
-    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    const offer = offers.find(o => o.id === offerId);
-    if (offer) {
-      if (!offer.attachments) offer.attachments = { files: [] };
-      offer.attachments.files.push(...filesMeta);
-      localStorage.setItem('vt_offers', JSON.stringify(offers));
-    }
-    return;
-  }
-
-  try {
-    const offerRef = doc(db, 'offers', offerId);
-    const offerSnap = await getDoc(offerRef);
-    if (offerSnap.exists()) {
-      const currentFiles = offerSnap.data().attachments?.files || [];
-      await updateDoc(offerRef, {
-        'attachments.files': [...currentFiles, ...filesMeta],
-        updatedAt: Timestamp.now()
-      });
-    }
-  } catch (error) {
-    console.error('VT: Erro ao anexar arquivos:', error);
-    throw error;
-  }
-};
-
-/**
- * VT: Busca todas as ofertas do usuário
- * @param {string} userId - ID do usuário
- * @returns {Promise<Array>} - Lista de ofertas
- */
-export const getUserOffers = async (userId) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Buscando ofertas do usuário:', userId);
-    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    return offers.filter(o => o.userId === userId);
-  }
-
-  try {
-    const q = query(
-      collection(db, 'offers'),
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error('VT: Erro ao buscar ofertas:', error);
-    return [];
-  }
-};
-
-/**
- * VT: Listener em tempo real para ofertas do usuário
- * @param {string} userId - ID do usuário
- * @param {Function} callback - Função chamada quando ofertas mudam
- * @returns {Function} - Função para cancelar o listener
- */
-export const subscribeToUserOffers = (userId, callback, filterType = null) => {
-  if (USE_MOCKS) {
-    console.log('VT: [MOCK] Listener de ofertas iniciado, tipo:', filterType);
-    // VT: Simular listener com setInterval
-    const interval = setInterval(() => {
-      let offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-      offers = offers.filter(o => o.userId === userId);
-      
-      // VT: Filtrar por tipo se especificado
-      if (filterType) {
-        offers = offers.filter(o => (o.type || 'oferta') === filterType);
-      }
-      
-      callback(offers);
-    }, 2000);
-    return () => clearInterval(interval);
-  }
-
-  const q = query(
-    collection(db, 'offers'),
-    where('userId', '==', userId),
-    orderBy('updatedAt', 'desc')
-  );
-  
-  return onSnapshot(q, (snapshot) => {
-    let offers = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      type: doc.data().type || 'oferta' // VT: Garantir que sempre tenha type
-    }));
-    
-    // VT: Log para debug
-    console.log("🔥 VT: Ofertas carregadas:", offers.map(o => ({
-      id: o.id,
-      title: o.title,
-      type: o.type
-    })));
-    
-    // VT: Filtrar por tipo se especificado
-    if (filterType) {
-      offers = offers.filter(o => o.type === filterType);
-      console.log(`🎯 VT: Filtradas para tipo "${filterType}":`, offers.length);
-    }
-    
-    callback(offers);
-  });
-};
+// Continue com os outros métodos do arquivo...
