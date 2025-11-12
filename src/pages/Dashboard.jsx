@@ -142,7 +142,9 @@ const Dashboard = () => {
               <AIChat initialText={aiInitialText} />
             )}
               {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
-              {activeTab === 'monitoring' && <OfferMonitoring />}
+              {activeTab === 'monitoring' && (
+                <OfferMonitoring onEditOffer={handleEditOffer} />
+              )}
             {activeTab === 'gptAgents' && <GPTAgents />}
           </motion.div>
         </main>

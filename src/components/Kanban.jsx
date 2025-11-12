@@ -1,13 +1,13 @@
 // VT: Kanban integrado com Firestore em tempo real
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp } from 'lucide-react';
+import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp, Copy } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOfferForModeling } from '../services/offersService';
 
 const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -76,6 +76,14 @@ const Kanban = ({ onEditOffer }) => {
       (updatedOffers) => {
         setOffers(updatedOffers);
         organizeOffersByStatus(updatedOffers);
+        console.log(
+          '🔥 Ofertas carregadas:',
+          updatedOffers.map((offer) => ({
+            id: offer.id,
+            title: offer.title,
+            type: offer.type,
+          })),
+        );
         setLoading(false);
       },
       'oferta',
@@ -199,6 +207,22 @@ const Kanban = ({ onEditOffer }) => {
 
     const fullOffer = offers.find((offer) => offer.id === offerId);
     onEditOffer(offerId, fullOffer);
+  };
+
+  const handleDuplicate = async (offerId) => {
+    const originalOffer = offers.find((offer) => offer.id === offerId);
+    if (!originalOffer) {
+      toast.error('Oferta não encontrada para duplicação');
+      return;
+    }
+
+    try {
+      await duplicateOfferForModeling(originalOffer);
+      toast.success('Oferta duplicada para modelagem!');
+    } catch (error) {
+      toast.error('Erro ao duplicar oferta');
+      console.error('VT: Erro ao duplicar oferta para modelagem:', error);
+    }
   };
 
   if (loading) {
@@ -401,6 +425,19 @@ const Kanban = ({ onEditOffer }) => {
                           )}
 
                             <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                              {item.type !== 'modelagem' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDuplicate(item.id);
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                  Duplicar para Modelagem
+                                </button>
+                              )}
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();

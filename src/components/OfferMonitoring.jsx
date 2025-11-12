@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, TrendingUp, Trash2 } from 'lucide-react';
+import { Clock, TrendingUp, Trash2, Edit2 } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import { useAuth } from '../hooks/useAuth';
@@ -10,7 +10,7 @@ import { formatDate } from '../utils/validation';
 
 const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
-const OfferMonitoring = () => {
+const OfferMonitoring = ({ onEditOffer }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [offers, setOffers] = useState([]);
@@ -146,18 +146,28 @@ const OfferMonitoring = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-xs text-gray-400">
               {t('monitoringStartedAt')} {formatDate(offer.modeling?.monitorStart)}
             </span>
-            <Button
-              variant="danger"
-              onClick={() => handleStopMonitoring(offer.id)}
-              className="flex items-center gap-1"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('stopMonitoring')}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => onEditOffer?.(offer.id, offer)}
+                className="px-4 py-2"
+                icon={Edit2}
+              >
+                Editar Oferta
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => handleStopMonitoring(offer.id)}
+                className="flex items-center gap-1"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('stopMonitoring')}
+              </Button>
+            </div>
           </div>
         </Card>
       ))}
