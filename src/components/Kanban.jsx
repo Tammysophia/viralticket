@@ -61,20 +61,27 @@ const Kanban = ({ onEditOffer }) => {
     },
   });
 
-  // VT: Listener em tempo real do Firestore
+  // VT: Listener em tempo real do Firestore (otimizado para evitar loops)
   useEffect(() => {
     if (!user?.id) return;
 
+    console.log('🎯 VT: Iniciando listener de ofertas para:', user.id);
+    setLoading(true);
+
     const unsubscribe = subscribeToUserOffers(user.id, (updatedOffers) => {
+      console.log('📥 VT: Recebeu', updatedOffers.length, 'ofertas');
       setOffers(updatedOffers);
       organizeOffersByStatus(updatedOffers);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('🔌 VT: Desconectando listener de ofertas');
+      unsubscribe();
+    };
   }, [user?.id]);
 
-  // VT: Organizar ofertas por status
+  // VT: Organizar ofertas por status (otimizado para evitar re-renders)
   const organizeOffersByStatus = (allOffers) => {
     const organized = {
       pending: { ...columns.pending, items: [] },
@@ -104,7 +111,11 @@ const Kanban = ({ onEditOffer }) => {
       });
     });
 
-    setColumns(organized);
+    // VT: Atualizar estado apenas se houver mudanças (evita loop)
+    setColumns(prev => {
+      const hasChanged = JSON.stringify(prev) !== JSON.stringify(organized);
+      return hasChanged ? organized : prev;
+    });
   };
 
   // VT: Drag and drop com persistência
