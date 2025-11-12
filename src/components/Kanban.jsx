@@ -1,55 +1,68 @@
 // VT: Kanban integrado com Firestore em tempo real
-import { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Sparkles, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import Card from './Card';
-import { useLanguage } from '../hooks/useLanguage';
-import { useAuth } from '../hooks/useAuth';
-import { formatDate } from '../utils/validation';
-import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
+import { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import {
+  Calendar,
+  Sparkles,
+  Edit2,
+  Trash2,
+  AlertCircle,
+  Copy,
+} from "lucide-react";
+import Card from "./Card";
+import { useLanguage } from "../hooks/useLanguage";
+import { useAuth } from "../hooks/useAuth";
+import { formatDate } from "../utils/validation";
+import toast from "react-hot-toast";
+import {
+  subscribeToUserOffers,
+  updateOffer,
+  deleteOffer,
+  duplicateOfferToModeling,
+} from "../services/offersService";
 
-const Kanban = ({ onEditOffer }) => {
+const Kanban = ({ onEditOffer, offerType = "oferta" }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [duplicatingIds, setDuplicatingIds] = useState(() => new Set());
 
   // VT: Mapeamento de status para colunas
   const STATUS_MAP = {
-    'pendente': 'pending',
-    'execucao': 'inExecution',
-    'modelando': 'modeling',
-    'concluido': 'completed'
+    pendente: "pending",
+    execucao: "inExecution",
+    modelando: "modeling",
+    concluido: "completed",
   };
 
   const REVERSE_STATUS_MAP = {
-    'pending': 'pendente',
-    'inExecution': 'execucao',
-    'modeling': 'modelando',
-    'completed': 'concluido'
+    pending: "pendente",
+    inExecution: "execucao",
+    modeling: "modelando",
+    completed: "concluido",
   };
 
   // VT: Estrutura de colunas
   const [columns, setColumns] = useState({
     pending: {
-      id: 'pending',
-      title: t('pending') || 'Pendente',
+      id: "pending",
+      title: t("pending") || "Pendente",
       items: [],
     },
     inExecution: {
-      id: 'inExecution',
-      title: t('inExecution') || 'Em Execução',
+      id: "inExecution",
+      title: t("inExecution") || "Em Execução",
       items: [],
     },
     modeling: {
-      id: 'modeling',
-      title: t('modeling') || 'Modelando',
+      id: "modeling",
+      title: t("modeling") || "Modelando",
       items: [],
     },
     completed: {
-      id: 'completed',
-      title: t('completed') || 'Concluído',
+      id: "completed",
+      title: t("completed") || "Concluído",
       items: [],
     },
   });
@@ -58,14 +71,42 @@ const Kanban = ({ onEditOffer }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const unsubscribe = subscribeToUserOffers(user.id, (updatedOffers) => {
-      setOffers(updatedOffers);
-      organizeOffersByStatus(updatedOffers);
-      setLoading(false);
-    });
+    setLoading(true);
+
+    const unsubscribe = subscribeToUserOffers(
+      user.id,
+      (updatedOffers) => {
+        const normalizedOffers = updatedOffers.map((offer) => ({
+          ...offer,
+          type: offer.type || "oferta",
+        }));
+
+        const filteredOffers = offerType
+          ? normalizedOffers.filter(
+              (offer) => (offer.type || "oferta") === offerType,
+            )
+          : normalizedOffers;
+
+        setOffers(filteredOffers);
+        console.log(
+          "🔥 Ofertas carregadas:",
+          filteredOffers.map((o) => ({
+            id: o.id,
+            title: o.title,
+            type: o.type,
+          })),
+        );
+        organizeOffersByStatus(filteredOffers);
+        setLoading(false);
+      },
+      {
+        type: offerType,
+        applyTypeFilterInQuery: offerType !== "oferta",
+      },
+    );
 
     return () => unsubscribe();
-  }, [user?.id]);
+  }, [user?.id, offerType]);
 
   // VT: Organizar ofertas por status
   const organizeOffersByStatus = (allOffers) => {
@@ -76,12 +117,12 @@ const Kanban = ({ onEditOffer }) => {
       completed: { ...columns.completed, items: [] },
     };
 
-    allOffers.forEach(offer => {
-      const columnId = STATUS_MAP[offer.status] || 'pending';
+    allOffers.forEach((offer) => {
+      const columnId = STATUS_MAP[offer.status] || "pending";
       organized[columnId].items.push({
         id: offer.id,
         title: offer.title,
-        agent: offer.agent || 'IA',
+        agent: offer.agent || "IA",
         date: offer.createdAt?.toDate?.() || offer.createdAt || new Date(),
         status: offer.status,
         modeling: offer.modeling,
@@ -96,14 +137,20 @@ const Kanban = ({ onEditOffer }) => {
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
       return;
     }
 
     const sourceColumn = columns[source.droppableId];
     const destColumn = columns[destination.droppableId];
     const sourceItems = [...sourceColumn.items];
-    const destItems = source.droppableId === destination.droppableId ? sourceItems : [...destColumn.items];
+    const destItems =
+      source.droppableId === destination.droppableId
+        ? sourceItems
+        : [...destColumn.items];
 
     const [removed] = sourceItems.splice(source.index, 1);
     destItems.splice(destination.index, 0, removed);
@@ -125,10 +172,10 @@ const Kanban = ({ onEditOffer }) => {
     try {
       const newStatus = REVERSE_STATUS_MAP[destination.droppableId];
       await updateOffer(draggableId, { status: newStatus });
-      toast.success('Oferta movida com sucesso!');
+      toast.success("Oferta movida com sucesso!");
     } catch (error) {
-      toast.error('Erro ao mover oferta');
-      console.error('VT: Erro ao atualizar status:', error);
+      toast.error("Erro ao mover oferta");
+      console.error("VT: Erro ao atualizar status:", error);
       // VT: Reverter UI em caso de erro
       organizeOffersByStatus(offers);
     }
@@ -142,18 +189,51 @@ const Kanban = ({ onEditOffer }) => {
 
     try {
       await deleteOffer(offerId);
-      toast.success('Oferta excluída!');
+      toast.success("Oferta excluída!");
     } catch (error) {
-      toast.error('Erro ao excluir oferta');
-      console.error('VT: Erro ao excluir:', error);
+      toast.error("Erro ao excluir oferta");
+      console.error("VT: Erro ao excluir:", error);
+    }
+  };
+
+  // VT: Duplicar oferta para modelagem
+  const handleDuplicate = async (offerId) => {
+    if (duplicatingIds.has(offerId)) {
+      return;
+    }
+
+    const offerToDuplicate = offers.find((offer) => offer.id === offerId);
+    if (!offerToDuplicate) {
+      toast.error("Oferta não encontrada para duplicação.");
+      return;
+    }
+
+    setDuplicatingIds((prev) => {
+      const next = new Set(prev);
+      next.add(offerId);
+      return next;
+    });
+
+    try {
+      await duplicateOfferToModeling(offerToDuplicate);
+      toast.success("Oferta duplicada para modelagem!");
+    } catch (error) {
+      toast.error("Erro ao duplicar oferta");
+      console.error("VT: Erro ao duplicar oferta para modelagem:", error);
+    } finally {
+      setDuplicatingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(offerId);
+        return next;
+      });
     }
   };
 
   const columnColors = {
-    pending: 'border-yellow-500/30',
-    inExecution: 'border-blue-500/30',
-    modeling: 'border-purple-500/30',
-    completed: 'border-green-500/30',
+    pending: "border-yellow-500/30",
+    inExecution: "border-blue-500/30",
+    modeling: "border-purple-500/30",
+    completed: "border-green-500/30",
   };
 
   if (loading) {
@@ -174,7 +254,9 @@ const Kanban = ({ onEditOffer }) => {
           <div key={column.id} className="space-y-3">
             <h3 className="font-bold text-lg px-2 flex items-center gap-2">
               {column.title}
-              <span className="text-xs text-gray-500">({column.items.length})</span>
+              <span className="text-xs text-gray-500">
+                ({column.items.length})
+              </span>
             </h3>
             <Droppable droppableId={column.id}>
               {(provided, snapshot) => (
@@ -182,7 +264,9 @@ const Kanban = ({ onEditOffer }) => {
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors ${
-                    snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
+                    snapshot.isDraggingOver
+                      ? "border-purple-500 bg-purple-500/5"
+                      : "border-white/10"
                   }`}
                 >
                   {column.items.length === 0 && (
@@ -191,16 +275,22 @@ const Kanban = ({ onEditOffer }) => {
                       <p className="text-sm">Nenhuma oferta</p>
                     </div>
                   )}
-                  
+
                   {column.items.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                    <Draggable
+                      key={item.id}
+                      draggableId={item.id}
+                      index={index}
+                    >
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
                           className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
-                            snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
+                            snapshot.isDragging
+                              ? "rotate-2 scale-105 shadow-xl"
+                              : ""
                           }`}
                         >
                           <h4 className="font-bold mb-2">{item.title}</h4>
@@ -212,25 +302,40 @@ const Kanban = ({ onEditOffer }) => {
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(item.date)}</span>
                           </div>
-                          
+
                           {/* VT: Badge de modelagem na coluna "Modelando" */}
-                          {column.id === 'modeling' && item.modeling && (
+                          {column.id === "modeling" && item.modeling && (
                             <div className="mb-3">
                               {item.modeling.modelavel && (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
                                   ✅ Modelável
                                 </span>
                               )}
-                              {item.modeling.trend === 'caindo' && (
+                              {item.modeling.trend === "caindo" && (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
                                   🚫 Parar
                                 </span>
                               )}
                             </div>
                           )}
-                          
+
                           {/* VT: Botões de ação */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10 flex-wrap">
+                            {offerType === "oferta" && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDuplicate(item.id);
+                                }}
+                                disabled={duplicatingIds.has(item.id)}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                <Copy className="w-3 h-3" />
+                                {duplicatingIds.has(item.id)
+                                  ? "Duplicando..."
+                                  : "Duplicar para Modelagem"}
+                              </button>
+                            )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
