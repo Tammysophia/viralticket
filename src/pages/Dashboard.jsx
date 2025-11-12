@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare, Bot } from 'lucide-react';
+import { Youtube, Sparkles, KanbanSquare, Bot, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -9,6 +9,7 @@ import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
 import GPTAgents from '../components/GPTAgents';
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
+import OfferMonitoring from '../components/OfferMonitoring';
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
@@ -24,12 +25,13 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
 
-    const tabs = [
-      { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
-      { id: 'ai', label: t('aiChat'), icon: Sparkles },
-      { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
-      { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
-    ];
+  const tabs = [
+    { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
+    { id: 'ai', label: t('aiChat'), icon: Sparkles },
+    { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    { id: 'monitoring', label: t('offerMonitoring'), icon: Clock },
+    { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
+  ];
 
   const handleUseWithAI = (text) => {
     setAiInitialText(text);
@@ -138,7 +140,8 @@ const Dashboard = () => {
             {activeTab === 'ai' && (
               <AIChat initialText={aiInitialText} />
             )}
-            {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+              {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+              {activeTab === 'monitoring' && <OfferMonitoring />}
             {activeTab === 'gptAgents' && <GPTAgents />}
           </motion.div>
         </main>
