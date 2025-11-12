@@ -32,39 +32,18 @@ const Kanban = ({ onEditOffer }) => {
     'completed': 'concluido'
   };
 
-  // VT: Estrutura de colunas (5 colunas agora!)
+  // VT: Estrutura de colunas
   const [columns, setColumns] = useState({
-    pending: {
-      id: 'pending',
-      title: t('pending') || 'Pendente',
-      items: [],
-    },
-    inExecution: {
-      id: 'inExecution',
-      title: t('inExecution') || 'Em Execução',
-      items: [],
-    },
-    modeling: {
-      id: 'modeling',
-      title: t('modeling') || 'Modelando',
-      items: [],
-    },
-    activeModeling: {
-      id: 'activeModeling',
-      title: 'Modelagem Ativa',
-      items: [],
-    },
-    completed: {
-      id: 'completed',
-      title: t('completed') || 'Concluído',
-      items: [],
-    },
+    pending: { id: 'pending', title: t('pending') || 'Pendente', items: [] },
+    inExecution: { id: 'inExecution', title: t('inExecution') || 'Em Execução', items: [] },
+    modeling: { id: 'modeling', title: t('modeling') || 'Modelando', items: [] },
+    activeModeling: { id: 'activeModeling', title: 'Modelagem Ativa', items: [] },
+    completed: { id: 'completed', title: t('completed') || 'Concluído', items: [] },
   });
 
-  // VT: Listener em tempo real do Firestore (otimizado para evitar loops)
+  // VT: Listener em tempo real do Firestore
   useEffect(() => {
     if (!user?.id) return;
-
     console.log('🎯 VT: Iniciando listener de ofertas para:', user.id);
     setLoading(true);
 
@@ -81,7 +60,7 @@ const Kanban = ({ onEditOffer }) => {
     };
   }, [user?.id]);
 
-  // VT: Organizar ofertas por status (otimizado para evitar re-renders)
+  // VT: Organizar ofertas por status
   const organizeOffersByStatus = (allOffers) => {
     const organized = {
       pending: { ...columns.pending, items: [] },
@@ -92,13 +71,8 @@ const Kanban = ({ onEditOffer }) => {
     };
 
     allOffers.forEach(offer => {
-      // VT: SEMPRE usar o status da oferta (não auto-detectar)
-      // Evita loop infinito de re-render
       const columnId = STATUS_MAP[offer.status] || 'pending';
-      
-      // VT: Verificar se é "Oferta Modelada" (10+ criativos)
       const isModeledOffer = offer.modeling?.creativesCount >= 10;
-      
       organized[columnId].items.push({
         id: offer.id,
         title: offer.title,
@@ -111,7 +85,6 @@ const Kanban = ({ onEditOffer }) => {
       });
     });
 
-    // VT: Atualizar estado apenas se houver mudanças (evita loop)
     setColumns(prev => {
       const hasChanged = JSON.stringify(prev) !== JSON.stringify(organized);
       return hasChanged ? organized : prev;
@@ -121,34 +94,22 @@ const Kanban = ({ onEditOffer }) => {
   // VT: Drag and drop com persistência
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
-
     if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
-      return;
-    }
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     const sourceColumn = columns[source.droppableId];
     const destColumn = columns[destination.droppableId];
     const sourceItems = [...sourceColumn.items];
     const destItems = source.droppableId === destination.droppableId ? sourceItems : [...destColumn.items];
-
     const [removed] = sourceItems.splice(source.index, 1);
     destItems.splice(destination.index, 0, removed);
 
-    // VT: Atualizar UI imediatamente
     setColumns({
       ...columns,
-      [source.droppableId]: {
-        ...sourceColumn,
-        items: sourceItems,
-      },
-      [destination.droppableId]: {
-        ...destColumn,
-        items: destItems,
-      },
+      [source.droppableId]: { ...sourceColumn, items: sourceItems },
+      [destination.droppableId]: { ...destColumn, items: destItems },
     });
 
-    // VT: Salvar novo status no Firestore
     try {
       const newStatus = REVERSE_STATUS_MAP[destination.droppableId];
       await updateOffer(draggableId, { status: newStatus });
@@ -156,19 +117,14 @@ const Kanban = ({ onEditOffer }) => {
     } catch (error) {
       toast.error('Erro ao mover oferta');
       console.error('VT: Erro ao atualizar status:', error);
-      // VT: Reverter UI em caso de erro
       organizeOffersByStatus(offers);
     }
   };
 
-  // VT: Excluir oferta com confirmação
+  // VT: Excluir oferta
   const handleDelete = async (offerId, offerTitle) => {
-    if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
-      return;
-    }
-
+    if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) return;
     try {
-      console.log('VT: Excluindo oferta:', offerId);
       await deleteOffer(offerId);
       toast.success('✅ Oferta excluída!');
     } catch (error) {
@@ -205,6 +161,7 @@ const Kanban = ({ onEditOffer }) => {
               {column.title}
               <span className="text-xs text-gray-500">({column.items.length})</span>
             </h3>
+
             <Droppable droppableId={column.id}>
               {(provided, snapshot) => (
                 <div
@@ -220,7 +177,7 @@ const Kanban = ({ onEditOffer }) => {
                       <p className="text-sm">Nenhuma oferta</p>
                     </div>
                   )}
-                  
+
                   {column.items.map((item, index) => (
                     <Draggable key={item.id} draggableId={item.id} index={index}>
                       {(provided, snapshot) => (
@@ -232,8 +189,9 @@ const Kanban = ({ onEditOffer }) => {
                             snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
                           }`}
                         >
+                          {/* VT: Cabeçalho com agente */}
                           <div className="flex items-center gap-2 mb-2">
-                            <img 
+                            <img
                               src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
                               alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                               className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
@@ -242,145 +200,58 @@ const Kanban = ({ onEditOffer }) => {
                                 e.target.nextSibling.style.display = 'inline-block';
                               }}
                             />
-                            <span className="text-2xl" style={{ display: 'none' }}>{item.agent === 'sophia' ? '🔥' : '🌟'}</span>
+                            <span className="text-2xl" style={{ display: 'none' }}>
+                              {item.agent === 'sophia' ? '🔥' : '🌟'}
+                            </span>
                             <span className="text-xs text-purple-400 font-semibold">
                               {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                             </span>
                           </div>
-                          
+
                           <h4 className="font-bold mb-1 text-white">{item.title}</h4>
-                          
+
                           {item.subtitle && (
                             <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>
                           )}
-                          
+
                           <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(item.date)}</span>
                           </div>
-                          
-                          {/* VT: Badge "OFERTA MODELADA" (10+ criativos em 7 dias) */}
-                          {item.isModeledOffer && (
-                            <div className="mb-3">
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold shadow-lg">
-                                🏆 OFERTA MODELADA
-                              </span>
-                            </div>
-                          )}
-                          
-                          {/* VT: ÁREA VISUAL DE MODELAGEM (quando tem dados preenchidos) */}
-                          {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
-                            <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
-                              <div className="flex items-center gap-2 mb-2">
-                                <TrendingUp className="w-4 h-4 text-cyan-400" />
-                                <span className="text-xs font-bold text-cyan-300">Dados de Modelagem</span>
-                              </div>
-                              
-                              <div className="space-y-1 text-xs">
-                                {item.modeling.creativesCount > 0 && (
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Criativos:</span>
-                                    <span className={`font-semibold ${item.modeling.creativesCount >= 10 ? 'text-green-400' : 'text-white'}`}>
-                                      {item.modeling.creativesCount}/10
-                                    </span>
-                                  </div>
-                                )}
-                                
-                                {item.modeling.fanpageUrl && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-green-400">✓</span>
-                                    <span className="text-green-400 text-xs">Fanpage</span>
-                                  </div>
-                                )}
-                                
-                                {item.modeling.salesPageUrl && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-green-400">✓</span>
-                                    <span className="text-green-400 text-xs">PV</span>
-                                  </div>
-                                )}
-                                
-                                {item.modeling.checkoutUrl && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-green-400">✓</span>
-                                    <span className="text-green-400 text-xs">Checkout</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* VT: Info e barra de progresso para modelagem */}
-                          {column.id === 'modeling' && item.modeling && (
-                            <div className="mb-3 space-y-2">
-                              {/* Badges */}
-                              <div className="flex gap-2 flex-wrap">
-                                {item.modeling.modelavel && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                    ✅ Modelável
-                                  </span>
-                                )}
-                                {item.modeling.trend === 'caindo' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
-                                    🚫 Parar
-                                  </span>
-                                )}
-                                {item.modeling.trend === 'subindo' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                    📈 Subindo
-                                  </span>
-                                )}
-                                {item.modeling.trend === 'estavel' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
-                                    ➡️ Estável
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {/* Barra de progresso */}
-                              {item.modeling.monitorStart && (
-                                <div className="space-y-1">
-                                  <div className="flex items-center justify-between text-xs text-gray-400">
-                                    <span>Monitoramento</span>
-                                    <span>{item.modeling.monitorDays || 7} dias</span>
-                                  </div>
-                                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                                      style={{ 
-                                        width: `${Math.min(100, ((Date.now() - new Date(item.modeling.monitorStart).getTime()) / (item.modeling.monitorDays * 24 * 60 * 60 * 1000)) * 100)}%` 
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          
-                          {/* VT: Botões de ação */}
+
+                          {/* VT: Botões */}
                           <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                            {/* ✅ Botão EDITAR corrigido */}
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 console.log('VT: Clicou em Editar, ID:', item.id);
-                                if (onEditOffer) {
-                                  onEditOffer(item.id);
-                                } else {
-                                  console.error('VT: onEditOffer não está definido!');
+
+                                if (!onEditOffer) {
                                   toast.error('Erro ao abrir editor');
+                                  return;
                                 }
+
+                                const fullOffer = offers.find((offer) => offer.id === item.id);
+                                if (!fullOffer) {
+                                  toast.error('Oferta não encontrada');
+                                  return;
+                                }
+
+                                onEditOffer(item.id, fullOffer);
                               }}
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
                             >
                               <Edit2 className="w-3 h-3" />
                               Editar
                             </button>
+
+                            {/* Botão EXCLUIR */}
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                console.log('VT: Clicou em Excluir, ID:', item.id, 'Título:', item.title);
                                 handleDelete(item.id, item.title);
                               }}
                               className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
