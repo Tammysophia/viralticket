@@ -1,43 +1,43 @@
-import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare } from 'lucide-react';
-import { motion } from 'framer-motion';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import Tabs from '../components/Tabs';
-import YouTubeExtractor from '../components/YouTubeExtractor';
-import AIChat from '../components/AIChat';
-import Kanban from '../components/Kanban';
-import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
-import Card from '../components/Card';
-import PlanBadge from '../components/PlanBadge';
-import ProgressBar from '../components/ProgressBar';
-import { useAuth } from '../hooks/useAuth';
-import { useLanguage } from '../hooks/useLanguage';
-import { getUserOffers } from '../services/offersService'; // VT: Buscar ofertas
+import { useState } from "react";
+import { Youtube, Sparkles, KanbanSquare } from "lucide-react";
+import { motion } from "framer-motion";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import Tabs from "../components/Tabs";
+import YouTubeExtractor from "../components/YouTubeExtractor";
+import AIChat from "../components/AIChat";
+import Kanban from "../components/Kanban";
+import OfferEditor from "../components/OfferEditor"; // VT: Editor de ofertas
+import Card from "../components/Card";
+import PlanBadge from "../components/PlanBadge";
+import ProgressBar from "../components/ProgressBar";
+import { useAuth } from "../hooks/useAuth";
+import { useLanguage } from "../hooks/useLanguage";
+import { getUserOffers } from "../services/offersService"; // VT: Buscar ofertas
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('youtube');
-  const [aiInitialText, setAiInitialText] = useState('');
+  const [activeTab, setActiveTab] = useState("youtube");
+  const [aiInitialText, setAiInitialText] = useState("");
   const [editingOffer, setEditingOffer] = useState(null); // VT: Oferta sendo editada
   const [showOfferEditor, setShowOfferEditor] = useState(false); // VT: Modal de edição
   const { user } = useAuth();
   const { t } = useLanguage();
 
   const tabs = [
-    { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
-    { id: 'ai', label: t('aiChat'), icon: Sparkles },
-    { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    { id: "youtube", label: t("youtubeExtractor"), icon: Youtube },
+    { id: "ai", label: t("aiChat"), icon: Sparkles },
+    { id: "kanban", label: t("offersKanban"), icon: KanbanSquare },
   ];
 
   const handleUseWithAI = (text) => {
     setAiInitialText(text);
-    setActiveTab('ai');
+    setActiveTab("ai");
   };
 
   // VT: Abrir editor de oferta
   const handleEditOffer = async (offerId) => {
     const offers = await getUserOffers(user.id);
-    const offer = offers.find(o => o.id === offerId);
+    const offer = offers.find((o) => o.id === offerId);
     if (offer) {
       setEditingOffer(offer);
       setShowOfferEditor(true);
@@ -93,8 +93,12 @@ const Dashboard = () => {
                 />
                 <div className="glass border border-purple-500/20 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-400">Extração YouTube</span>
-                    <span className="text-xs text-green-400 font-bold">ILIMITADO</span>
+                    <span className="text-sm text-gray-400">
+                      Extração YouTube
+                    </span>
+                    <span className="text-xs text-green-400 font-bold">
+                      ILIMITADO
+                    </span>
                   </div>
                   <div className="text-2xl font-bold text-green-400">
                     ∞ URLs/dia
@@ -117,13 +121,13 @@ const Dashboard = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {activeTab === 'youtube' && (
+            {activeTab === "youtube" && (
               <YouTubeExtractor onUseWithAI={handleUseWithAI} />
             )}
-            {activeTab === 'ai' && (
-              <AIChat initialText={aiInitialText} />
+            {activeTab === "ai" && <AIChat initialText={aiInitialText} />}
+            {activeTab === "kanban" && (
+              <Kanban onEditOffer={handleEditOffer} offerType="oferta" />
             )}
-            {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
           </motion.div>
         </main>
       </div>
