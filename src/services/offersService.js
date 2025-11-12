@@ -158,4 +158,112 @@ export const deleteOffer = async (id) => {
   }
 };
 
-// Continue com os outros métodos do arquivo...
+/**
+ * VT: Adiciona link do YouTube a uma oferta
+ * @param {string} offerId - ID da oferta
+ * @param {string} url - URL do YouTube
+ */
+export const addYoutubeLink = async (offerId, url) => {
+  if (USE_MOCKS) {
+    console.log('VT: [MOCK] Adicionando link:', offerId, url);
+    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    const offer = offers.find(o => o.id === offerId);
+    if (offer) {
+      if (!offer.youtubeLinks) offer.youtubeLinks = [];
+      if (!offer.youtubeLinks.includes(url)) {
+        offer.youtubeLinks.push(url);
+      }
+      localStorage.setItem('vt_offers', JSON.stringify(offers));
+    }
+    return;
+  }
+
+  try {
+    const offerRef = doc(db, 'offers', offerId);
+    const offerSnap = await getDoc(offerRef);
+    if (offerSnap.exists()) {
+      const links = offerSnap.data().youtubeLinks || [];
+      if (!links.includes(url)) {
+        links.push(url);
+        await updateDoc(offerRef, { youtubeLinks: links, updatedAt: Timestamp.now() });
+      }
+    }
+  } catch (error) {
+    console.error('VT: Erro ao adicionar link:', error);
+    throw error;
+  }
+};
+
+/**
+ * VT: Remove link do YouTube de uma oferta
+ * @param {string} offerId - ID da oferta
+ * @param {string} url - URL do YouTube
+ */
+export const removeYoutubeLink = async (offerId, url) => {
+  if (USE_MOCKS) {
+    console.log('VT: [MOCK] Removendo link:', offerId, url);
+    const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+    const offer = offers.find(o => o.id === offerId);
+    if (offer && offer.youtubeLinks) {
+      offer.youtubeLinks = offer.youtubeLinks.filter(l => l !== url);
+      localStorage.setItem('vt_offers', JSON.stringify(offers));
+    }
+    return;
+  }
+
+  try {
+    const offerRef = doc(db, 'offers', offerId);
+    const offerSnap = await getDoc(offerRef);
+    if (offerSnap.exists()) {
+      const links = offerSnap.data().youtubeLinks || [];
+      const filtered = links.filter(l => l !== url);
+      await updateDoc(offerRef, { youtubeLinks: filtered, updatedAt: Timestamp.now() });
+    }
+  } catch (error) {
+    console.error('VT: Erro ao remover link:', error);
+    throw error;
+  }
+};
+
+/**
+ * VT: Listener em tempo real para ofertas do usuário
+ * @param {string} userId - ID do usuário
+ * @param {Function} callback - Função chamada quando ofertas mudam
+ * @returns {Function} - Função para cancelar o listener
+ */
+export const subscribeToUserOffers = (userId, callback, filterType = null) => {
+  if (USE_MOCKS) {
+    console.log('VT: [MOCK] Listener de ofertas iniciado, tipo:', filterType);
+    const interval = setInterval(() => {
+      let offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+      offers = offers.filter(o => o.userId === userId);
+      
+      if (filterType) {
+        offers = offers.filter(o => (o.type || 'oferta') === filterType);
+      }
+      
+      callback(offers);
+    }, 2000);
+    return () => clearInterval(interval);
+  }
+
+  const q = query(
+    collection(db, 'offers'),
+    where('userId', '==', userId),
+    orderBy('updatedAt', 'desc')
+  );
+  
+  return onSnapshot(q, (snapshot) => {
+    let offers = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      type: doc.data().type || 'oferta'
+    }));
+    
+    if (filterType) {
+      offers = offers.filter(o => o.type === filterType);
+    }
+    
+    callback(offers);
+  });
+};
