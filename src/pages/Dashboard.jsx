@@ -147,11 +147,13 @@ const Dashboard = () => {
       </div>
 
       {/* VT: Modal de edição de oferta */}
-      <OfferEditor
-        isOpen={showOfferEditor}
-        onClose={handleCloseEditor}
-        offer={editingOffer}
-      />
+      {showOfferEditor && editingOffer && (
+        <OfferEditor
+          isOpen={showOfferEditor}
+          onClose={handleCloseEditor}
+          offer={editingOffer}
+        />
+      )}
     </div>
   );
 };

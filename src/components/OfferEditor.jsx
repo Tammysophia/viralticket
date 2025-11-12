@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { updateOffer, addYoutubeLink, removeYoutubeLink } from '../services/offersService';
 import { getServiceAPIKey } from '../hooks/useAPIKeys';
 
+// VT: Editor de ofertas com validação robusta
 const OfferEditor = ({ isOpen, onClose, offer }) => {
   const [activeTab, setActiveTab] = useState('details');
   const [formData, setFormData] = useState({
@@ -34,9 +35,10 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
   const [newLink, setNewLink] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // VT: Carregar dados da oferta
+  // VT: Carregar dados da oferta (com validação robusta)
   useEffect(() => {
-    if (offer) {
+    if (offer && offer.id) {
+      console.log('📝 VT: Carregando oferta no editor:', offer.id, offer.title);
       setFormData({
         title: offer.title || '',
         status: offer.status || 'execucao',
@@ -54,7 +56,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
         youtubeLinks: offer.youtubeLinks || []
       });
     }
-  }, [offer]);
+  }, [offer, offer?.id]); // VT: Dependências otimizadas
 
   // VT: Salvar alterações
   const handleSave = async () => {
@@ -158,8 +160,14 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     { id: 'modeling', label: 'Modelagem', icon: TrendingUp },
   ];
 
+  // VT: Não renderizar se não tiver oferta válida
+  if (!offer || !offer.id) {
+    console.warn('⚠️ VT: OfferEditor renderizado sem oferta válida');
+    return null;
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Editor de Oferta" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Editar: ${offer.title}`} size="xl">
       <div className="flex flex-col h-[600px]">
         {/* VT: Tabs */}
         <div className="flex gap-2 mb-6 border-b border-white/10 pb-2">

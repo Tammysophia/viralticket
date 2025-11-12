@@ -98,7 +98,7 @@ const GPTAgents = () => {
                     <div className={agent.imageUrl ? 'text-5xl hidden' : 'text-5xl'}>{agent.icon || '🤖'}</div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent">
+                    <h3 className="text-xl font-bold mb-1 text-white relative z-10">
                       {agent.name}
                     </h3>
                     <p className="text-sm text-gray-400">
