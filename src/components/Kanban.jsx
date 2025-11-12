@@ -1,13 +1,15 @@
 // VT: Kanban integrado com Firestore em tempo real
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Sparkles, Edit2, Trash2, AlertCircle, TrendingUp } from 'lucide-react';
+import { Calendar, Sparkles, Edit2, Trash2, AlertCircle, TrendingUp, Copy } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOfferForModeling } from '../services/offersService';
+
+const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
 const Kanban = ({ onEditOffer }) => {
   const { t } = useLanguage();
@@ -17,19 +19,19 @@ const Kanban = ({ onEditOffer }) => {
 
   // VT: Mapeamento de status para colunas
   const STATUS_MAP = {
-    'pendente': 'pending',
-    'execucao': 'inExecution',
-    'modelando': 'modeling',
-    'modelagem_ativa': 'activeModeling',
-    'concluido': 'completed'
+    pendente: 'pending',
+    execucao: 'inExecution',
+    modelando: 'modeling',
+    modelagem_ativa: 'activeModeling',
+    concluido: 'completed',
   };
 
   const REVERSE_STATUS_MAP = {
-    'pending': 'pendente',
-    'inExecution': 'execucao',
-    'modeling': 'modelando',
-    'activeModeling': 'modelagem_ativa',
-    'completed': 'concluido'
+    pending: 'pendente',
+    inExecution: 'execucao',
+    modeling: 'modelando',
+    activeModeling: 'modelagem_ativa',
+    completed: 'concluido',
   };
 
   // VT: Estrutura de colunas
@@ -40,6 +42,16 @@ const Kanban = ({ onEditOffer }) => {
     activeModeling: { id: 'activeModeling', title: 'Modelagem Ativa', items: [] },
     completed: { id: 'completed', title: t('completed') || 'Concluído', items: [] },
   });
+
+  useEffect(() => {
+    setColumns((prev) => ({
+      pending: { ...prev.pending, title: t('pending') || 'Pendente' },
+      inExecution: { ...prev.inExecution, title: t('inExecution') || 'Em Execução' },
+      modeling: { ...prev.modeling, title: t('modeling') || 'Modelando' },
+      activeModeling: { ...prev.activeModeling, title: 'Modelagem Ativa' },
+      completed: { ...prev.completed, title: t('completed') || 'Concluído' },
+    }));
+  }, [t]);
 
   // VT: Listener em tempo real do Firestore
   useEffect(() => {
@@ -70,7 +82,7 @@ const Kanban = ({ onEditOffer }) => {
       completed: { ...columns.completed, items: [] },
     };
 
-    allOffers.forEach(offer => {
+    allOffers.forEach((offer) => {
       const columnId = STATUS_MAP[offer.status] || 'pending';
       const isModeledOffer = offer.modeling?.creativesCount >= 10;
       organized[columnId].items.push({
@@ -126,10 +138,29 @@ const Kanban = ({ onEditOffer }) => {
     if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) return;
     try {
       await deleteOffer(offerId);
+      setOffers((prevOffers) => prevOffers.filter((o) => o.id !== offerId));
+      organizeOffersByStatus(offers.filter((o) => o.id !== offerId));
       toast.success('✅ Oferta excluída!');
     } catch (error) {
       toast.error('❌ Erro ao excluir oferta');
       console.error('VT: Erro ao excluir:', error);
+    }
+  };
+
+  // VT: Duplicar oferta para modelagem
+  const handleDuplicate = async (offerId) => {
+    const originalOffer = offers.find((offer) => offer.id === offerId);
+    if (!originalOffer) {
+      toast.error('Oferta não encontrada para duplicação');
+      return;
+    }
+
+    try {
+      await duplicateOfferForModeling(originalOffer);
+      toast.success('Oferta duplicada para modelagem!');
+    } catch (error) {
+      toast.error('Erro ao duplicar oferta');
+      console.error('VT: Erro ao duplicar oferta para modelagem:', error);
     }
   };
 
@@ -139,6 +170,21 @@ const Kanban = ({ onEditOffer }) => {
     modeling: 'border-purple-500/30',
     activeModeling: 'border-cyan-500/30',
     completed: 'border-green-500/30',
+  };
+
+  const handleEditClick = (offerId) => {
+    if (!onEditOffer) {
+      toast.error('Erro ao abrir editor');
+      return;
+    }
+
+    const fullOffer = offers.find((offer) => offer.id === offerId);
+    if (!fullOffer) {
+      toast.error('Oferta não encontrada');
+      return;
+    }
+
+    onEditOffer(offerId, fullOffer);
   };
 
   if (loading) {
@@ -161,7 +207,6 @@ const Kanban = ({ onEditOffer }) => {
               {column.title}
               <span className="text-xs text-gray-500">({column.items.length})</span>
             </h3>
-
             <Droppable droppableId={column.id}>
               {(provided, snapshot) => (
                 <div
@@ -177,102 +222,159 @@ const Kanban = ({ onEditOffer }) => {
                       <p className="text-sm">Nenhuma oferta</p>
                     </div>
                   )}
-
-                  {column.items.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
-                            snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
-                          }`}
-                        >
-                          {/* VT: Cabeçalho com agente */}
-                          <div className="flex items-center gap-2 mb-2">
-                            <img
-                              src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
-                              alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
-                              className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'inline-block';
-                              }}
-                            />
-                            <span className="text-2xl" style={{ display: 'none' }}>
-                              {item.agent === 'sophia' ? '🔥' : '🌟'}
-                            </span>
-                            <span className="text-xs text-purple-400 font-semibold">
-                              {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
-                            </span>
-                          </div>
-
-                          <h4 className="font-bold mb-1 text-white">{item.title}</h4>
-
-                          {item.subtitle && (
-                            <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>
-                          )}
-
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                            <Calendar className="w-3 h-3" />
-                            <span>{formatDate(item.date)}</span>
-                          </div>
-
-                          {/* VT: Botões */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                            {/* ✅ Botão EDITAR corrigido */}
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log('VT: Clicou em Editar, ID:', item.id);
-
-                                if (!onEditOffer) {
-                                  toast.error('Erro ao abrir editor');
-                                  return;
-                                }
-
-                                const fullOffer = offers.find((offer) => offer.id === item.id);
-                                if (!fullOffer) {
-                                  toast.error('Oferta não encontrada');
-                                  return;
-                                }
-
-                                onEditOffer(item.id, fullOffer);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                              Editar
-                            </button>
-
-                            {/* Botão EXCLUIR */}
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDelete(item.id, item.title);
-                              }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Excluir
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
-        ))}
-      </div>
-    </DragDropContext>
-  );
-};
-
-export default Kanban;
+                  {column.items.map((item, index) => {
+                    const monitorDays = item.modeling?.monitorDays || 7;
+                    const monitorStart = item.modeling?.monitorStart
+                      ? new Date(item.modeling.monitorStart)
+                      : null;
+                    const elapsedDays = monitorStart
+                      ? Math.max(
+                          0,
+                          Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS),
+                        )
+                      : 0;
+                    const progressPercent = monitorStart
+                      ? Math.min((elapsedDays / monitorDays) * 100, 100)
+                      : 0;
+                    return (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
+                              snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <img
+                                src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
+                                alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                                className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.nextSibling;
+                                  if (fallback) fallback.style.display = 'inline-block';
+                                }}
+                              />
+                              <span className="text-2xl" style={{ display: 'none' }}>
+                                {item.agent === 'sophia' ? '🔥' : '🌟'}
+                              </span>
+                              <span className="text-xs text-purple-400 font-semibold">
+                                {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                              </span>
+                            </div>
+                            <h4 className="font-bold mb-1 text-white">{item.title}</h4>
+                            {item.subtitle && (
+                              <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>
+                            )}
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                              <Calendar className="w-3 h-3" />
+                              <span>{formatDate(item.date)}</span>
+                            </div>
+                            {item.isModeledOffer && (
+                              <div className="mb-3">
+                                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold shadow-lg">
+                                  🏆 OFERTA MODELADA
+                                </span>
+                              </div>
+                            )}
+                            {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
+                              <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <TrendingUp className="w-4 h-4 text-cyan-400" />
+                                  <span className="text-xs font-bold text-cyan-300">
+                                    {t('monitoringProgress')}
+                                  </span>
+                                </div>
+                                <div className="space-y-1 text-xs">
+                                  {item.modeling.creativesCount > 0 && (
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-gray-400">{t('creativesLabel')}</span>
+                                      <span
+                                        className={`font-semibold ${
+                                          item.modeling.creativesCount >= 7
+                                            ? 'text-green-400'
+                                            : 'text-white'
+                                        }`}
+                                      >
+                                        {item.modeling.creativesCount}/7
+                                      </span>
+                                    </div>
+                                  )}
+                                  {item.modeling.fanpageUrl && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-green-400">✓</span>
+                                      <span className="text-green-400 text-xs">Fanpage</span>
+                                    </div>
+                                  )}
+                                  {item.modeling.salesPageUrl && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-green-400">✓</span>
+                                      <span className="text-green-400 text-xs">PV</span>
+                                    </div>
+                                  )}
+                                  {item.modeling.checkoutUrl && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-green-400">✓</span>
+                                      <span className="text-green-400 text-xs">Checkout</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {column.id === 'modeling' && item.modeling && (
+                              <div className="mb-3 space-y-2">
+                                <div className="flex gap-2 flex-wrap">
+                                  {item.modeling.modelavel && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                      ✅ Modelável
+                                    </span>
+                                  )}
+                                  {item.modeling.trend === 'caindo' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
+                                      🚫 Parar
+                                    </span>
+                                  )}
+                                  {item.modeling.trend === 'subindo' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                                      📈 Subindo
+                                    </span>
+                                  )}
+                                  {item.modeling.trend === 'estavel' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
+                                      ➡️ Estável
+                                    </span>
+                                  )}
+                                </div>
+                                {item.modeling.monitorStart && (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs text-gray-400">
+                                      <span>{t('monitoringProgress')}</span>
+                                      <span>
+                                        {elapsedDays}/{monitorDays} {t('days')}
+                                      </span>
+                                    </div>
+                                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                                        style={{ width: `${progressPercent}%` }}
+                                      />
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                      {t('monitoringRemaining')}: {Math.max(monitorDays - elapsedDays, 0)}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                              {item.type !== 'modelagem' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDuplicate(item.id);
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-1 px-
