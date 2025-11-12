@@ -47,3 +47,9 @@
     background-color: #23214A; /* Azul petróleo para detalhes */
   }
 }
+
+/* VT: Oculta a toolbar do Vercel sem afetar o layout */
+#__vercel,
+#__vercel-toolbar {
+  display: none !important;
+}
