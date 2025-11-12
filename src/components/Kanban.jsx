@@ -377,4 +377,25 @@ const Kanban = ({ onEditOffer }) => {
                                     e.stopPropagation();
                                     handleDuplicate(item.id);
                                   }}
-                                  className="flex-1 flex items-center justify-center gap-1 px-
+                                  className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                  Duplicar para Modelagem
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleEditClick(item.id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Editar
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handle
