@@ -72,9 +72,9 @@ const GPTAgents = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card hover gradient className="relative h-full">
+              <Card hover gradient className="relative h-full overflow-hidden">
                 {/* VT: Garantimos que o conteúdo textual fique acima do gradiente do Card */}
-                <div className="relative z-10 flex flex-col h-full">
+                <div className="relative z-10 flex flex-col h-full isolate">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="flex-shrink-0">
                     {agent.imageUrl ? (
@@ -94,10 +94,10 @@ const GPTAgents = () => {
                     </div>
                   </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent truncate relative z-10">
+                      <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent truncate relative z-20">
                       {agent.name}
                     </h3>
-                      <p className="text-sm text-gray-400 relative z-10">{agent.description}</p>
+                      <p className="text-sm text-gray-400 relative z-20">{agent.description}</p>
                   </div>
                 </div>
 
