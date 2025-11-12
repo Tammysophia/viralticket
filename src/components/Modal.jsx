@@ -16,12 +16,13 @@ const Modal = ({ isOpen, onClose, title, children }) => {
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-0 md:p-6">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass border border-white/20 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+                // VT: Modal ocupa 100% no mobile e 90% no desktop, preservando o visual glass original
+                className="glass border border-white/20 rounded-2xl p-6 w-full h-full max-h-[100vh] overflow-y-auto md:h-auto md:w-[90vw]"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">

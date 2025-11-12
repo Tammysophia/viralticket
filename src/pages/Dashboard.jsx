@@ -29,6 +29,7 @@ const Dashboard = () => {
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
     { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    // VT: Nova aba focada em monitoramento/modelagem separado do Kanban de ofertas
     { id: 'monitoring', label: t('offerMonitoring'), icon: Clock },
     { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
   ];
@@ -47,7 +48,7 @@ const Dashboard = () => {
         return;
       }
 
-      const offers = await getUserOffers(user.id);
+      const offers = await getUserOffers(user.id, 'oferta');
       const offer = offers.find((o) => o.id === offerId);
       if (!offer) {
         console.error('VT: Oferta não encontrada:', offerId);

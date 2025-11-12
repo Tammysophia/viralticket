@@ -18,20 +18,20 @@ const Kanban = ({ onEditOffer }) => {
   const [loading, setLoading] = useState(true);
 
     // VT: Mapeamento de status para colunas
-    const STATUS_MAP = {
-      pendente: 'pending',
-      execucao: 'inExecution',
-      modelando: 'modeling',
-      modelagem_ativa: 'modeling',
-      concluido: 'completed',
-    };
+  const STATUS_MAP = {
+    pendente: 'pending',
+    execucao: 'inExecution',
+    modelando: 'modeling',
+    modelagem_ativa: 'modeling',
+    concluido: 'completed',
+  };
 
-    const REVERSE_STATUS_MAP = {
-      pending: 'pendente',
-      inExecution: 'execucao',
-      modeling: 'modelando',
-      completed: 'concluido',
-    };
+  const REVERSE_STATUS_MAP = {
+    pending: 'pendente',
+    inExecution: 'execucao',
+    modeling: 'modelando',
+    completed: 'concluido',
+  };
 
   // VT: Estrutura de colunas
   const [columns, setColumns] = useState({
@@ -70,11 +70,16 @@ const Kanban = ({ onEditOffer }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const unsubscribe = subscribeToUserOffers(user.id, (updatedOffers) => {
-      setOffers(updatedOffers);
-      organizeOffersByStatus(updatedOffers);
-      setLoading(false);
-    });
+    // VT: Carregamos apenas ofertas do tipo "oferta" para manter o Kanban principal isolado das modelagens
+    const unsubscribe = subscribeToUserOffers(
+      user.id,
+      (updatedOffers) => {
+        setOffers(updatedOffers);
+        organizeOffersByStatus(updatedOffers);
+        setLoading(false);
+      },
+      'oferta',
+    );
 
     return () => unsubscribe();
   }, [user?.id]);
@@ -100,6 +105,7 @@ const Kanban = ({ onEditOffer }) => {
         date: offer.createdAt?.toDate?.() || offer.createdAt || new Date(),
         status: offer.status,
         modeling: offer.modeling,
+        type: offer.type || 'oferta',
         isModeledOffer: Boolean(offer.modeling?.modelavel),
       });
     });
@@ -119,7 +125,10 @@ const Kanban = ({ onEditOffer }) => {
     const sourceColumn = columns[source.droppableId];
     const destColumn = columns[destination.droppableId];
     const sourceItems = [...sourceColumn.items];
-    const destItems = source.droppableId === destination.droppableId ? sourceItems : [...destColumn.items];
+    const destItems =
+      source.droppableId === destination.droppableId
+        ? sourceItems
+        : [...destColumn.items];
 
     const [removed] = sourceItems.splice(source.index, 1);
     destItems.splice(destination.index, 0, removed);
@@ -140,7 +149,13 @@ const Kanban = ({ onEditOffer }) => {
     // VT: Salvar novo status no Firestore
     try {
       const newStatus = REVERSE_STATUS_MAP[destination.droppableId];
-      await updateOffer(draggableId, { status: newStatus });
+      const newType = newStatus === 'modelando' ? 'modelagem' : 'oferta';
+
+      // VT: Mantemos o objeto local coerente com o novo status/tipo
+      removed.status = newStatus;
+      removed.type = newType;
+
+      await updateOffer(draggableId, { status: newStatus, type: newType });
       toast.success('Oferta movida com sucesso!');
     } catch (error) {
       toast.error('Erro ao mover oferta');
@@ -169,60 +184,60 @@ const Kanban = ({ onEditOffer }) => {
       }
     };
 
-    const columnColors = {
-      pending: 'border-yellow-500/30',
-      inExecution: 'border-blue-500/30',
-      modeling: 'border-purple-500/30',
-      completed: 'border-green-500/30',
-    };
+  const columnColors = {
+    pending: 'border-yellow-500/30',
+    inExecution: 'border-blue-500/30',
+    modeling: 'border-purple-500/30',
+    completed: 'border-green-500/30',
+  };
 
-    const handleEditClick = (offerId) => {
-      if (!onEditOffer) {
-        toast.error('Erro ao abrir editor');
-        return;
-      }
-
-      const fullOffer = offers.find((offer) => offer.id === offerId);
-      onEditOffer(offerId, fullOffer);
-    };
-
-    if (loading) {
-      return (
-        <Card>
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-400">Carregando ofertas...</p>
-          </div>
-        </Card>
-      );
+  const handleEditClick = (offerId) => {
+    if (!onEditOffer) {
+      toast.error('Erro ao abrir editor');
+      return;
     }
 
-    return (
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 px-2">
-          {Object.values(columns).map((column) => (
-            <div key={column.id} className="space-y-3">
-              <h3 className="font-bold text-lg px-2 flex items-center gap-2">
-                {column.title}
-                <span className="text-xs text-gray-500">({column.items.length})</span>
-              </h3>
-              <Droppable droppableId={column.id}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors ${
-                      snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
-                    }`}
-                  >
-                    {column.items.length === 0 && (
-                      <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                        <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
-                        <p className="text-sm">Nenhuma oferta</p>
-                      </div>
-                    )}
+    const fullOffer = offers.find((offer) => offer.id === offerId);
+    onEditOffer(offerId, fullOffer);
+  };
 
-                    {column.items.map((item, index) => {
+  if (loading) {
+    return (
+      <Card>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-400">Carregando ofertas...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 px-2">
+        {Object.values(columns).map((column) => (
+          <div key={column.id} className="space-y-3">
+            <h3 className="font-bold text-lg px-2 flex items-center gap-2">
+              {column.title}
+              <span className="text-xs text-gray-500">({column.items.length})</span>
+            </h3>
+            <Droppable droppableId={column.id}>
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`space-y-3 min-h-[400px] p-3 rounded-xl border-2 border-dashed transition-colors ${
+                    snapshot.isDraggingOver ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
+                  }`}
+                >
+                  {column.items.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                      <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                      <p className="text-sm">Nenhuma oferta</p>
+                    </div>
+                  )}
+
+                  {column.items.map((item, index) => {
                       const monitorDays = item.modeling?.monitorDays || 7;
                       const monitorStart = item.modeling?.monitorStart
                         ? new Date(item.modeling.monitorStart)

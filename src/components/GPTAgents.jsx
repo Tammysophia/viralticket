@@ -54,7 +54,7 @@ const GPTAgents = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+          <Card>
         <div className="flex items-center gap-3 mb-2">
           <Sparkles className="w-6 h-6 text-purple-400" />
           <h2 className="text-2xl font-bold">Agentes GPTs Bônus</h2>
@@ -65,15 +65,16 @@ const GPTAgents = () => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {agents.map((agent, index) => (
-          <motion.div
-            key={agent.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card hover gradient className="h-full">
-              <div className="flex flex-col h-full">
+          {agents.map((agent, index) => (
+            <motion.div
+              key={agent.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card hover gradient className="relative h-full">
+                {/* VT: Garantimos que o conteúdo textual fique acima do gradiente do Card */}
+                <div className="relative z-10 flex flex-col h-full">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="flex-shrink-0">
                     {agent.imageUrl ? (
@@ -92,11 +93,11 @@ const GPTAgents = () => {
                       {agent.icon || '🤖'}
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent truncate">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent truncate relative z-10">
                       {agent.name}
                     </h3>
-                    <p className="text-sm text-gray-400">{agent.description}</p>
+                      <p className="text-sm text-gray-400 relative z-10">{agent.description}</p>
                   </div>
                 </div>
 

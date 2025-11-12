@@ -19,17 +19,22 @@ const OfferMonitoring = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const unsubscribe = subscribeToUserOffers(user.id, (data) => {
-      setOffers(
-        data.filter(
-          (offer) =>
-            offer.modeling?.monitorStart &&
-            offer.modeling?.monitorDays &&
-            offer.modeling?.creativesCount >= 1,
-        ),
-      );
-      setLoading(false);
-    });
+    // VT: Consumimos apenas as ofertas marcadas como "modelagem" para o painel dedicado de monitoramento
+    const unsubscribe = subscribeToUserOffers(
+      user.id,
+      (data) => {
+        setOffers(
+          data.filter(
+            (offer) =>
+              offer.modeling?.monitorStart &&
+              offer.modeling?.monitorDays &&
+              offer.modeling?.creativesCount >= 1,
+          ),
+        );
+        setLoading(false);
+      },
+      'modelagem',
+    );
 
     return () => unsubscribe();
   }, [user?.id]);

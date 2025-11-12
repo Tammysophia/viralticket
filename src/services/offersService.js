@@ -45,32 +45,36 @@ export const createOfferFromAI = async (data) => {
     const mockId = `mock_${Date.now()}`;
     // VT: Salvar no localStorage para simular
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    offers.push({
-      id: mockId,
-      ...data,
-      status: 'execucao',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      modeling: {
-        fanpageUrl: '',
-        salesPageUrl: '',
-        checkoutUrl: '',
-        creativesCount: 0,
-        monitorStart: null,
-        monitorDays: 7,
-        trend: null,
-        modelavel: false
-      },
-      attachments: { files: [] }
-    });
+      offers.push({
+        id: mockId,
+        ...data,
+        // VT: Tipamos explicitamente a oferta criada pela IA para separação nos Kanbans
+        type: 'oferta',
+        status: 'execucao',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        modeling: {
+          fanpageUrl: '',
+          salesPageUrl: '',
+          checkoutUrl: '',
+          creativesCount: 0,
+          monitorStart: null,
+          monitorDays: 7,
+          trend: null,
+          modelavel: false
+        },
+        attachments: { files: [] }
+      });
     localStorage.setItem('vt_offers', JSON.stringify(offers));
     return mockId;
   }
 
   try {
     const offerRef = doc(collection(db, 'offers'));
-    const offerData = {
+      const offerData = {
       ...data,
+        // VT: Tipamos explicitamente a oferta criada pela IA para separação nos Kanbans
+        type: 'oferta',
       status: 'execucao', // VT: Nova oferta começa em execução
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -108,23 +112,34 @@ export const updateOffer = async (id, patch) => {
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
     const index = offers.findIndex(o => o.id === id);
     if (index !== -1) {
-      offers[index] = { ...offers[index], ...patch, updatedAt: new Date().toISOString() };
+      offers[index] = {
+        ...offers[index],
+        ...patch,
+        // VT: Garante que o tipo sempre permaneça definido mesmo durante atualizações parciais
+        type: patch.type || offers[index].type || 'oferta',
+        updatedAt: new Date().toISOString()
+      };
       localStorage.setItem('vt_offers', JSON.stringify(offers));
     }
     return;
   }
 
-  try {
-    const offerRef = doc(db, 'offers', id);
-    await updateDoc(offerRef, {
-      ...patch,
-      updatedAt: Timestamp.now()
-    });
-    console.log('VT: Oferta atualizada:', id);
-  } catch (error) {
-    console.error('VT: Erro ao atualizar oferta:', error);
-    throw error;
-  }
+    try {
+      const offerRef = doc(db, 'offers', id);
+      const currentSnapshot = await getDoc(offerRef);
+      const currentData = currentSnapshot.exists() ? currentSnapshot.data() : {};
+
+      await updateDoc(offerRef, {
+        ...patch,
+        // VT: Garante que o tipo sempre permaneça definido mesmo durante atualizações parciais
+        type: patch.type || currentData.type || 'oferta',
+        updatedAt: Timestamp.now(),
+      });
+      console.log('VT: Oferta atualizada:', id);
+    } catch (error) {
+      console.error('VT: Erro ao atualizar oferta:', error);
+      throw error;
+    }
 };
 
 /**
@@ -255,11 +270,21 @@ export const attachFiles = async (offerId, filesMeta) => {
  * @param {string} userId - ID do usuário
  * @returns {Promise<Array>} - Lista de ofertas
  */
-export const getUserOffers = async (userId) => {
+export const getUserOffers = async (userId, type) => {
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Buscando ofertas do usuário:', userId);
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-    return offers.filter(o => o.userId === userId);
+    return offers
+      .filter(o => {
+        const offerType = o.type || (o.status === 'modelando' ? 'modelagem' : 'oferta');
+        const matchesUser = o.userId === userId;
+        const matchesType = type ? offerType === type : true;
+        return matchesUser && matchesType;
+      })
+      .map(o => ({
+        ...o,
+        type: o.type || (o.status === 'modelando' ? 'modelagem' : 'oferta'),
+      }));
   }
 
   try {
@@ -267,9 +292,19 @@ export const getUserOffers = async (userId) => {
       collection(db, 'offers'),
       where('userId', '==', userId),
       orderBy('updatedAt', 'desc')
-    );
+      );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter((offer) => {
+        // VT: Dados antigos sem campo `type` assumem o tipo com base no status para não sumirem dos Kanbans
+        const offerType = offer.type || (offer.status === 'modelando' ? 'modelagem' : 'oferta');
+        return type ? offerType === type : true;
+      })
+      .map((offer) => ({
+        ...offer,
+        type: offer.type || (offer.status === 'modelando' ? 'modelagem' : 'oferta'),
+      }));
   } catch (error) {
     console.error('VT: Erro ao buscar ofertas:', error);
     return [];
@@ -282,13 +317,24 @@ export const getUserOffers = async (userId) => {
  * @param {Function} callback - Função chamada quando ofertas mudam
  * @returns {Function} - Função para cancelar o listener
  */
-export const subscribeToUserOffers = (userId, callback) => {
+export const subscribeToUserOffers = (userId, callback, type = 'oferta') => {
   if (USE_MOCKS) {
     console.log('VT: [MOCK] Listener de ofertas iniciado');
     // VT: Simular listener com setInterval
     const interval = setInterval(() => {
       const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-      callback(offers.filter(o => o.userId === userId));
+      const filtered = offers
+        .filter(o => {
+          // VT: Dados antigos sem campo `type` assumem o tipo com base no status para não sumirem dos Kanbans
+          const offerType = o.type || (o.status === 'modelando' ? 'modelagem' : 'oferta');
+          return o.userId === userId && offerType === type;
+        })
+        .map(o => ({
+          ...o,
+          type: o.type || (o.status === 'modelando' ? 'modelagem' : 'oferta'),
+        }));
+
+      callback(filtered);
     }, 2000);
     return () => clearInterval(interval);
   }
@@ -298,9 +344,19 @@ export const subscribeToUserOffers = (userId, callback) => {
     where('userId', '==', userId),
     orderBy('updatedAt', 'desc')
   );
-  
+
   return onSnapshot(q, (snapshot) => {
     const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(offers);
+    const filtered = offers
+      .filter((offer) => {
+        // VT: Dados antigos sem campo `type` assumem o tipo com base no status para não sumirem dos Kanbans
+        const offerType = offer.type || (offer.status === 'modelando' ? 'modelagem' : 'oferta');
+        return offerType === type;
+      })
+      .map((offer) => ({
+        ...offer,
+        type: offer.type || (offer.status === 'modelando' ? 'modelagem' : 'oferta'),
+      }));
+    callback(filtered);
   });
 };

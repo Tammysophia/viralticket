@@ -29,6 +29,7 @@ const INITIAL_FORM = {
   youtubeLinks: [],
 };
 
+// VT: Helper para garantir que cada abertura do editor tenha um objeto novo (evitando mutações compartilhadas)
 const createInitialForm = () => ({
   ...INITIAL_FORM,
   copy: { ...INITIAL_FORM.copy },
@@ -43,7 +44,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
   const [saving, setSaving] = useState(false);
   const [monitorAutoStarted, setMonitorAutoStarted] = useState(false);
 
-  // VT: Carregar dados da oferta
+  // VT: Carregar dados da oferta (e resetar tudo quando fechar o editor)
   useEffect(() => {
     if (offer) {
       setFormData({
@@ -60,6 +61,7 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     }
   }, [offer]);
 
+  // VT: Iniciamos automaticamente o monitoramento ao receber criativos e validamos quando a oferta se torna modelável
   useEffect(() => {
     if (
       formData.modeling.creativesCount >= 1 &&
@@ -130,7 +132,16 @@ const OfferEditor = ({ isOpen, onClose, offer }) => {
     
     setSaving(true);
     try {
-      await updateOffer(offer.id, formData);
+      const offerType =
+        formData.status === 'modelando' || formData.modeling?.modelavel
+          ? 'modelagem'
+          : 'oferta';
+
+      // VT: Salvamos explicitamente o tipo para que a oferta vá para o Kanban correto
+      await updateOffer(offer.id, {
+        ...formData,
+        type: offerType,
+      });
       toast.success('💾 Oferta salva com sucesso!');
       onClose();
     } catch (error) {

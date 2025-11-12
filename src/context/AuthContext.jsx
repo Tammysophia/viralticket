@@ -16,6 +16,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // VT: Padronizamos toasts para não duplicar ícones (remoção do ícone padrão do react-hot-toast)
+  const showSuccess = (message) => toast.success(message, { icon: null });
+  const showError = (message) => toast.error(message, { icon: null });
+
   useEffect(() => {
     // Se Firebase não estiver configurado, usar localStorage
     if (!isFirebaseConfigured || !auth) {
@@ -112,7 +116,7 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
-        toast.success('🎉 Login efetuado com sucesso!');
+        showSuccess('🎉 Login efetuado com sucesso!');
         return mockUser;
       }
 
@@ -150,43 +154,43 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (firestoreError) {
         console.warn('Firestore access warning (ignored):', firestoreError.code);
-      }
-      
-      const userProfile = {
-        id: firebaseUser.uid,
-        email: firebaseUser.email,
-        name: userData.name || email.split('@')[0],
-        plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
-        isAdmin,
-        avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
-        dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
-        limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
-      };
-      
-      setUser(userProfile);
-      localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
-      setLoading(false);
-      toast.success('🎉 Login efetuado com sucesso!');
-      return userProfile;
+        }
+
+        const userProfile = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: userData.name || email.split('@')[0],
+          plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
+          isAdmin,
+          avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
+          dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
+          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+        };
+
+        setUser(userProfile);
+        localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
+        setLoading(false);
+        showSuccess('🎉 Login efetuado com sucesso!');
+        return userProfile;
     } catch (error) {
       setLoading(false);
       
       // Tratamento específico de erros Firebase
-      if (error.code === 'auth/user-not-found') {
-        toast.error('❌ Usuário não encontrado. Crie uma conta primeiro!');
-      } else if (error.code === 'auth/wrong-password') {
-        toast.error('🔐 Senha incorreta. Tente novamente.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('📧 E-mail inválido. Verifique o formato.');
-      } else if (error.code === 'auth/invalid-credential') {
-        toast.error('❌ E-mail ou senha incorretos.');
-      } else if (error.code === 'auth/too-many-requests') {
-        toast.error('⚠️ Muitas tentativas. Aguarde alguns minutos.');
-      } else if (error.code === 'auth/network-request-failed') {
-        toast.error('📡 Sem conexão com a internet.');
-      } else {
-        toast.error('⚠️ Erro ao processar o login. Tente novamente.');
-      }
+        if (error.code === 'auth/user-not-found') {
+          showError('❌ Usuário não encontrado. Crie uma conta primeiro!');
+        } else if (error.code === 'auth/wrong-password') {
+          showError('🔐 Senha incorreta. Tente novamente.');
+        } else if (error.code === 'auth/invalid-email') {
+          showError('📧 E-mail inválido. Verifique o formato.');
+        } else if (error.code === 'auth/invalid-credential') {
+          showError('❌ E-mail ou senha incorretos.');
+        } else if (error.code === 'auth/too-many-requests') {
+          showError('⚠️ Muitas tentativas. Aguarde alguns minutos.');
+        } else if (error.code === 'auth/network-request-failed') {
+          showError('📡 Sem conexão com a internet.');
+        } else {
+          showError('⚠️ Erro ao processar o login. Tente novamente.');
+        }
       
       throw error;
     }
@@ -214,7 +218,7 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
         localStorage.setItem('viralticket_user', JSON.stringify(mockUser));
         setLoading(false);
-        toast.success('✅ Cadastro realizado com sucesso!');
+        showSuccess('✅ Cadastro realizado com sucesso!');
         return mockUser;
       }
 
@@ -241,38 +245,38 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (firestoreError) {
         console.warn('Firestore permission warning (ignored):', firestoreError.code);
-      }
-      
-      // Set local user state
-      const fullUserProfile = {
-        id: firebaseUser.uid,
-        ...userProfile,
-        isAdmin,
-        limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
-      };
-      
-      setUser(fullUserProfile);
-      localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
-      setLoading(false);
-      toast.success('✅ Cadastro realizado com sucesso!');
-      return fullUserProfile;
+        }
+
+        // Set local user state
+        const fullUserProfile = {
+          id: firebaseUser.uid,
+          ...userProfile,
+          isAdmin,
+          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
+        };
+
+        setUser(fullUserProfile);
+        localStorage.setItem('viralticket_user', JSON.stringify(fullUserProfile));
+        setLoading(false);
+        showSuccess('✅ Cadastro realizado com sucesso!');
+        return fullUserProfile;
     } catch (error) {
       setLoading(false);
       
       // Tratamento específico de erros Firebase
-      if (error.code === 'auth/email-already-in-use') {
-        toast.error('❌ Este e-mail já está em uso. Faça login!');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('📧 E-mail inválido. Verifique o formato.');
-      } else if (error.code === 'auth/weak-password') {
-        toast.error('🔐 Senha muito fraca. Use pelo menos 6 caracteres.');
-      } else if (error.code === 'auth/operation-not-allowed') {
-        toast.error('⚠️ Cadastro desabilitado. Contate o suporte.');
-      } else if (error.code === 'auth/network-request-failed') {
-        toast.error('📡 Sem conexão com a internet.');
-      } else {
-        toast.error('⚠️ Erro ao cadastrar. Tente novamente.');
-      }
+        if (error.code === 'auth/email-already-in-use') {
+          showError('❌ Este e-mail já está em uso. Faça login!');
+        } else if (error.code === 'auth/invalid-email') {
+          showError('📧 E-mail inválido. Verifique o formato.');
+        } else if (error.code === 'auth/weak-password') {
+          showError('🔐 Senha muito fraca. Use pelo menos 6 caracteres.');
+        } else if (error.code === 'auth/operation-not-allowed') {
+          showError('⚠️ Cadastro desabilitado. Contate o suporte.');
+        } else if (error.code === 'auth/network-request-failed') {
+          showError('📡 Sem conexão com a internet.');
+        } else {
+          showError('⚠️ Erro ao cadastrar. Tente novamente.');
+        }
       
       throw error;
     }
