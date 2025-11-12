@@ -160,6 +160,7 @@ const AIChat = ({ initialText = '' }) => {
         
         const offerId = await createOfferFromAI({
           userId: user.id,
+          type: 'oferta', // VT: Ofertas da IA são tipo "oferta"
           title: offerData.title || 'Nova Oferta',
           subtitle: offerData.subtitle || '',
           agent: selectedAgent,

@@ -15,6 +15,7 @@ import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { getUserOffers } from '../services/offersService'; // VT: Buscar ofertas
+import toast from 'react-hot-toast'; // VT: Toast para feedback
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('youtube');
@@ -39,16 +40,24 @@ const Dashboard = () => {
   // VT: Abrir editor de oferta
   const handleEditOffer = async (offerId) => {
     try {
+      console.log('🔍 VT: Abrindo editor para oferta:', offerId);
       const offers = await getUserOffers(user.id);
+      console.log('📦 VT: Total de ofertas do usuário:', offers.length);
+      
       const offer = offers.find(o => o.id === offerId);
+      
       if (offer) {
+        console.log('✅ VT: Oferta encontrada:', offer.title);
         setEditingOffer(offer);
         setShowOfferEditor(true);
       } else {
-        console.error('VT: Oferta não encontrada:', offerId);
+        console.error('❌ VT: Oferta não encontrada:', offerId);
+        console.log('📋 VT: IDs disponíveis:', offers.map(o => o.id));
+        toast.error('Oferta não encontrada');
       }
     } catch (error) {
-      console.error('VT: Erro ao abrir editor:', error);
+      console.error('❌ VT: Erro ao abrir editor:', error);
+      toast.error('Erro ao abrir editor');
     }
   };
 

@@ -47,6 +47,7 @@ export const createOfferFromAI = async (data) => {
     const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
     offers.push({
       id: mockId,
+      type: 'oferta', // VT: Tipo da oferta (oferta ou modelagem)
       ...data,
       status: 'execucao',
       createdAt: new Date().toISOString(),
@@ -71,6 +72,7 @@ export const createOfferFromAI = async (data) => {
     const offerRef = doc(collection(db, 'offers'));
     const offerData = {
       ...data,
+      type: data.type || 'oferta', // VT: Tipo padrão é "oferta" (ofertas da IA)
       status: 'execucao', // VT: Nova oferta começa em execução
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -282,13 +284,20 @@ export const getUserOffers = async (userId) => {
  * @param {Function} callback - Função chamada quando ofertas mudam
  * @returns {Function} - Função para cancelar o listener
  */
-export const subscribeToUserOffers = (userId, callback) => {
+export const subscribeToUserOffers = (userId, callback, filterType = null) => {
   if (USE_MOCKS) {
-    console.log('VT: [MOCK] Listener de ofertas iniciado');
+    console.log('VT: [MOCK] Listener de ofertas iniciado, tipo:', filterType);
     // VT: Simular listener com setInterval
     const interval = setInterval(() => {
-      const offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
-      callback(offers.filter(o => o.userId === userId));
+      let offers = JSON.parse(localStorage.getItem('vt_offers') || '[]');
+      offers = offers.filter(o => o.userId === userId);
+      
+      // VT: Filtrar por tipo se especificado
+      if (filterType) {
+        offers = offers.filter(o => (o.type || 'oferta') === filterType);
+      }
+      
+      callback(offers);
     }, 2000);
     return () => clearInterval(interval);
   }
@@ -300,7 +309,25 @@ export const subscribeToUserOffers = (userId, callback) => {
   );
   
   return onSnapshot(q, (snapshot) => {
-    const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    let offers = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      type: doc.data().type || 'oferta' // VT: Garantir que sempre tenha type
+    }));
+    
+    // VT: Log para debug
+    console.log("🔥 VT: Ofertas carregadas:", offers.map(o => ({
+      id: o.id,
+      title: o.title,
+      type: o.type
+    })));
+    
+    // VT: Filtrar por tipo se especificado
+    if (filterType) {
+      offers = offers.filter(o => o.type === filterType);
+      console.log(`🎯 VT: Filtradas para tipo "${filterType}":`, offers.length);
+    }
+    
     callback(offers);
   });
 };

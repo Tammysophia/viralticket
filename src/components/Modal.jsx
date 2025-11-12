@@ -1,7 +1,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+// VT: Modal responsivo com suporte a tamanhos customizados
+const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
+  // VT: Tamanhos do modal
+  const sizeClasses = {
+    sm: 'max-w-md',      // 448px
+    md: 'max-w-lg',      // 512px  
+    lg: 'max-w-2xl',     // 672px
+    xl: 'max-w-4xl',     // 896px
+    full: 'max-w-[90vw]' // 90% da tela
+  };
+  
   return (
     <AnimatePresence>
       {isOpen && (
@@ -21,7 +31,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass border border-white/20 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+              className={`glass border border-white/20 rounded-2xl p-6 ${sizeClasses[size] || sizeClasses.md} w-full max-h-[90vh] overflow-y-auto`}
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
