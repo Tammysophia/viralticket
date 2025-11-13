@@ -48,14 +48,6 @@ const AdminOverview = () => {
   const [userGrowth, setUserGrowth] = useState([0, 0, 0, 0, 0, 0, 0]);
   const [loading, setLoading] = useState(true);
 
-  // Proteção adicional - não renderizar se não for admin
-  if (!user?.isAdmin) {
-    return (
-      <Card>
-        <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
-      </Card>
-    );
-  }
   useEffect(() => {
     const fetchRealData = async () => {
       if (!db) {
@@ -239,6 +231,15 @@ const AdminOverview = () => {
     fetchRealData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Proteção adicional - não renderizar se não for admin
+  if (!user?.isAdmin) {
+    return (
+      <Card>
+        <p className="text-center text-gray-400">🎯 O sistema está em operação normal.</p>
+      </Card>
+    );
+  }
 
   if (loading) {
     return (
