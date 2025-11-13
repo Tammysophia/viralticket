@@ -16,6 +16,7 @@ import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { checkAndResetUsage } from '../services/dailyResetService';
 import { getUserOffers, duplicateOfferForModeling, updateOffer } from '../services/offersService'; // VT: Buscar ofertas
 import toast from 'react-hot-toast'; // VT: Toast para feedback
 
@@ -24,15 +25,33 @@ const Dashboard = () => {
   const [aiInitialText, setAiInitialText] = useState('');
   const [editingOffer, setEditingOffer] = useState(null); // VT: Oferta sendo editada
   const [showOfferEditor, setShowOfferEditor] = useState(false); // VT: Modal de edição
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { t } = useLanguage();
+
+  // ✅ VT: Verificar reset diário ao carregar o Dashboard
+  useEffect(() => {
+    const verifyDailyReset = async () => {
+      if (user && user.id) {
+        const updatedUser = await checkAndResetUsage(user);
+        if (updatedUser && updatedUser !== user) {
+          // Atualizar contexto se houve reset
+          if (typeof setUser === 'function') {
+            setUser(updatedUser);
+          }
+          localStorage.setItem('viralticket_user', JSON.stringify(updatedUser));
+        }
+      }
+    };
+    
+    verifyDailyReset();
+  }, [user?.id]);
 
   const tabs = [
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
-    { id: 'kanban', label: 'Ofertas Salvas', icon: KanbanSquare },
-    { id: 'monitoring', label: 'Monitoramento', icon: TrendingUp },
-    { id: 'modeling', label: 'Modelagem', icon: Layers },
+    { id: 'kanban', label: t('offersSaved'), icon: KanbanSquare },
+    { id: 'monitoring', label: t('monitoring'), icon: TrendingUp },
+    { id: 'modeling', label: t('modelingTab'), icon: Layers },
     { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
   ];
 

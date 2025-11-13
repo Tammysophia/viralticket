@@ -1,34 +1,15 @@
 export const PLANS = {
-  FREE: {
-    name: 'FREE',
-    offers: 2,              // Por dia - APENAS geração de ofertas com IA
-    offersMonthly: 60,      // Por mês (30 dias × 2/dia)
-    urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
-    urlsMonthly: 'unlimited',
-    color: 'gray',
-    badge: '🆓',
-    price: 0,
-  },
-  BRONZE: {
-    name: 'BRONZE',
-    offers: 5,              // Por dia
-    offersMonthly: 150,     // Por mês
-    urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
-    urlsMonthly: 'unlimited',
-    color: 'orange',
-    badge: '🥉',
-    price: 9.90,
-  },
   PRATA: {
     name: 'PRATA',
-    offers: 10,             // Por dia
-    offersMonthly: 300,     // Por mês
+    offers: 3,              // Por dia - Plano inicial
+    offersMonthly: 90,      // Por mês (30 dias × 3/dia)
     urls: 'unlimited',      // ILIMITADO - YouTube extractor sem limites
     urlsMonthly: 'unlimited',
-    color: 'gray',
+    color: 'silver',
     badge: '🥈',
-    price: 19.90,
+    price: 29.90,
   },
+
   OURO: {
     name: 'OURO',
     offers: 'unlimited',    // ILIMITADO
@@ -42,15 +23,14 @@ export const PLANS = {
 };
 
 export const getPlanLimits = (planName) => {
-  return PLANS[planName] || PLANS.FREE;
+  return PLANS[planName] || PLANS.PRATA;
 };
 
 export const getPlanColor = (planName) => {
   const colors = {
-    FREE: 'from-gray-600 to-gray-800',
-    BRONZE: 'from-orange-600 to-orange-800',
     PRATA: 'from-gray-400 to-gray-600',
     OURO: 'from-yellow-500 to-yellow-700',
+    DIAMANTE: 'from-purple-500 to-pink-600',
   };
-  return colors[planName] || colors.FREE;
+  return colors[planName] || colors.PRATA;
 };

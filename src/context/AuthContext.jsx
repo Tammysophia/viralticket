@@ -9,6 +9,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../config/firebase';
 import { PLANS } from '../utils/plans';
 import toast from 'react-hot-toast';
+import { checkAndResetUsage } from '../services/dailyResetService';
 
 export const AuthContext = createContext();
 
@@ -46,27 +47,31 @@ export const AuthProvider = ({ children }) => {
                 
                 const planData = PLANS[userData.plan || 'FREE'];
                 
-                const userProfile = {
+                let userProfile = {
                   id: firebaseUser.uid,
                   email: firebaseUser.email,
                   name: userData.name || firebaseUser.email.split('@')[0],
-                  plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
+                  plan: isAdmin ? 'ADMIN' : userData.plan || 'PRATA',
                   isAdmin,
                   avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
                   dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
                   monthlyUsage: userData.monthlyUsage || { offers: 0, urls: 0, month: new Date().getMonth() },
+                  lastResetDate: userData.lastResetDate || null,
                   limits: isAdmin ? { 
                     offers: 'unlimited', 
                     urls: 'unlimited',
                     offersMonthly: 'unlimited',
                     urlsMonthly: 'unlimited'
                   } : {
-                    offers: planData?.offers || 2,
-                    urls: planData?.urls || 3,
-                    offersMonthly: planData?.offersMonthly || 15,
-                    urlsMonthly: planData?.urlsMonthly || 30,
+                    offers: planData?.offers || 3,
+                    urls: planData?.urls || 'unlimited',
+                    offersMonthly: planData?.offersMonthly || 90,
+                    urlsMonthly: planData?.urlsMonthly || 'unlimited',
                   },
                 };
+                
+                // ✅ VT: Verificar e resetar uso diário/mensal automaticamente
+                userProfile = await checkAndResetUsage(userProfile);
                 
                 setUser(userProfile);
                 localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
@@ -321,7 +326,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
