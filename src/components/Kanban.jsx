@@ -7,7 +7,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOfferForModeling } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
 
 const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
