@@ -328,17 +328,33 @@ export const duplicateOfferForModeling = async (originalOffer) => {
 
   try {
     const offerRef = doc(collection(db, 'offers'));
+    
+    // Criar cópia limpa dos dados
+    const cleanOffer = JSON.parse(JSON.stringify(originalOffer, (key, value) => {
+      // Preservar apenas valores serializáveis
+      if (value && typeof value === 'object' && value.toDate) {
+        return value; // Manter Timestamps do Firestore
+      }
+      return value;
+    }));
+    
     const offerData = {
-      ...originalOffer,
-      id: undefined,
+      ...cleanOffer,
       type: 'modelagem',
       status: 'pendente',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       modeling: {
-        ...originalOffer.modeling,
+        fanpageUrl: cleanOffer.modeling?.fanpageUrl || '',
+        salesPageUrl: cleanOffer.modeling?.salesPageUrl || '',
+        checkoutUrl: cleanOffer.modeling?.checkoutUrl || '',
+        creativesCount: cleanOffer.modeling?.creativesCount || 0,
+        salesPageCopy: cleanOffer.modeling?.salesPageCopy || '',
+        creativeCopy: cleanOffer.modeling?.creativeCopy || '',
         monitorStart: null,
         monitorDays: 7,
+        trend: null,
+        modelavel: false
       }
     };
 

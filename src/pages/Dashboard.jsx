@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare, Bot } from 'lucide-react';
+import { Youtube, Sparkles, KanbanSquare, Bot, TrendingUp, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -7,6 +7,8 @@ import Tabs from '../components/Tabs';
 import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
+import KanbanMonitoring from '../components/KanbanMonitoring';
+import KanbanModeling from '../components/KanbanModeling';
 import GPTAgents from '../components/GPTAgents';
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
 import Card from '../components/Card';
@@ -14,7 +16,7 @@ import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { getUserOffers } from '../services/offersService'; // VT: Buscar ofertas
+import { getUserOffers, duplicateOfferForModeling, updateOffer } from '../services/offersService'; // VT: Buscar ofertas
 import toast from 'react-hot-toast'; // VT: Toast para feedback
 
 const Dashboard = () => {
@@ -28,7 +30,9 @@ const Dashboard = () => {
   const tabs = [
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
-    { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
+    { id: 'kanban', label: 'Ofertas Salvas', icon: KanbanSquare },
+    { id: 'monitoring', label: 'Monitoramento', icon: TrendingUp },
+    { id: 'modeling', label: 'Modelagem', icon: Layers },
     { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
   ];
 
@@ -65,6 +69,21 @@ const Dashboard = () => {
   const handleCloseEditor = () => {
     setShowOfferEditor(false);
     setEditingOffer(null);
+  };
+
+  // VT: Mover oferta do Monitoramento para Modelagem
+  const handleMoveToModeling = async (originalOffer) => {
+    try {
+      toast.loading('Movendo para modelagem...');
+      const newId = await duplicateOfferForModeling(originalOffer);
+      toast.dismiss();
+      toast.success('Oferta movida para modelagem!');
+      setActiveTab('modeling');
+    } catch (err) {
+      toast.dismiss();
+      toast.error('Erro ao mover para modelagem');
+      console.error('VT: handleMoveToModeling error', err);
+    }
   };
 
   return (
@@ -141,6 +160,13 @@ const Dashboard = () => {
               <AIChat initialText={aiInitialText} />
             )}
             {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+            {activeTab === 'monitoring' && (
+              <KanbanMonitoring 
+                onEditOffer={handleEditOffer} 
+                onMoveToModeling={handleMoveToModeling}
+              />
+            )}
+            {activeTab === 'modeling' && <KanbanModeling onEditOffer={handleEditOffer} />}
             {activeTab === 'gptAgents' && <GPTAgents />}
           </motion.div>
         </main>
