@@ -1,4 +1,4 @@
-// VT: Painel de Agentes GPTs para usuários
+// ...existing code...
 import { useState, useEffect } from 'react';
 import { ExternalLink, Sparkles, Lock } from 'lucide-react';
 import Card from './Card';
@@ -21,7 +21,7 @@ const GPTAgents = () => {
   }, []);
 
   const handleOpenAgent = (agent) => {
-    if (!agent.url || agent.url.trim() === '') {
+    if (!agent?.url || agent.url.trim() === '') {
       toast.error('Este agente ainda não está configurado');
       return;
     }
@@ -49,7 +49,7 @@ const GPTAgents = () => {
           <Lock className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl font-bold mb-2">Nenhum Agente Disponível</h3>
           <p className="text-gray-400 text-center max-w-md">
-            Os agentes GPTs são bônus extras que serão liberados em breve. 
+            Os agentes GPTs são bônus extras que serão liberados em breve.
             Aguarde enquanto configuramos esses assistentes especiais para você!
           </p>
         </div>
@@ -65,9 +65,7 @@ const GPTAgents = () => {
           <Sparkles className="w-6 h-6 text-purple-400" />
           <h2 className="text-2xl font-bold">Agentes GPTs Bônus</h2>
         </div>
-        <p className="text-gray-400">
-          Assistentes especializados para complementar suas estratégias!
-        </p>
+        <p className="text-gray-400">Assistentes especializados para complementar suas estratégias!</p>
       </Card>
 
       {/* Grid de Agentes */}
@@ -85,40 +83,41 @@ const GPTAgents = () => {
                 <div className="flex items-start gap-4 mb-4">
                   <div className="flex-shrink-0">
                     {agent.imageUrl ? (
-                      <img 
-                        src={agent.imageUrl} 
+                      <img
+                        src={agent.imageUrl}
                         alt={agent.name}
                         className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/30"
                         onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'block';
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextSibling;
+                          if (fallback) fallback.style.display = 'block';
                         }}
                       />
                     ) : null}
                     <div className={agent.imageUrl ? 'text-5xl hidden' : 'text-5xl'}>{agent.icon || '🤖'}</div>
                   </div>
+
                   <div className="flex-1">
+                    {/* Nome acima do gradiente para ficar visível */}
                     <h3 className="text-xl font-bold mb-1 text-white relative z-10">
                       {agent.name}
                     </h3>
-                    <p className="text-sm text-gray-400">
-                      {agent.description}
-                    </p>
+                    <p className="text-sm text-gray-400">{agent.description}</p>
                   </div>
                 </div>
 
                 {/* Botão de Ação */}
                 <button
                   onClick={() => handleOpenAgent(agent)}
-                  disabled={!agent.url || agent.url.trim() === ''}
+                  disabled={!agent?.url || agent.url.trim() === ''}
                   className={`w-full mt-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                    agent.url && agent.url.trim() !== ''
+                    agent?.url && agent.url.trim() !== ''
                       ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg hover:shadow-purple-500/50'
                       : 'bg-gray-600/20 text-gray-500 cursor-not-allowed'
                   }`}
                 >
                   <ExternalLink className="w-4 h-4" />
-                  {agent.url && agent.url.trim() !== '' ? 'Abrir Agente' : 'Em Breve'}
+                  {agent?.url && agent.url.trim() !== '' ? 'Abrir Agente' : 'Em Breve'}
                 </button>
               </div>
             </Card>
@@ -146,3 +145,4 @@ const GPTAgents = () => {
 };
 
 export default GPTAgents;
+// ...existing code...
