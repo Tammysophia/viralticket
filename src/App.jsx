@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
+import ModelingEditor from './pages/ModelingEditor';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -58,6 +59,14 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/modelagem/:id"
+        element={
+          <PrivateRoute>
+            <ModelingEditor />
           </PrivateRoute>
         }
       />
