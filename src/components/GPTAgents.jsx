@@ -1,4 +1,3 @@
-// ...existing code...
 import { useState, useEffect } from 'react';
 import { ExternalLink, Sparkles, Lock } from 'lucide-react';
 import Card from './Card';
@@ -10,7 +9,6 @@ const GPTAgents = () => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // VT: Listener em tempo real dos agentes ativos
   useEffect(() => {
     const unsubscribe = subscribeToActiveAgents((activeAgents) => {
       setAgents(activeAgents);
@@ -26,7 +24,6 @@ const GPTAgents = () => {
       return;
     }
 
-    // Abrir em nova aba
     window.open(agent.url, '_blank', 'noopener,noreferrer');
     toast.success(`Abrindo ${agent.name}...`);
   };
@@ -98,7 +95,7 @@ const GPTAgents = () => {
                   </div>
 
                   <div className="flex-1">
-                    {/* Nome acima do gradiente para ficar visível */}
+                    {/* Nome acima do gradiente - z-10 garante visibilidade */}
                     <h3 className="text-xl font-bold mb-1 text-white relative z-10">
                       {agent.name}
                     </h3>
@@ -145,4 +142,3 @@ const GPTAgents = () => {
 };
 
 export default GPTAgents;
-// ...existing code...
