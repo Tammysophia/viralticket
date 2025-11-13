@@ -1,13 +1,13 @@
-// VT: Kanban integrado com Firestore em tempo real
+// ...existing code...
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Sparkles, Edit2, Trash2, AlertCircle, TrendingUp, Copy } from 'lucide-react';
+import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp, Copy } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOfferForModeling } from '../services/offersService';
 
 const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -51,17 +51,22 @@ const Kanban = ({ onEditOffer }) => {
     }));
   }, [t]);
 
+  // listener: apenas type = "oferta" para o kanban principal
   useEffect(() => {
     if (!user?.id) return;
     console.log('🎯 VT: Iniciando listener de ofertas para:', user.id);
     setLoading(true);
 
-    const unsubscribe = subscribeToUserOffers(user.id, (updatedOffers) => {
-      console.log('📥 VT: Recebeu', updatedOffers.length, 'ofertas');
-      setOffers(updatedOffers);
-      organizeOffersByStatus(updatedOffers);
-      setLoading(false);
-    });
+    const unsubscribe = subscribeToUserOffers(
+      user.id,
+      (updatedOffers) => {
+        console.log('🔥 Ofertas carregadas:', updatedOffers.map(o => ({ id: o.id, title: o.title, type: o.type })));
+        setOffers(updatedOffers);
+        organizeOffersByStatus(updatedOffers);
+        setLoading(false);
+      },
+      'oferta' // garante apenas ofertas, não modelagens
+    );
 
     return () => {
       console.log('🔌 VT: Desconectando listener de ofertas');
@@ -80,7 +85,7 @@ const Kanban = ({ onEditOffer }) => {
 
     allOffers.forEach((offer) => {
       const columnId = STATUS_MAP[offer.status] || 'pending';
-      const isModeledOffer = offer.modeling?.creativesCount >= 10;
+      organized[columnId] = organized[columnId] || organized.pending;
       organized[columnId].items.push({
         id: offer.id,
         title: offer.title,
@@ -89,7 +94,8 @@ const Kanban = ({ onEditOffer }) => {
         date: offer.createdAt?.toDate?.() || offer.createdAt || new Date(),
         status: offer.status,
         modeling: offer.modeling,
-        isModeledOffer: isModeledOffer,
+        type: offer.type || 'oferta',
+        isModeledOffer: Boolean(offer.modeling?.modelavel),
       });
     });
 
@@ -119,7 +125,10 @@ const Kanban = ({ onEditOffer }) => {
 
     try {
       const newStatus = REVERSE_STATUS_MAP[destination.droppableId];
-      await updateOffer(draggableId, { status: newStatus });
+      const newType = newStatus === 'modelando' ? 'modelagem' : 'oferta';
+      removed.status = newStatus;
+      removed.type = newType;
+      await updateOffer(draggableId, { status: newStatus, type: newType });
       toast.success('Oferta movida com sucesso!');
     } catch (error) {
       toast.error('Erro ao mover oferta');
@@ -132,8 +141,8 @@ const Kanban = ({ onEditOffer }) => {
     if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) return;
     try {
       await deleteOffer(offerId);
-      setOffers((prevOffers) => prevOffers.filter((o) => o.id !== offerId));
-      organizeOffersByStatus(offers.filter((o) => o.id !== offerId));
+      setOffers(prev => prev.filter(o => o.id !== offerId));
+      organizeOffersByStatus(offers.filter(o => o.id !== offerId));
       toast.success('✅ Oferta excluída!');
     } catch (error) {
       toast.error('❌ Erro ao excluir oferta');
@@ -142,18 +151,31 @@ const Kanban = ({ onEditOffer }) => {
   };
 
   const handleDuplicate = async (offerId) => {
-    const originalOffer = offers.find((offer) => offer.id === offerId);
+    const originalOffer = offers.find((o) => o.id === offerId);
     if (!originalOffer) {
       toast.error('Oferta não encontrada para duplicação');
       return;
     }
-
     try {
       await duplicateOfferForModeling(originalOffer);
-      toast.success('Oferta duplicada para modelagem!');
-    } catch (error) {
-      toast.error('Erro ao duplicar oferta');
-      console.error('VT: Erro ao duplicar oferta para modelagem:', error);
+      toast.success('✅ Oferta duplicada para modelagem!');
+    } catch (err) {
+      toast.error('❌ Erro ao duplicar oferta');
+      console.error('VT: Erro ao duplicar para modelagem', err);
+    }
+  };
+
+  // remover apenas o monitoramento mantendo a oferta
+  const handleRemoveMonitoring = async (offerId) => {
+    if (!window.confirm('Remover monitoramento desta oferta?')) return;
+    try {
+      await updateOffer(offerId, { modeling: null, type: 'oferta' });
+      setOffers(prev => prev.map(o => (o.id === offerId ? { ...o, modeling: null, type: 'oferta' } : o)));
+      organizeOffersByStatus(offers.map(o => (o.id === offerId ? { ...o, modeling: null, type: 'oferta' } : o)));
+      toast.success('Monitoramento removido');
+    } catch (err) {
+      toast.error('Erro ao remover monitoramento');
+      console.error(err);
     }
   };
 
@@ -163,21 +185,6 @@ const Kanban = ({ onEditOffer }) => {
     modeling: 'border-purple-500/30',
     activeModeling: 'border-cyan-500/30',
     completed: 'border-green-500/30',
-  };
-
-  const handleEditClick = (offerId) => {
-    if (!onEditOffer) {
-      toast.error('Erro ao abrir editor');
-      return;
-    }
-
-    const fullOffer = offers.find((offer) => offer.id === offerId);
-    if (!fullOffer) {
-      toast.error('Oferta não encontrada');
-      return;
-    }
-
-    onEditOffer(offerId, fullOffer);
   };
 
   if (loading) {
@@ -217,15 +224,9 @@ const Kanban = ({ onEditOffer }) => {
                   )}
                   {column.items.map((item, index) => {
                     const monitorDays = item.modeling?.monitorDays || 7;
-                    const monitorStart = item.modeling?.monitorStart
-                      ? new Date(item.modeling.monitorStart)
-                      : null;
-                    const elapsedDays = monitorStart
-                      ? Math.max(0, Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS))
-                      : 0;
-                    const progressPercent = monitorStart
-                      ? Math.min((elapsedDays / monitorDays) * 100, 100)
-                      : 0;
+                    const monitorStart = item.modeling?.monitorStart ? new Date(item.modeling.monitorStart) : null;
+                    const elapsedDays = monitorStart ? Math.max(0, Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS)) : 0;
+                    const progressPercent = monitorStart ? Math.min((elapsedDays / monitorDays) * 100, 100) : 0;
 
                     return (
                       <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -243,22 +244,20 @@ const Kanban = ({ onEditOffer }) => {
                                 src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
                                 alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                                 className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
                               />
-                              <span className="text-xs text-purple-400 font-semibold">
+                              <span className="text-xs text-white relative z-10 font-semibold">
                                 {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                               </span>
                             </div>
+
                             <h4 className="font-bold mb-1 text-white">{item.title}</h4>
-                            {item.subtitle && (
-                              <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>
-                            )}
+                            {item.subtitle && <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>}
                             <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                               <Calendar className="w-3 h-3" />
                               <span>{formatDate(item.date)}</span>
                             </div>
+
                             {item.isModeledOffer && (
                               <div className="mb-3">
                                 <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold shadow-lg">
@@ -266,6 +265,7 @@ const Kanban = ({ onEditOffer }) => {
                                 </span>
                               </div>
                             )}
+
                             {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
                               <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
                                 <div className="flex items-center gap-2 mb-2">
@@ -282,34 +282,27 @@ const Kanban = ({ onEditOffer }) => {
                                     </div>
                                   )}
                                   {item.modeling.fanpageUrl && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-green-400">✓</span>
-                                      <span className="text-green-400 text-xs">Fanpage</span>
-                                    </div>
+                                    <div className="flex items-center gap-1"><span className="text-green-400">✓</span><span className="text-green-400 text-xs">Fanpage</span></div>
                                   )}
                                   {item.modeling.salesPageUrl && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-green-400">✓</span>
-                                      <span className="text-green-400 text-xs">PV</span>
-                                    </div>
+                                    <div className="flex items-center gap-1"><span className="text-green-400">✓</span><span className="text-green-400 text-xs">PV</span></div>
+                                  )}
+                                  {item.modeling.checkoutUrl && (
+                                    <div className="flex items-center gap-1"><span className="text-green-400">✓</span><span className="text-green-400 text-xs">Checkout</span></div>
                                   )}
                                 </div>
                               </div>
                             )}
+
                             {column.id === 'modeling' && item.modeling && (
                               <div className="mb-3 space-y-2">
                                 <div className="flex gap-2 flex-wrap">
-                                  {item.modeling.modelavel && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                      ✅ Modelável
-                                    </span>
-                                  )}
-                                  {item.modeling.trend === 'caindo' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
-                                      🚫 Parar
-                                    </span>
-                                  )}
+                                  {item.modeling.modelavel && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">✅ Modelável</span>}
+                                  {item.modeling.trend === 'caindo' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">🚫 Parar</span>}
+                                  {item.modeling.trend === 'subindo' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">📈 Subindo</span>}
+                                  {item.modeling.trend === 'estavel' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">➡️ Estável</span>}
                                 </div>
+
                                 {item.modeling.monitorStart && (
                                   <div className="space-y-2">
                                     <div className="flex items-center justify-between text-xs text-gray-400">
@@ -317,50 +310,35 @@ const Kanban = ({ onEditOffer }) => {
                                       <span>{elapsedDays}/{monitorDays} {t('days')}</span>
                                     </div>
                                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                                        style={{ width: `${progressPercent}%` }}
-                                      />
+                                      <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all" style={{ width: `${progressPercent}%` }} />
                                     </div>
+                                    <p className="text-xs text-gray-500">{t('monitoringRemaining')}: {Math.max(monitorDays - elapsedDays, 0)}</p>
                                   </div>
                                 )}
+
+                                <div className="flex gap-2 mt-2">
+                                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const full = offers.find(o => o.id === item.id); if (!full) { toast.error('Oferta não encontrada'); return; } onEditOffer?.(item.id, full); }} className="px-2 py-1 text-xs bg-purple-600/20 rounded text-purple-300">
+                                    <Edit2 className="w-4 h-4 inline-block mr-1" /> Ver / Editar Monitoramento
+                                  </button>
+
+                                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveMonitoring(item.id); }} className="px-2 py-1 text-xs bg-red-600/20 rounded text-red-300">
+                                    <Trash2 className="w-4 h-4 inline-block mr-1" /> Remover Monitor.
+                                  </button>
+                                </div>
                               </div>
                             )}
+
                             <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
                               {item.type !== 'modelagem' && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDuplicate(item.id);
-                                  }}
-                                  className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                                >
-                                  <Copy className="w-3 h-3" />
-                                  Duplicar
+                                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDuplicate(item.id); }} className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors">
+                                  <Copy className="w-3 h-3" /> Duplicar para Modelagem
                                 </button>
                               )}
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleEditClick(item.id);
-                                }}
-                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                              >
-                                <Edit2 className="w-3 h-3" />
-                                Editar
+                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const full = offers.find(o => o.id === item.id); if (!full) { toast.error('Oferta não encontrada'); return; } onEditOffer?.(item.id, full); }} className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors">
+                                <Edit2 className="w-3 h-3" /> Editar
                               </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDelete(item.id, item.title);
-                                }}
-                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                Excluir
+                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(item.id, item.title); }} className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors">
+                                <Trash2 className="w-3 h-3" /> Excluir
                               </button>
                             </div>
                           </div>
@@ -380,3 +358,4 @@ const Kanban = ({ onEditOffer }) => {
 };
 
 export default Kanban;
+// ...existing code...
