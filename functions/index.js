@@ -22,6 +22,17 @@ const getTodayISODate = () => {
   return `${year}-${month}-${day}`;
 };
 
+// Importar webhooks
+const webhooks = require('./webhooks');
+const resetAPIKeys = require('./resetAPIKeys');
+
+// Exportar funções de webhook
+exports.processWebhook = webhooks.processWebhook;
+
+// Exportar função de reset de chaves API
+exports.resetAPIKeysQuota = resetAPIKeys.resetAPIKeysQuota;
+
+// Reset diário de ofertas
 exports.resetDailyOffers = onSchedule(
   {
     schedule: 'every day 00:00',

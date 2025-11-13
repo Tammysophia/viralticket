@@ -39,7 +39,7 @@ const AdminUsers = () => {
           id: docSnap.id,
           name: data.name || data.email?.split('@')[0] || 'Sem nome',
           email: data.email || 'Sem email',
-          plan: data.plan || 'FREE',
+          plan: data.plan || 'PRATA',
           dailyOffers: data.dailyUsage?.offers || 0,
           dailyUrls: data.dailyUsage?.urls || 0,
           status: data.status || 'active',
@@ -176,7 +176,7 @@ const AdminUsers = () => {
             <div>
               <p className="text-sm text-gray-400 mb-2">Alterar Plano</p>
               <div className="grid grid-cols-2 gap-2">
-                {['FREE', 'BRONZE', 'PRATA', 'OURO'].map((plan) => (
+                {['PRATA', 'OURO', 'DIAMANTE'].map((plan) => (
                   <button
                     key={plan}
                     onClick={() => handleChangePlan(selectedUser.id, plan)}

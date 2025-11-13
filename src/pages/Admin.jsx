@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, Key, Webhook, Bot } from 'lucide-react';
+import { LayoutDashboard, Users, Key, Webhook, Bot, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -8,6 +8,7 @@ import AdminUsers from '../components/AdminUsers';
 import AdminAPIKeys from '../components/AdminAPIKeys';
 import AdminWebhooks from '../components/AdminWebhooks';
 import AdminGPTAgents from '../components/AdminGPTAgents';
+import AdminSettings from '../components/AdminSettings';
 import { useLanguage } from '../hooks/useLanguage';
 
 const Admin = () => {
@@ -20,6 +21,7 @@ const Admin = () => {
     { id: 'apiKeys', label: t('apiKeys'), icon: Key },
     { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
     { id: 'webhooks', label: t('webhooks'), icon: Webhook },
+    { id: 'settings', label: 'Configurações', icon: Settings },
   ];
 
   const renderContent = () => {
@@ -34,6 +36,8 @@ const Admin = () => {
         return <AdminGPTAgents />;
       case 'webhooks':
         return <AdminWebhooks />;
+      case 'settings':
+        return <AdminSettings />;
       default:
         return <AdminOverview />;
     }

@@ -90,14 +90,12 @@ const translations = {
 
     // Plans
     plan: 'Plano',
-    free: 'FREE',
-    bronze: 'BRONZE',
     silver: 'PRATA',
     gold: 'OURO',
-    planFree: 'Grátis',
-    planBronze: 'Bronze',
+    diamond: 'DIAMANTE',
     planSilver: 'Prata',
     planGold: 'Ouro',
+    planDiamond: 'Diamante',
     planAdmin: 'Admin',
 
     // Common
@@ -190,14 +188,15 @@ const translations = {
     gptAgents: 'GPT Agents',
 
     plan: 'Plan',
-    free: 'FREE',
-    bronze: 'BRONZE',
-    silver: 'SILVER',
-    gold: 'GOLD',
-    planFree: 'Free',
-    planBronze: 'Bronze',
-    planSilver: 'Silver',
-    planGold: 'Gold',
+    
+    
+    silver: "SILVER",
+    gold: "GOLD",
+    diamond: "DIAMOND",
+    planSilver: "Silver",
+    
+    planDiamond: "Diamond",
+    
     planAdmin: 'Admin',
 
     loading: 'Loading...',

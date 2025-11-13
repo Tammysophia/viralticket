@@ -3,16 +3,15 @@ import { getPlanColor } from '../utils/plans';
 import { useLanguage } from '../hooks/useLanguage';
 
 const PLAN_LABEL_MAP = {
-  FREE: 'planFree',
-  BRONZE: 'planBronze',
   PRATA: 'planSilver',
   OURO: 'planGold',
+  DIAMANTE: 'planDiamond',
   ADMIN: 'planAdmin',
 };
 
 const PlanBadge = ({ plan, size = 'md' }) => {
   const { t } = useLanguage();
-  const normalizedPlan = (plan || 'FREE').toUpperCase();
+  const normalizedPlan = (plan || 'PRATA').toUpperCase();
 
   const sizes = {
     sm: 'text-xs px-2 py-1',
@@ -20,7 +19,7 @@ const PlanBadge = ({ plan, size = 'md' }) => {
     lg: 'text-base px-4 py-2',
   };
 
-  const planLabelKey = PLAN_LABEL_MAP[normalizedPlan] || PLAN_LABEL_MAP.FREE;
+  const planLabelKey = PLAN_LABEL_MAP[normalizedPlan] || PLAN_LABEL_MAP.PRATA;
   const planLabel = t(planLabelKey);
 
   return (

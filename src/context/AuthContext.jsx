@@ -48,13 +48,13 @@ export const AuthProvider = ({ children }) => {
                 const userData = userDoc.data();
                 const isAdmin = firebaseUser.email === 'tamara14@gmail.com';
                 
-                const planData = PLANS[userData.plan || 'FREE'];
+                const planData = PLANS[userData.plan || 'PRATA'];
                 
                 const userProfile = {
                   id: firebaseUser.uid,
                   email: firebaseUser.email,
                   name: userData.name || firebaseUser.email.split('@')[0],
-                  plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
+                  plan: isAdmin ? 'ADMIN' : userData.plan || 'PRATA',
                   isAdmin,
                   avatar: userData.avatar || `https://ui-avatars.com/api/?name=${firebaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
                   dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
           id: Date.now().toString(),
           email,
           name: email.split('@')[0],
-          plan: isAdmin ? 'ADMIN' : 'FREE',
+          plan: isAdmin ? 'ADMIN' : 'PRATA',
           isAdmin,
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: { offers: 0, urls: 0 },
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }) => {
       let userData = {
         name: email.split('@')[0],
         email: firebaseUser.email,
-        plan: isAdmin ? 'ADMIN' : 'FREE',
+        plan: isAdmin ? 'ADMIN' : 'PRATA',
         avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: { offers: 0, urls: 0 },
         createdAt: new Date().toISOString(),
@@ -160,11 +160,11 @@ export const AuthProvider = ({ children }) => {
           id: firebaseUser.uid,
           email: firebaseUser.email,
           name: userData.name || email.split('@')[0],
-          plan: isAdmin ? 'ADMIN' : userData.plan || 'FREE',
+          plan: isAdmin ? 'ADMIN' : userData.plan || 'PRATA',
           isAdmin,
           avatar: userData.avatar || `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: userData.dailyUsage || { offers: 0, urls: 0 },
-          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'FREE']?.limits || { offers: 3, urls: 3 }),
+          limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : (PLANS[userData.plan || 'PRATA']?.limits || { offers: 3, urls: 3 }),
         };
 
         setUser(userProfile);
@@ -208,7 +208,7 @@ export const AuthProvider = ({ children }) => {
           id: Date.now().toString(),
           email,
           name: email.split('@')[0],
-          plan: isAdmin ? 'ADMIN' : 'FREE',
+          plan: isAdmin ? 'ADMIN' : 'PRATA',
           isAdmin,
           avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
           dailyUsage: { offers: 0, urls: 0 },
@@ -232,7 +232,7 @@ export const AuthProvider = ({ children }) => {
       const userProfile = {
         name: email.split('@')[0],
         email: firebaseUser.email,
-        plan: isAdmin ? 'ADMIN' : 'FREE',
+        plan: isAdmin ? 'ADMIN' : 'PRATA',
         avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: { offers: 0, urls: 0 },
         createdAt: new Date().toISOString(),

@@ -8,6 +8,7 @@ import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
 import GPTAgents from '../components/GPTAgents';
+import WhatsAppButton from '../components/WhatsAppButton';
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
 import OfferMonitoring from '../components/OfferMonitoring';
 import Card from '../components/Card';
@@ -156,6 +157,9 @@ const Dashboard = () => {
         onClose={handleCloseEditor}
         offer={editingOffer}
       />
+      
+      {/* Botão WhatsApp Suporte */}
+      <WhatsAppButton />
     </div>
   );
 };

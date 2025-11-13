@@ -39,10 +39,9 @@ const AdminOverview = () => {
     },
   ]);
   const [planDistribution, setPlanDistribution] = useState([
-    { plan: 'FREE', percentage: 0, color: 'gray' },
-    { plan: 'BRONZE', percentage: 0, color: 'orange' },
     { plan: 'PRATA', percentage: 0, color: 'gray' },
     { plan: 'OURO', percentage: 0, color: 'yellow' },
+    { plan: 'DIAMANTE', percentage: 0, color: 'cyan' },
   ]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [userGrowth, setUserGrowth] = useState([0, 0, 0, 0, 0, 0, 0]);
@@ -84,27 +83,15 @@ const AdminOverview = () => {
         const conversionRate =
           totalUsers > 0 ? Math.round((offersToday / totalUsers) * 100) : 0;
 
-        const plans = { FREE: 0, BRONZE: 0, PRATA: 0, OURO: 0 };
+        const plans = { PRATA: 0, OURO: 0, DIAMANTE: 0 };
         usersSnapshot.forEach((docSnap) => {
-          const plan = docSnap.data().plan || 'FREE';
+          const plan = docSnap.data().plan || 'PRATA';
           if (plans[plan] !== undefined) {
             plans[plan] += 1;
           }
         });
         const totalPlans = Object.values(plans).reduce((a, b) => a + b, 0);
         setPlanDistribution([
-          {
-            plan: 'FREE',
-            percentage:
-              totalPlans > 0 ? Math.round((plans.FREE / totalPlans) * 100) : 0,
-            color: 'gray',
-          },
-          {
-            plan: 'BRONZE',
-            percentage:
-              totalPlans > 0 ? Math.round((plans.BRONZE / totalPlans) * 100) : 0,
-            color: 'orange',
-          },
           {
             plan: 'PRATA',
             percentage:
@@ -116,6 +103,12 @@ const AdminOverview = () => {
             percentage:
               totalPlans > 0 ? Math.round((plans.OURO / totalPlans) * 100) : 0,
             color: 'yellow',
+          },
+          {
+            plan: 'DIAMANTE',
+            percentage:
+              totalPlans > 0 ? Math.round((plans.DIAMANTE / totalPlans) * 100) : 0,
+            color: 'cyan',
           },
         ]);
 
@@ -153,7 +146,7 @@ const AdminOverview = () => {
                 diffMinutes < 60
                   ? `há ${diffMinutes} min`
                   : `há ${Math.floor(diffMinutes / 60)}h`,
-              plan: userData.plan || 'FREE',
+              plan: userData.plan || 'PRATA',
             });
           }
         }
@@ -293,10 +286,9 @@ const AdminOverview = () => {
           <h3 className="text-xl font-bold mb-4">Distribuição de Planos</h3>
           <div className="space-y-3">
             {[
-              { plan: 'FREE', percentage: 45, color: 'gray' },
-              { plan: 'BRONZE', percentage: 25, color: 'orange' },
-              { plan: 'PRATA', percentage: 20, color: 'gray' },
-              { plan: 'OURO', percentage: 10, color: 'yellow' },
+              { plan: 'PRATA', percentage: 40, color: 'gray' },
+              { plan: 'OURO', percentage: 35, color: 'yellow' },
+              { plan: 'DIAMANTE', percentage: 25, color: 'cyan' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between text-sm mb-1">

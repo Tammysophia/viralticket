@@ -1,0 +1,293 @@
+/**
+ * Cloud Functions para processar Webhooks de Plataformas de Pagamento
+ * 
+ * Suporta:
+ * - Hotmart
+ * - Stripe
+ * - Monetizze
+ * - Eduzz
+ * - PayPal
+ */
+
+const { onRequest } = require('firebase-functions/v2/https');
+const { logger } = require('firebase-functions');
+const admin = require('firebase-admin');
+
+const db = admin.firestore();
+
+/**
+ * Webhook genérico para todas as plataformas
+ * URL: https://us-central1-[PROJECT_ID].cloudfunctions.net/processWebhook
+ */
+exports.processWebhook = onRequest(async (req, res) => {
+  try {
+    // Aceitar apenas POST
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const platform = req.query.platform || 'unknown';
+    const payload = req.body;
+
+    logger.info(`📥 Webhook recebido de ${platform}`, { payload });
+
+    // Processar de acordo com a plataforma
+    let result;
+    switch (platform.toLowerCase()) {
+      case 'hotmart':
+        result = await processHotmart(payload);
+        break;
+      case 'stripe':
+        result = await processStripe(payload);
+        break;
+      case 'monetizze':
+        result = await processMonetizze(payload);
+        break;
+      case 'eduzz':
+        result = await processEduzz(payload);
+        break;
+      case 'paypal':
+        result = await processPayPal(payload);
+        break;
+      default:
+        logger.warn(`⚠️ Plataforma desconhecida: ${platform}`);
+        res.status(400).send('Unknown platform');
+        return;
+    }
+
+    // Salvar log do webhook
+    await db.collection('webhookLogs').add({
+      platform,
+      event: result.event,
+      email: result.email,
+      plan: result.plan,
+      status: result.status,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      payload,
+    });
+
+    res.status(200).json({ success: true, message: result.message });
+  } catch (error) {
+    logger.error('❌ Erro ao processar webhook:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Processar webhook da Hotmart
+ */
+async function processHotmart(payload) {
+  const event = payload.event;
+  const data = payload.data;
+
+  const email = data.buyer?.email;
+  const productName = data.product?.name;
+  const status = data.purchase?.status;
+
+  logger.info(`🔥 Hotmart - Evento: ${event}, Email: ${email}, Status: ${status}`);
+
+  if (event === 'PURCHASE_COMPLETE' || event === 'PURCHASE_APPROVED') {
+    // Venda confirmada - Liberar acesso
+    const plan = mapProductToPlan(productName);
+    await createOrUpdateUser(email, plan, 'active');
+    return { event, email, plan, status: 'granted', message: 'Acesso liberado' };
+  } else if (event === 'PURCHASE_REFUNDED' || event === 'PURCHASE_CHARGEBACK') {
+    // Reembolso ou chargeback - Remover acesso
+    await blockUser(email);
+    return { event, email, plan: null, status: 'revoked', message: 'Acesso removido' };
+  }
+
+  return { event, email, plan: null, status: 'ignored', message: 'Evento ignorado' };
+}
+
+/**
+ * Processar webhook do Stripe
+ */
+async function processStripe(payload) {
+  const event = payload.type;
+  const data = payload.data.object;
+
+  const email = data.customer_email || data.receipt_email;
+  const productId = data.lines?.data[0]?.price?.product;
+
+  logger.info(`💳 Stripe - Evento: ${event}, Email: ${email}`);
+
+  if (event === 'checkout.session.completed' || event === 'payment_intent.succeeded') {
+    // Pagamento confirmado - Liberar acesso
+    const plan = mapProductToPlan(productId);
+    await createOrUpdateUser(email, plan, 'active');
+    return { event, email, plan, status: 'granted', message: 'Acesso liberado' };
+  } else if (event === 'charge.refunded' || event === 'charge.dispute.created') {
+    // Reembolso ou disputa - Remover acesso
+    await blockUser(email);
+    return { event, email, plan: null, status: 'revoked', message: 'Acesso removido' };
+  }
+
+  return { event, email, plan: null, status: 'ignored', message: 'Evento ignorado' };
+}
+
+/**
+ * Processar webhook da Monetizze
+ */
+async function processMonetizze(payload) {
+  const status = payload.venda?.status;
+  const email = payload.comprador?.email;
+  const productId = payload.produto?.codigo;
+
+  logger.info(`💰 Monetizze - Status: ${status}, Email: ${email}`);
+
+  if (status === '2' || status === 2) {
+    // Venda aprovada - Liberar acesso
+    const plan = mapProductToPlan(productId);
+    await createOrUpdateUser(email, plan, 'active');
+    return { event: 'approved', email, plan, status: 'granted', message: 'Acesso liberado' };
+  } else if (status === '6' || status === 6 || status === '7' || status === 7) {
+    // Reembolso ou chargeback - Remover acesso
+    await blockUser(email);
+    return { event: 'refunded', email, plan: null, status: 'revoked', message: 'Acesso removido' };
+  }
+
+  return { event: status, email, plan: null, status: 'ignored', message: 'Evento ignorado' };
+}
+
+/**
+ * Processar webhook da Eduzz
+ */
+async function processEduzz(payload) {
+  const status = payload.trans_status;
+  const email = payload.cus_email;
+  const productId = payload.product_id;
+
+  logger.info(`🔵 Eduzz - Status: ${status}, Email: ${email}`);
+
+  if (status === 'aprovado' || status === 'Aprovado') {
+    // Venda aprovada - Liberar acesso
+    const plan = mapProductToPlan(productId);
+    await createOrUpdateUser(email, plan, 'active');
+    return { event: 'approved', email, plan, status: 'granted', message: 'Acesso liberado' };
+  } else if (status === 'reembolsado' || status === 'cancelado') {
+    // Reembolso ou cancelamento - Remover acesso
+    await blockUser(email);
+    return { event: 'refunded', email, plan: null, status: 'revoked', message: 'Acesso removido' };
+  }
+
+  return { event: status, email, plan: null, status: 'ignored', message: 'Evento ignorado' };
+}
+
+/**
+ * Processar webhook do PayPal
+ */
+async function processPayPal(payload) {
+  const eventType = payload.event_type;
+  const resource = payload.resource;
+  const email = resource.payer?.email_address;
+
+  logger.info(`🅿️ PayPal - Evento: ${eventType}, Email: ${email}`);
+
+  if (eventType === 'PAYMENT.SALE.COMPLETED') {
+    // Pagamento confirmado - Liberar acesso
+    const plan = mapProductToPlan(resource.custom_id);
+    await createOrUpdateUser(email, plan, 'active');
+    return { event: eventType, email, plan, status: 'granted', message: 'Acesso liberado' };
+  } else if (eventType === 'PAYMENT.SALE.REFUNDED' || eventType === 'PAYMENT.SALE.REVERSED') {
+    // Reembolso - Remover acesso
+    await blockUser(email);
+    return { event: eventType, email, plan: null, status: 'revoked', message: 'Acesso removido' };
+  }
+
+  return { event: eventType, email, plan: null, status: 'ignored', message: 'Evento ignorado' };
+}
+
+/**
+ * Mapear produto/código para plano
+ * Você pode configurar isso no painel admin
+ */
+function mapProductToPlan(productIdentifier) {
+  // Buscar mapeamento do Firestore (configurado no admin)
+  // Por enquanto, lógica simples baseada no nome/código
+  const identifier = String(productIdentifier).toLowerCase();
+
+  if (identifier.includes('prata') || identifier.includes('silver') || identifier.includes('basic')) {
+    return 'PRATA';
+  } else if (identifier.includes('ouro') || identifier.includes('gold') || identifier.includes('pro')) {
+    return 'OURO';
+  } else if (identifier.includes('diamante') || identifier.includes('diamond') || identifier.includes('premium')) {
+    return 'DIAMANTE';
+  }
+
+  // Padrão: PRATA
+  return 'PRATA';
+}
+
+/**
+ * Criar ou atualizar usuário com plano
+ */
+async function createOrUpdateUser(email, plan, status) {
+  if (!email) {
+    logger.error('❌ Email não fornecido');
+    return;
+  }
+
+  try {
+    // Buscar usuário por email
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('email', '==', email).get();
+
+    const userData = {
+      email,
+      plan,
+      status,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (snapshot.empty) {
+      // Criar novo usuário
+      userData.name = email.split('@')[0];
+      userData.avatar = `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`;
+      userData.dailyUsage = { offers: 0, urls: 0 };
+      userData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+
+      await usersRef.add(userData);
+      logger.info(`✅ Usuário criado: ${email} - Plano: ${plan}`);
+    } else {
+      // Atualizar usuário existente
+      const userDoc = snapshot.docs[0];
+      await userDoc.ref.update(userData);
+      logger.info(`✅ Usuário atualizado: ${email} - Plano: ${plan}`);
+    }
+  } catch (error) {
+    logger.error(`❌ Erro ao criar/atualizar usuário ${email}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Bloquear usuário (reembolso/chargeback)
+ */
+async function blockUser(email) {
+  if (!email) {
+    logger.error('❌ Email não fornecido');
+    return;
+  }
+
+  try {
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('email', '==', email).get();
+
+    if (!snapshot.empty) {
+      const userDoc = snapshot.docs[0];
+      await userDoc.ref.update({
+        status: 'blocked',
+        plan: 'PRATA', // Downgrade para plano básico
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      logger.info(`🚫 Usuário bloqueado: ${email}`);
+    } else {
+      logger.warn(`⚠️ Usuário não encontrado para bloquear: ${email}`);
+    }
+  } catch (error) {
+    logger.error(`❌ Erro ao bloquear usuário ${email}:`, error);
+    throw error;
+  }
+}
