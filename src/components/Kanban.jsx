@@ -347,29 +347,7 @@ const Kanban = ({ onEditOffer }) => {
                                       ➡️ Estável
                                     </span>
                                   )}
-                                </div>
-                                {item.modeling.monitorStart && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs text-gray-400">
-                                      <span>{t('monitoringProgress')}</span>
-                                      <span>
-                                        {elapsedDays}/{monitorDays} {t('days')}
-                                      </span>
-                                    </div>
-                                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                                        style={{ width: `${progressPercent}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                      {t('monitoringRemaining')}: {Math.max(monitorDays - elapsedDays, 0)}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                                                           <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
                               {item.type !== 'modelagem' && (
                                 <button
                                   onClick={(e) => {
@@ -387,21 +365,25 @@ const Kanban = ({ onEditOffer }) => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                 // ...existing code...
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleDelete(item.id, item.title);
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                    Excluir
-                                  </button>
-                                </div>
-                              </div>
-                            )}
+                                  handleEditClick(item.id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Editar
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDelete(item.id, item.title);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Excluir
+                              </button>
+                            </div>
                           </div>
                         )}
                       </Draggable>
