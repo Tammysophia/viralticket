@@ -17,7 +17,6 @@ const Kanban = ({ onEditOffer }) => {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // VT: Mapeamento de status para colunas
   const STATUS_MAP = {
     pendente: 'pending',
     execucao: 'inExecution',
@@ -34,7 +33,6 @@ const Kanban = ({ onEditOffer }) => {
     completed: 'concluido',
   };
 
-  // VT: Estrutura de colunas
   const [columns, setColumns] = useState({
     pending: { id: 'pending', title: t('pending') || 'Pendente', items: [] },
     inExecution: { id: 'inExecution', title: t('inExecution') || 'Em Execução', items: [] },
@@ -53,7 +51,6 @@ const Kanban = ({ onEditOffer }) => {
     }));
   }, [t]);
 
-  // VT: Listener em tempo real do Firestore
   useEffect(() => {
     if (!user?.id) return;
     console.log('🎯 VT: Iniciando listener de ofertas para:', user.id);
@@ -72,7 +69,6 @@ const Kanban = ({ onEditOffer }) => {
     };
   }, [user?.id]);
 
-  // VT: Organizar ofertas por status
   const organizeOffersByStatus = (allOffers) => {
     const organized = {
       pending: { ...columns.pending, items: [] },
@@ -103,7 +99,6 @@ const Kanban = ({ onEditOffer }) => {
     });
   };
 
-  // VT: Drag and drop com persistência
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
@@ -133,7 +128,6 @@ const Kanban = ({ onEditOffer }) => {
     }
   };
 
-  // VT: Excluir oferta
   const handleDelete = async (offerId, offerTitle) => {
     if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) return;
     try {
@@ -147,7 +141,6 @@ const Kanban = ({ onEditOffer }) => {
     }
   };
 
-  // VT: Duplicar oferta para modelagem
   const handleDuplicate = async (offerId) => {
     const originalOffer = offers.find((offer) => offer.id === offerId);
     if (!originalOffer) {
@@ -228,14 +221,12 @@ const Kanban = ({ onEditOffer }) => {
                       ? new Date(item.modeling.monitorStart)
                       : null;
                     const elapsedDays = monitorStart
-                      ? Math.max(
-                          0,
-                          Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS),
-                        )
+                      ? Math.max(0, Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS))
                       : 0;
                     const progressPercent = monitorStart
                       ? Math.min((elapsedDays / monitorDays) * 100, 100)
                       : 0;
+
                     return (
                       <Draggable key={item.id} draggableId={item.id} index={index}>
                         {(provided, snapshot) => (
@@ -254,13 +245,8 @@ const Kanban = ({ onEditOffer }) => {
                                 className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
-                                  const fallback = e.currentTarget.nextSibling;
-                                  if (fallback) fallback.style.display = 'inline-block';
                                 }}
                               />
-                              <span className="text-2xl" style={{ display: 'none' }}>
-                                {item.agent === 'sophia' ? '🔥' : '🌟'}
-                              </span>
                               <span className="text-xs text-purple-400 font-semibold">
                                 {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                               </span>
@@ -284,21 +270,13 @@ const Kanban = ({ onEditOffer }) => {
                               <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
                                 <div className="flex items-center gap-2 mb-2">
                                   <TrendingUp className="w-4 h-4 text-cyan-400" />
-                                  <span className="text-xs font-bold text-cyan-300">
-                                    {t('monitoringProgress')}
-                                  </span>
+                                  <span className="text-xs font-bold text-cyan-300">{t('monitoringProgress')}</span>
                                 </div>
                                 <div className="space-y-1 text-xs">
                                   {item.modeling.creativesCount > 0 && (
                                     <div className="flex items-center justify-between">
                                       <span className="text-gray-400">{t('creativesLabel')}</span>
-                                      <span
-                                        className={`font-semibold ${
-                                          item.modeling.creativesCount >= 7
-                                            ? 'text-green-400'
-                                            : 'text-white'
-                                        }`}
-                                      >
+                                      <span className={item.modeling.creativesCount >= 7 ? 'text-green-400' : 'text-white'}>
                                         {item.modeling.creativesCount}/7
                                       </span>
                                     </div>
@@ -313,12 +291,6 @@ const Kanban = ({ onEditOffer }) => {
                                     <div className="flex items-center gap-1">
                                       <span className="text-green-400">✓</span>
                                       <span className="text-green-400 text-xs">PV</span>
-                                    </div>
-                                  )}
-                                  {item.modeling.checkoutUrl && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-green-400">✓</span>
-                                      <span className="text-green-400 text-xs">Checkout</span>
                                     </div>
                                   )}
                                 </div>
@@ -337,17 +309,24 @@ const Kanban = ({ onEditOffer }) => {
                                       🚫 Parar
                                     </span>
                                   )}
-                                  {item.modeling.trend === 'subindo' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                      📈 Subindo
-                                    </span>
-                                  )}
-                                  {item.modeling.trend === 'estavel' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
-                                      ➡️ Estável
-                                    </span>
-                                  )}
-                                                           <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                                </div>
+                                {item.modeling.monitorStart && (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs text-gray-400">
+                                      <span>{t('monitoringProgress')}</span>
+                                      <span>{elapsedDays}/{monitorDays} {t('days')}</span>
+                                    </div>
+                                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                                        style={{ width: `${progressPercent}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
                               {item.type !== 'modelagem' && (
                                 <button
                                   onClick={(e) => {
@@ -358,7 +337,7 @@ const Kanban = ({ onEditOffer }) => {
                                   className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
                                 >
                                   <Copy className="w-3 h-3" />
-                                  Duplicar para Modelagem
+                                  Duplicar
                                 </button>
                               )}
                               <button
