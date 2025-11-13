@@ -42,6 +42,7 @@ const AdminOverview = () => {
     { plan: 'PRATA', percentage: 0, color: 'gray' },
     { plan: 'OURO', percentage: 0, color: 'yellow' },
     { plan: 'DIAMANTE', percentage: 0, color: 'cyan' },
+    { plan: 'MENTORIA', percentage: 0, color: 'purple' },
   ]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [userGrowth, setUserGrowth] = useState([0, 0, 0, 0, 0, 0, 0]);
@@ -83,7 +84,7 @@ const AdminOverview = () => {
         const conversionRate =
           totalUsers > 0 ? Math.round((offersToday / totalUsers) * 100) : 0;
 
-        const plans = { PRATA: 0, OURO: 0, DIAMANTE: 0 };
+        const plans = { PRATA: 0, OURO: 0, DIAMANTE: 0, MENTORIA: 0 };
         usersSnapshot.forEach((docSnap) => {
           const plan = docSnap.data().plan || 'PRATA';
           if (plans[plan] !== undefined) {
@@ -109,6 +110,12 @@ const AdminOverview = () => {
             percentage:
               totalPlans > 0 ? Math.round((plans.DIAMANTE / totalPlans) * 100) : 0,
             color: 'cyan',
+          },
+          {
+            plan: 'MENTORIA',
+            percentage:
+              totalPlans > 0 ? Math.round((plans.MENTORIA / totalPlans) * 100) : 0,
+            color: 'purple',
           },
         ]);
 
@@ -286,9 +293,10 @@ const AdminOverview = () => {
           <h3 className="text-xl font-bold mb-4">Distribuição de Planos</h3>
           <div className="space-y-3">
             {[
-              { plan: 'PRATA', percentage: 40, color: 'gray' },
-              { plan: 'OURO', percentage: 35, color: 'yellow' },
-              { plan: 'DIAMANTE', percentage: 25, color: 'cyan' },
+              { plan: 'PRATA', percentage: 30, color: 'gray' },
+              { plan: 'OURO', percentage: 25, color: 'yellow' },
+              { plan: 'DIAMANTE', percentage: 20, color: 'cyan' },
+              { plan: 'MENTORIA', percentage: 25, color: 'purple' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between text-sm mb-1">

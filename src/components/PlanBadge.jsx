@@ -6,6 +6,7 @@ const PLAN_LABEL_MAP = {
   PRATA: 'planSilver',
   OURO: 'planGold',
   DIAMANTE: 'planDiamond',
+  MENTORIA: 'planMentorship',
   ADMIN: 'planAdmin',
 };
 

@@ -12,6 +12,7 @@ const AdminSettings = () => {
   const { user } = useAuth();
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [whatsappMessage, setWhatsappMessage] = useState('Olá! Preciso de suporte com o ViralTicket.');
+  const [mentoriaLink, setMentoriaLink] = useState('');
   const [loading, setLoading] = useState(true);
   const { success, error } = useToast();
 
@@ -34,11 +35,12 @@ const AdminSettings = () => {
     // Tentar carregar do Firestore
     if (db) {
       try {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'whatsapp'));
+        const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
         if (settingsDoc.exists()) {
           const data = settingsDoc.data();
-          setWhatsappNumber(data.number || '');
-          setWhatsappMessage(data.message || 'Olá! Preciso de suporte com o ViralTicket.');
+          setWhatsappNumber(data.whatsappNumber || '');
+          setWhatsappMessage(data.whatsappMessage || 'Olá! Preciso de suporte com o ViralTicket.');
+          setMentoriaLink(data.mentoriaLink || '');
         }
       } catch (err) {
         console.warn('VT: Erro ao carregar configurações do Firestore:', err);
@@ -46,12 +48,13 @@ const AdminSettings = () => {
     }
     
     // Fallback: carregar do localStorage
-    const saved = localStorage.getItem('viralticket_whatsapp_settings');
+    const saved = localStorage.getItem('viralticket_settings');
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        setWhatsappNumber(data.number || '');
-        setWhatsappMessage(data.message || 'Olá! Preciso de suporte com o ViralTicket.');
+        setWhatsappNumber(data.whatsappNumber || '');
+        setWhatsappMessage(data.whatsappMessage || 'Olá! Preciso de suporte com o ViralTicket.');
+        setMentoriaLink(data.mentoriaLink || '');
       } catch (err) {
         console.error('Erro ao carregar configurações:', err);
       }
@@ -61,24 +64,20 @@ const AdminSettings = () => {
   };
 
   const handleSave = async () => {
-    if (!whatsappNumber) {
-      error('📝 Digite o número do WhatsApp');
-      return;
-    }
-
     const settings = {
-      number: whatsappNumber,
-      message: whatsappMessage,
+      whatsappNumber,
+      whatsappMessage,
+      mentoriaLink,
       updatedAt: new Date().toISOString(),
     };
 
     // Salvar no localStorage (sempre funciona)
-    localStorage.setItem('viralticket_whatsapp_settings', JSON.stringify(settings));
+    localStorage.setItem('viralticket_settings', JSON.stringify(settings));
 
     // Tentar salvar no Firestore
     if (db) {
       try {
-        await setDoc(doc(db, 'settings', 'whatsapp'), settings);
+        await setDoc(doc(db, 'settings', 'general'), settings);
         success('✅ Configurações salvas no Firestore!');
       } catch (err) {
         console.warn('VT: Erro ao salvar no Firestore:', err);
@@ -142,11 +141,46 @@ const AdminSettings = () => {
         {whatsappNumber && (
           <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
             <p className="text-sm text-green-400 mb-2">
-              <strong>Preview do Link:</strong>
+              <strong>Preview do Link WhatsApp:</strong>
             </p>
             <p className="text-xs text-gray-300 font-mono break-all">
               https://wa.me/{whatsappNumber}?text={encodeURIComponent(whatsappMessage)}
             </p>
+          </div>
+        )}
+
+        <hr className="border-white/10 my-6" />
+
+        <div>
+          <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-2xl">🎓</span>
+            Plano MENTORIA
+          </h4>
+          <Input
+            label="Link de Venda da Mentoria"
+            placeholder="Ex: https://pay.hotmart.com/..."
+            value={mentoriaLink}
+            onChange={(e) => setMentoriaLink(e.target.value)}
+            helperText="Link da página de venda da mentoria (Hotmart, Stripe, etc)"
+          />
+        </div>
+
+        {mentoriaLink && (
+          <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
+            <p className="text-sm text-purple-400 mb-2">
+              <strong>Link da Mentoria:</strong>
+            </p>
+            <p className="text-xs text-gray-300 font-mono break-all">
+              {mentoriaLink}
+            </p>
+            <a 
+              href={mentoriaLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-purple-400 hover:text-purple-300 underline mt-2 inline-block"
+            >
+              → Testar link
+            </a>
           </div>
         )}
 

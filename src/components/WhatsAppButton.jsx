@@ -16,11 +16,11 @@ const WhatsAppButton = () => {
     // Tentar carregar do Firestore
     if (db) {
       try {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'whatsapp'));
+        const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
         if (settingsDoc.exists()) {
           const data = settingsDoc.data();
-          setWhatsappNumber(data.number || '');
-          setWhatsappMessage(data.message || 'Olá! Preciso de suporte com o ViralTicket.');
+          setWhatsappNumber(data.whatsappNumber || '');
+          setWhatsappMessage(data.whatsappMessage || 'Olá! Preciso de suporte com o ViralTicket.');
           return;
         }
       } catch (err) {
@@ -29,12 +29,12 @@ const WhatsAppButton = () => {
     }
     
     // Fallback: carregar do localStorage
-    const saved = localStorage.getItem('viralticket_whatsapp_settings');
+    const saved = localStorage.getItem('viralticket_settings');
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        setWhatsappNumber(data.number || '');
-        setWhatsappMessage(data.message || 'Olá! Preciso de suporte com o ViralTicket.');
+        setWhatsappNumber(data.whatsappNumber || '');
+        setWhatsappMessage(data.whatsappMessage || 'Olá! Preciso de suporte com o ViralTicket.');
       } catch (err) {
         console.error('Erro ao carregar configurações:', err);
       }

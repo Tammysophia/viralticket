@@ -25,12 +25,16 @@ const getTodayISODate = () => {
 // Importar webhooks
 const webhooks = require('./webhooks');
 const resetAPIKeys = require('./resetAPIKeys');
+const checkExpiredPlans = require('./checkExpiredPlans');
 
 // Exportar funções de webhook
 exports.processWebhook = webhooks.processWebhook;
 
 // Exportar função de reset de chaves API
 exports.resetAPIKeysQuota = resetAPIKeys.resetAPIKeysQuota;
+
+// Exportar função de verificação de planos expirados
+exports.checkExpiredPlans = checkExpiredPlans.checkExpiredPlans;
 
 // Reset diário de ofertas
 exports.resetDailyOffers = onSchedule(

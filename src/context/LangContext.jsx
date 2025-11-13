@@ -93,9 +93,11 @@ const translations = {
     silver: 'PRATA',
     gold: 'OURO',
     diamond: 'DIAMANTE',
+    mentorship: 'MENTORIA',
     planSilver: 'Prata',
     planGold: 'Ouro',
     planDiamond: 'Diamante',
+    planMentorship: 'Mentoria',
     planAdmin: 'Admin',
 
     // Common
@@ -193,9 +195,11 @@ const translations = {
     silver: "SILVER",
     gold: "GOLD",
     diamond: "DIAMOND",
+    mentorship: "MENTORSHIP",
     planSilver: "Silver",
     
     planDiamond: "Diamond",
+    planMentorship: "Mentorship",
     
     planAdmin: 'Admin',
 

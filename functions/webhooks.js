@@ -208,7 +208,9 @@ function mapProductToPlan(productIdentifier) {
   // Por enquanto, lógica simples baseada no nome/código
   const identifier = String(productIdentifier).toLowerCase();
 
-  if (identifier.includes('prata') || identifier.includes('silver') || identifier.includes('basic')) {
+  if (identifier.includes('mentoria') || identifier.includes('mentorship')) {
+    return 'MENTORIA';
+  } else if (identifier.includes('prata') || identifier.includes('silver') || identifier.includes('basic')) {
     return 'PRATA';
   } else if (identifier.includes('ouro') || identifier.includes('gold') || identifier.includes('pro')) {
     return 'OURO';
@@ -240,6 +242,11 @@ async function createOrUpdateUser(email, plan, status) {
       status,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
+    
+    // Se for plano MENTORIA, adicionar data de início
+    if (plan === 'MENTORIA') {
+      userData.planStartDate = admin.firestore.FieldValue.serverTimestamp();
+    }
 
     if (snapshot.empty) {
       // Criar novo usuário

@@ -176,7 +176,7 @@ const AdminUsers = () => {
             <div>
               <p className="text-sm text-gray-400 mb-2">Alterar Plano</p>
               <div className="grid grid-cols-2 gap-2">
-                {['PRATA', 'OURO', 'DIAMANTE'].map((plan) => (
+                {['PRATA', 'OURO', 'DIAMANTE', 'MENTORIA'].map((plan) => (
                   <button
                     key={plan}
                     onClick={() => handleChangePlan(selectedUser.id, plan)}
