@@ -1,13 +1,13 @@
 // ...existing code...
 import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp, Copy } from 'lucide-react';
+import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOfferForModeling } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
 
 const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -171,29 +171,7 @@ const Kanban = ({ onEditOffer, onOpenModeling }) => {
     }
   };
 
-  // duplicar via botão: cria modelagem e abre
-  const handleDuplicate = async (offerId) => {
-    const original = offersRef.current.find(o => o.id === offerId);
-    if (!original) {
-      toast.error('Oferta não encontrada');
-      return;
-    }
-    try {
-      toast.loading('Criando modelagem...');
-      const newId = await duplicateOfferForModeling(original);
-      toast.dismiss();
-      toast.success('Modelagem criada!');
-      if (typeof onOpenModeling === 'function') {
-        onOpenModeling(newId);
-      } else {
-        window.location.href = `/modelagem/${newId}`;
-      }
-    } catch (err) {
-      toast.dismiss();
-      toast.error('Erro ao duplicar');
-      console.error(err);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -293,10 +271,6 @@ const Kanban = ({ onEditOffer, onOpenModeling }) => {
                             )}
 
                             <div className="flex gap-2 mt-3 pt-3 border-t border-white/10 flex-wrap">
-                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDuplicate(item.id); }} className="flex-1 min-w-[120px] flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors">
-                                <Copy className="w-3 h-3" /> Duplicar
-                              </button>
-
                               <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEditClick(item.id); }} className="flex-1 min-w-[100px] flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors">
                                 <Edit2 className="w-3 h-3" /> Editar
                               </button>
