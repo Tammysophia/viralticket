@@ -419,4 +419,3 @@ const Kanban = ({ onEditOffer }) => {
 };
 
 export default Kanban;
-// ...existing code...
