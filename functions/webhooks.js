@@ -12,6 +12,7 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
+const { sendPasswordCreationEmail } = require('./services/emailService');
 
 const db = admin.firestore();
 
@@ -107,6 +108,19 @@ async function processHotmart(payload) {
   const email = data.buyer?.email;
   const productName = data.product?.name;
   const status = data.purchase?.status;
+  const transactionId = data.purchase?.transaction || data.transaction;
+
+  // IDEMPOTÊNCIA: Verificar se a transação já foi processada
+  if (transactionId) {
+    const existingTransaction = await db.collection('processedTransactions')
+      .doc(`hotmart_${transactionId}`)
+      .get();
+    
+    if (existingTransaction.exists) {
+      logger.info(`⚠️ Transação já processada: ${transactionId}`);
+      return { event, email, plan: null, status: 'duplicate', message: 'Transação já processada' };
+    }
+  }
 
   logger.info(`🔥 Hotmart - Evento: ${event}, Email: ${email}, Status: ${status}`);
 
@@ -114,6 +128,18 @@ async function processHotmart(payload) {
     // Venda confirmada - Liberar acesso
     const plan = mapProductToPlan(productName);
     await createOrUpdateUser(email, plan, 'active');
+    
+    // Registrar transação como processada
+    if (transactionId) {
+      await db.collection('processedTransactions').doc(`hotmart_${transactionId}`).set({
+        platform: 'hotmart',
+        transactionId,
+        email,
+        event,
+        processedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    
     return { event, email, plan, status: 'granted', message: 'Acesso liberado' };
   } else if (event === 'PURCHASE_REFUNDED' || event === 'PURCHASE_CHARGEBACK') {
     // Reembolso ou chargeback - Remover acesso
@@ -286,9 +312,14 @@ async function createOrUpdateUser(email, plan, status) {
       await usersRef.add(userData);
       logger.info(`✅ Usuário criado: ${email} - Plano: ${plan} - Token: ${token.substring(0, 20)}...`);
       
-      // TODO: Enviar email com link de criação de senha
-      // const resetURL = `https://viralticket.vercel.app/criar-senha?token=${token}`;
-      // await sendPasswordCreationEmail(email, resetURL);
+      // Enviar email com link de criação de senha
+      try {
+        await sendPasswordCreationEmail(email, token, userData.name);
+        logger.info(`📧 Email de criação de senha enviado para ${email}`);
+      } catch (emailError) {
+        logger.error(`❌ Erro ao enviar email para ${email}:`, emailError);
+        // Não falhar o webhook se o email falhar
+      }
     } else {
       // Atualizar usuário existente
       const userDoc = snapshot.docs[0];
