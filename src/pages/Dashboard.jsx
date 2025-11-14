@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Youtube, Sparkles, KanbanSquare, Bot, Clock } from 'lucide-react';
+import { Youtube, Sparkles, KanbanSquare, Bot, TrendingUp, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -7,10 +7,11 @@ import Tabs from '../components/Tabs';
 import YouTubeExtractor from '../components/YouTubeExtractor';
 import AIChat from '../components/AIChat';
 import Kanban from '../components/Kanban';
+import KanbanMonitoring from '../components/KanbanMonitoring';
+import KanbanModeling from '../components/KanbanModeling';
 import GPTAgents from '../components/GPTAgents';
 import WhatsAppButton from '../components/WhatsAppButton';
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
-import OfferMonitoring from '../components/OfferMonitoring';
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
 import ProgressBar from '../components/ProgressBar';
@@ -29,9 +30,9 @@ const Dashboard = () => {
   const tabs = [
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
     { id: 'ai', label: t('aiChat'), icon: Sparkles },
-    { id: 'kanban', label: t('offersKanban'), icon: KanbanSquare },
-    // VT: Nova aba focada em monitoramento/modelagem separado do Kanban de ofertas
-    { id: 'monitoring', label: t('offerMonitoring'), icon: Clock },
+    { id: 'kanban', label: 'Ofertas Salvas', icon: KanbanSquare },
+    { id: 'monitoring', label: 'Monitoramento', icon: TrendingUp },
+    { id: 'modeling', label: 'Modelagem', icon: Layers },
     { id: 'gptAgents', label: t('gptAgents'), icon: Bot },
   ];
 
@@ -142,10 +143,11 @@ const Dashboard = () => {
             {activeTab === 'ai' && (
               <AIChat initialText={aiInitialText} />
             )}
-              {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
-              {activeTab === 'monitoring' && (
-                <OfferMonitoring onEditOffer={handleEditOffer} />
-              )}
+            {activeTab === 'kanban' && <Kanban onEditOffer={handleEditOffer} />}
+            {activeTab === 'monitoring' && (
+              <KanbanMonitoring onEditOffer={handleEditOffer} />
+            )}
+            {activeTab === 'modeling' && <KanbanModeling onEditOffer={handleEditOffer} />}
             {activeTab === 'gptAgents' && <GPTAgents />}
           </motion.div>
         </main>
