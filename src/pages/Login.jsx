@@ -7,7 +7,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import toast, { Toaster } from 'react-hot-toast';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import LanguageSelector from '../components/LanguageSelector';
+import LanguageSelectorCompact from '../components/LanguageSelectorCompact';
 import { validateEmail, validatePassword } from '../utils/validation';
 
 const Login = () => {
@@ -180,7 +180,7 @@ const Login = () => {
 
         {/* Language Selector */}
         <div className="mt-6 flex justify-center">
-          <LanguageSelector />
+          <LanguageSelectorCompact />
         </div>
       </motion.div>
     </div>

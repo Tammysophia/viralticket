@@ -1,7 +1,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'default' }) => {
+  // Definir tamanhos do modal
+  const sizeClasses = {
+    small: 'md:max-w-md',
+    default: 'md:w-[90vw]',
+    large: 'md:w-[95vw]',
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -21,8 +28,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-                // VT: Modal ocupa 100% no mobile e 90% no desktop, preservando o visual glass original
-                className="glass border border-white/20 rounded-2xl p-6 w-full h-full max-h-[100vh] overflow-y-auto md:h-auto md:w-[90vw]"
+                // VT: Modal ocupa 100% no mobile e tamanho personalizado no desktop
+                className={`glass border border-white/20 rounded-2xl p-6 w-full h-full max-h-[100vh] overflow-y-auto md:h-auto ${sizeClasses[size]}`}
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">

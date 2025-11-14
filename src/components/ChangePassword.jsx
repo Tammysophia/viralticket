@@ -149,6 +149,7 @@ const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
         onClose={handleClose}
         title={isForced ? t('forcePasswordChange') : t('changePassword')}
         closeOnOverlayClick={!isForced}
+        size="small"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
@@ -209,20 +210,14 @@ const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
           </div>
 
           {isForced && (
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-              <p className="text-sm text-yellow-300">
-                <strong>⚠️ ATENÇÃO:</strong> Por segurança, você deve alterar sua senha temporária antes de usar a plataforma.
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+              <p className="text-xs text-yellow-300">
+                <strong>⚠️ ATENÇÃO:</strong> Altere sua senha temporária antes de usar a plataforma.
               </p>
             </div>
           )}
-          
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-            <p className="text-sm text-blue-300">
-              ℹ️ Sua senha deve ter no mínimo 6 caracteres.
-            </p>
-          </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             {!isForced && (
               <Button
                 type="button"
