@@ -313,7 +313,7 @@ async function createOrUpdateUser(email, plan, status) {
       userData.dailyUsage = { offers: 0, urls: 0 };
       userData.createdAt = admin.firestore.FieldValue.serverTimestamp();
       userData.status = 'active';
-      userData.mustChangePassword = true; // Forçar troca de senha no primeiro login
+      // NÃO forçar troca de senha para quem comprou (já recebeu senha própria)
       
       await db.collection('users').doc(authUser.uid).set(userData);
       logger.info(`✅ Perfil criado no Firestore: ${email} - Plano: ${plan}`);
