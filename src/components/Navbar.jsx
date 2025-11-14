@@ -3,6 +3,7 @@ import { Globe, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
+import { BrazilFlag, USAFlag, SpainFlag } from './FlagIcons';
 
 const Navbar = () => {
   const { language, changeLanguage, t } = useLanguage();
@@ -10,9 +11,9 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const languages = [
-    { code: 'pt-BR', flag: '🇧🇷', name: 'Português' },
-    { code: 'en-US', flag: '🇺🇸', name: 'English' },
-    { code: 'es-ES', flag: '🇪🇸', name: 'Español' },
+    { code: 'pt-BR', FlagComponent: BrazilFlag, name: 'Português' },
+    { code: 'en-US', FlagComponent: USAFlag, name: 'English' },
+    { code: 'es-ES', FlagComponent: SpainFlag, name: 'Español' },
   ];
 
   return (
@@ -50,18 +51,18 @@ const Navbar = () => {
             <span className="hidden sm:inline">Admin</span>
           </button>
         )}
-        <Globe className="w-4 h-4 text-gray-400" />
+        <Globe className="w-4 h-4 text-gray-400 mr-1" />
         {languages.map((lang) => (
           <button
             key={lang.code}
             onClick={() => changeLanguage(lang.code)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+            className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 flex items-center gap-2 ${
               language === lang.code
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                : 'glass-hover text-gray-400'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30'
+                : 'glass-hover text-gray-400 hover:text-gray-200'
             }`}
           >
-            <span className="mr-1">{lang.flag}</span>
+            <lang.FlagComponent className="w-5 h-5 rounded-sm shadow-sm" />
             <span className="hidden sm:inline">{lang.name}</span>
           </button>
         ))}

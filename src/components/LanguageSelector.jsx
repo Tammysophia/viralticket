@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Globe } from 'lucide-react';
+import { Globe, Check } from 'lucide-react';
 import { useLanguage } from '../hooks/useLanguage';
+import { BrazilFlag, USAFlag, SpainFlag } from './FlagIcons';
 
 const LanguageSelector = ({ variant = 'default' }) => {
   const { language, changeLanguage } = useLanguage();
@@ -10,19 +11,19 @@ const LanguageSelector = ({ variant = 'default' }) => {
     { 
       code: 'pt-BR', 
       name: 'Português', 
-      flag: '🇧🇷',
+      FlagComponent: BrazilFlag,
       shortName: 'PT'
     },
     { 
       code: 'en-US', 
       name: 'English', 
-      flag: '🇺🇸',
+      FlagComponent: USAFlag,
       shortName: 'EN'
     },
     { 
       code: 'es-ES', 
       name: 'Español', 
-      flag: '🇪🇸',
+      FlagComponent: SpainFlag,
       shortName: 'ES'
     },
   ];
@@ -39,10 +40,10 @@ const LanguageSelector = ({ variant = 'default' }) => {
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-purple-500 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-purple-500 transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/20"
         >
-          <span className="text-2xl">{currentLang.flag}</span>
-          <span className="text-sm font-medium">{currentLang.shortName}</span>
+          <currentLang.FlagComponent className="w-5 h-5 rounded-sm shadow-sm" />
+          <span className="text-sm font-medium text-gray-200">{currentLang.shortName}</span>
         </button>
 
         {isOpen && (
@@ -51,17 +52,20 @@ const LanguageSelector = ({ variant = 'default' }) => {
               className="fixed inset-0 z-40" 
               onClick={() => setIsOpen(false)}
             />
-            <div className="absolute top-full mt-2 right-0 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden min-w-[160px]">
+            <div className="absolute top-full mt-2 right-0 bg-gray-800/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50 overflow-hidden min-w-[180px]">
               {languages.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-purple-600/20 transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-purple-600/20 transition-all duration-200 ${
                     language === lang.code ? 'bg-purple-600/30' : ''
                   }`}
                 >
-                  <span className="text-2xl">{lang.flag}</span>
-                  <span className="text-sm font-medium">{lang.name}</span>
+                  <lang.FlagComponent className="w-6 h-6 rounded-sm shadow-sm" />
+                  <span className="text-sm font-medium text-gray-200">{lang.name}</span>
+                  {language === lang.code && (
+                    <Check className="ml-auto w-4 h-4 text-purple-400" />
+                  )}
                 </button>
               ))}
             </div>
@@ -75,11 +79,11 @@ const LanguageSelector = ({ variant = 'default' }) => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-purple-500 transition-all"
+        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500 hover:bg-white/10 transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/20 group"
       >
-        <Globe className="w-4 h-4" />
-        <span className="text-2xl">{currentLang.flag}</span>
-        <span className="text-sm font-medium">{currentLang.name}</span>
+        <Globe className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" />
+        <currentLang.FlagComponent className="w-6 h-6 rounded shadow-sm" />
+        <span className="text-sm font-medium text-gray-200">{currentLang.name}</span>
       </button>
 
       {isOpen && (
@@ -88,19 +92,19 @@ const LanguageSelector = ({ variant = 'default' }) => {
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full mt-2 right-0 bg-gray-900 border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden min-w-[180px]">
+          <div className="absolute top-full mt-2 right-0 bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden min-w-[200px]">
             {languages.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-purple-600/20 transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-purple-600/20 transition-all duration-200 ${
                   language === lang.code ? 'bg-purple-600/30 border-l-2 border-purple-500' : ''
                 }`}
               >
-                <span className="text-2xl">{lang.flag}</span>
-                <span className="text-sm font-medium">{lang.name}</span>
+                <lang.FlagComponent className="w-6 h-6 rounded shadow-sm" />
+                <span className="text-sm font-medium text-gray-200">{lang.name}</span>
                 {language === lang.code && (
-                  <span className="ml-auto text-purple-400 text-xs">✓</span>
+                  <Check className="ml-auto w-4 h-4 text-purple-400" />
                 )}
               </button>
             ))}
