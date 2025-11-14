@@ -244,20 +244,21 @@ const AIChat = ({ initialText = '' }) => {
     try {
       console.log('🎨 VT: Gerando criativos...');
 
-      // NÃO repetir análise - só gerar criativos
-      const creativesPrompt = `Você já fez a análise. AGORA gere APENAS os CRIATIVOS:
+      // ✅ NOVO: Usar prompt específico do Firebase para Criativos
+      console.log(`🎨 VT: Buscando prompt específico de criativos: ${selectedAgent}_criativos`);
+      
+      // ✅ Contexto mínimo com informações da oferta já gerada
+      const offerContext = `OFERTA CAMPEÃ JÁ DEFINIDA:
+Título: ${output.title}
+Subtítulo: ${output.subtitle}
+Benefícios: ${output.bullets.join(', ')}
+CTA: ${output.cta}
+Bônus: ${output.bonus}
 
-✅ 5 POSTS ESTÁTICOS (1080x1080) numerados
-✅ 5 VÍDEOS CURTOS (Reels/TikTok) numerados
-✅ Para cada: Copy + Ideia visual + Descrição
-✅ NÃO repita análise anterior
+Gere APENAS os criativos (posts + vídeos) usando essas informações.`;
 
-COMECE DIRETO:
-POST 1:
-[conteúdo do post]`;
-
-      // Chamar IA para gerar criativos no idioma selecionado
-      const creativesData = await generateOffer(creativesPrompt, selectedAgent, getLanguageForAI());
+      // ✅ Chamar generateOffer com prompt específico do Firebase
+      const creativesData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), 'criativos');
 
       // Adicionar ao output existente
       setOutput(prev => ({
@@ -350,9 +351,15 @@ Gere APENAS o formato solicitado usando essas informações.`;
 
       // ✅ NOVO: Usar prompts específicos do Firebase para Ebook
       // Nota: Ebook usa o mesmo sistema de prompts separados
-      // Os prompts no Firebase devem ser: sophia_canva, sophia_gama, sofia_canva, sofia_gama
+      // Os prompts no Firebase: sophia_entregavel_canva, sophia_gama, sofia_entregavel_canva, sofia_gama
       
-      const specificPromptType = format; // 'canva' ou 'gama'
+      // Mapear formato para nome correto no Firebase
+      const promptMapping = {
+        'canva': 'entregavel_canva',  // Usa entregavel_canva no Firebase
+        'gama': 'gama'
+      };
+      
+      const specificPromptType = promptMapping[format];
       
       console.log(`📘 VT: Buscando prompt específico de ebook: ${selectedAgent}_${specificPromptType}`);
       
