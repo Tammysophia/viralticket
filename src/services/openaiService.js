@@ -4,165 +4,101 @@ import { db } from '../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 /**
- * Busca o prompt do agente no Firestore
- * @param {string} agentId - ID do agente (sophia, sofia, sophia_lovable, etc)
- * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress)
- * @returns {Promise<string|null>} - Prompt ou null se não encontrar
+ * Busca o template da agente do Firestore
+ * @param {string} agentId - ID da agente (sophia, sofia, sophia_lovable, etc)
+ * @returns {Promise<string|null>} - Prompt da agente ou null
  */
-const getAgentPromptFromFirestore = async (agentId, specificPrompt = null) => {
+const getAgentTemplate = async (agentId) => {
   try {
-    // Se specificPrompt foi fornecido, buscar prompt específico
-    const promptId = specificPrompt ? `${agentId}_${specificPrompt}` : agentId;
+    console.log(`🔍 VT: Buscando template "${agentId}" no Firestore...`);
     
-    console.log(`🔍 VT: Buscando prompt "${promptId}" no Firestore...`);
-    
-    if (!db) {
-      console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
-      return null;
-    }
-
-    const docRef = doc(db, 'agent_templates', promptId);
+    const docRef = doc(db, 'agent_templates', agentId);
     const docSnap = await getDoc(docRef);
-
+    
     if (docSnap.exists()) {
       const data = docSnap.data();
-      console.log(`✅ VT: Prompt encontrado para "${promptId}"`);
-      return data.prompt || data.systemPrompt || null;
-    } else {
-      console.warn(`⚠️ VT: Prompt "${promptId}" não encontrado no Firestore`);
+      const prompt = data.prompt || data.systemPrompt || null;
       
-      // Se não encontrou prompt específico, tentar buscar o prompt principal
-      if (specificPrompt) {
-        console.log(`🔄 VT: Tentando buscar prompt principal "${agentId}"...`);
-        const mainDocRef = doc(db, 'agent_templates', agentId);
-        const mainDocSnap = await getDoc(mainDocRef);
-        
-        if (mainDocSnap.exists()) {
-          const data = mainDocSnap.data();
-          console.log(`✅ VT: Usando prompt principal "${agentId}" como fallback`);
-          return data.prompt || data.systemPrompt || null;
-        }
+      if (prompt && prompt.trim().length > 0) {
+        console.log(`✅ VT: Template ${agentId} carregado (${prompt.length} caracteres)`);
+        return prompt;
+      } else {
+        console.warn(`⚠️ VT: Template ${agentId} está vazio`);
+        return null;
       }
-      
-      return null;
     }
+    
+    console.warn(`⚠️ VT: Template ${agentId} não encontrado`);
+    return null;
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
+    console.error(`❌ VT: Erro ao buscar template ${agentId}:`, error);
     return null;
   }
 };
 
 /**
- * Parse seguro de JSON removendo markdown
- * @param {string} content - Conteúdo a parsear
- * @returns {Object} - JSON parseado
+ * Função genérica para chamar a IA
+ * @param {string} agentId - ID do template no Firebase
+ * @param {string} userMessage - Mensagem do usuário
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Resposta da IA
  */
-const safeJsonParse = (content) => {
+const callOpenAI = async (agentId, userMessage, targetLanguage = 'português brasileiro') => {
   try {
-    console.log('📝 VT: Tentando parsear JSON da resposta da IA...');
-    console.log('📏 VT: Tamanho da resposta:', content.length, 'caracteres');
+    const apiKey = await getServiceAPIKey('openai');
     
-    // Tentar parsear direto primeiro
-    try {
-      const parsed = JSON.parse(content);
-      console.log('✅ VT: JSON parseado com sucesso (sem limpeza necessária)!');
-      return parsed;
-    } catch (e) {
-      // Se falhar, tentar extrair JSON de resposta complexa da Sophia Universal
-      console.log('🧹 VT: Resposta complexa detectada, procurando JSON...');
-      
-      // Procurar por blocos ```json```
-      const jsonBlockMatch = content.match(/```json\s*\n?([\s\S]*?)\n?```/i);
-      if (jsonBlockMatch) {
-        console.log('🔍 VT: Encontrado bloco ```json```');
-        try {
-          const parsed = JSON.parse(jsonBlockMatch[1].trim());
-          console.log('✅ VT: JSON extraído de bloco markdown!');
-          return parsed;
-        } catch (e2) {
-          console.log('⚠️ VT: Bloco markdown não é JSON válido');
-        }
-      }
-      
-      // Procurar por padrão específico: {"title": ... }
-      const patterns = [
-        // Procurar objeto com title, subtitle, bullets, cta, bonus
-        /\{\s*"title"\s*:\s*"[^"]*"\s*,\s*"subtitle"\s*:\s*"[^"]*"\s*,\s*"bullets"\s*:\s*\[[^\]]*\]\s*,\s*"cta"\s*:\s*"[^"]*"\s*,\s*"bonus"\s*:\s*"[^"]*"\s*\}/s,
-        // Procurar objeto mais flexível
-        /\{[^{}]*"title"[^{}]*"subtitle"[^{}]*"bullets"[^{}]*"cta"[^{}]*"bonus"[^{}]*\}/s,
-      ];
-      
-      for (let i = 0; i < patterns.length; i++) {
-        const match = content.match(patterns[i]);
-        if (match) {
-          console.log(`🔍 VT: Encontrado JSON com padrão ${i + 1}`);
-          try {
-            // Extrair o match e tentar balancear chaves
-            let jsonStr = match[0];
-            const parsed = JSON.parse(jsonStr);
-            console.log('✅ VT: JSON extraído com padrão!');
-            return parsed;
-          } catch (e3) {
-            console.log(`⚠️ VT: Padrão ${i + 1} não parseou`);
-          }
-        }
-      }
-      
-      // Extrair TODOS os objetos JSON da resposta e procurar o que tem a estrutura correta
-      const allJsonObjects = [];
-      let depth = 0;
-      let start = -1;
-      
-      for (let i = 0; i < content.length; i++) {
-        if (content[i] === '{') {
-          if (depth === 0) start = i;
-          depth++;
-        } else if (content[i] === '}') {
-          depth--;
-          if (depth === 0 && start !== -1) {
-            const jsonStr = content.substring(start, i + 1);
-            try {
-              const parsed = JSON.parse(jsonStr);
-              // Verificar se tem a estrutura que precisamos
-              if (parsed.title && parsed.subtitle && parsed.bullets && parsed.cta) {
-                console.log('✅ VT: JSON válido encontrado na resposta!');
-                return parsed;
-              }
-              allJsonObjects.push(parsed);
-            } catch (e) {
-              // Ignorar JSONs inválidos
-            }
-            start = -1;
-          }
-        }
-      }
-      
-      console.log(`🔍 VT: Encontrados ${allJsonObjects.length} objetos JSON na resposta`);
-      
-      // Se não encontrou JSON válido, criar estrutura básica a partir do texto
-      console.warn('⚠️ VT: Nenhum JSON válido encontrado, criando estrutura básica...');
-      
-      return {
-        title: '🎯 Oferta Especial',
-        subtitle: 'Análise detalhada gerada. Verifique o console para detalhes completos.',
-        bullets: [
-          '✅ Análise profunda do público-alvo',
-          '✅ 10 micro-ofertas personalizadas criadas',
-          '✅ 3 ofertas campeãs selecionadas',
-          '✅ Estrutura completa do produto'
-        ],
-        cta: '🚀 VER ANÁLISE COMPLETA NO CONSOLE',
-        bonus: '🎁 Análise detalhada disponível nos logs do navegador (F12)'
-      };
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error('Configure uma chave OpenAI válida no painel administrativo');
     }
-  } catch (error) {
-    console.error('❌ VT: Erro ao parsear JSON:', error);
-    console.error('📄 VT: Primeiros 1000 chars:', content.substring(0, 1000));
+
+    // Buscar prompt do Firebase
+    let systemPrompt = await getAgentTemplate(agentId);
     
-    const err = new Error('PARSE_ERROR');
-    err.adminMessage = 'A IA retornou análise completa mas sem JSON final. Adicione no final do prompt: "Ao final, retorne JSON: {title, subtitle, bullets, cta, bonus}"';
-    err.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
-    throw err;
+    // Se não encontrar, usar fallback básico
+    if (!systemPrompt) {
+      console.log(`📝 VT: Usando prompt fallback para ${agentId}`);
+      systemPrompt = `Você é uma IA especializada. Responda em ${targetLanguage} de forma profissional e focada em conversão.`;
+    }
+
+    // Chamar OpenAI - SEM adicionar instruções extras
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt, // Usa APENAS o prompt do Firebase
+          },
+          {
+            role: 'user',
+            content: userMessage,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('❌ VT: Erro na API OpenAI:', error);
+      throw new Error(error.error?.message || 'Erro ao gerar resposta');
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    console.log('✅ VT: Resposta gerada com sucesso');
+    
+    return content;
+  } catch (error) {
+    console.error('❌ VT: Erro ao chamar OpenAI:', error);
+    throw error;
   }
 };
 
@@ -181,7 +117,6 @@ export const verifyAPIConnection = async () => {
       };
     }
 
-    // Fazer uma requisição simples para testar a chave
     const response = await fetch('https://api.openai.com/v1/models', {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -209,168 +144,160 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
- * Gera uma oferta irresistível usando GPT
+ * Gera oferta principal (até seção 4)
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
- * @param {string} targetLanguage - Idioma alvo (pt-BR, en-US, es-ES)
- * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress) - NOVO
+ * @param {string} targetLanguage - Idioma alvo
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null) => {
+export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'português brasileiro') => {
   try {
-    const apiKey = await getServiceAPIKey('openai');
+    console.log(`🚀 VT: Gerando oferta com agente "${agent}"...`);
     
-    console.log('🔑 VT: Chave OpenAI obtida:', apiKey ? 'SIM' : 'NÃO');
-    console.log('🔑 VT: Comprimento da chave:', apiKey?.length);
-    console.log('🔑 VT: Primeira parte:', apiKey?.substring(0, 7));
-    console.log('🔑 VT: Última parte:', apiKey?.substring(apiKey?.length - 4));
+    const userMessage = `Analise estes comentários e gere a oferta em ${targetLanguage}:\n\n${comments}`;
+    const content = await callOpenAI(agent, userMessage, targetLanguage);
     
-    if (specificPrompt) {
-      console.log(`🎯 VT: Usando prompt específico: ${agent}_${specificPrompt}`);
-    }
-    
-    if (!apiKey) {
-      const error = new Error('API_KEY_NOT_FOUND');
-      error.adminMessage = 'Chave da API do OpenAI não configurada no painel administrativo';
-      error.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
-      throw error;
-    }
-    
-    // Verificar se é uma chave mockada
-    if ((apiKey.includes('•') || apiKey.includes('*') || apiKey.includes('AIza************************'))) {
-      const error = new Error('API_KEY_MOCKED');
-      error.adminMessage = 'A chave da API está mockada. Configure uma chave real no painel Admin → API Keys';
-      error.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
-      throw error;
-    }
-
-    // PASSO 1: Buscar prompt do Firestore (com suporte a prompts específicos)
-    let systemPrompt = await getAgentPromptFromFirestore(agent, specificPrompt);
-    
-    // PASSO 2: Se não encontrou, usar fallback hardcoded
-    if (!systemPrompt) {
-      console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
-      
-      const fallbackPrompts = {
-        sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
-      };
-      
-      systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
-    }
-    
-    console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
-    
-    // PASSO 3: Estruturar mensagens corretamente
-    const languageInstructions = {
-      'pt-BR': 'Responda em português do Brasil.',
-      'en-US': 'Respond in American English.',
-      'es-ES': 'Responde en español de España.'
+    return {
+      title: `🔥 Oferta Completa Gerada por ${agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}`,
+      subtitle: 'Análise completa e estruturada da sua oferta',
+      bullets: [
+        '✅ Análise profunda do público-alvo e suas dores',
+        '✅ Estrutura completa da oferta irresistível',
+        '✅ Copy persuasiva e estratégica',
+        '✅ Recomendações de implementação',
+      ],
+      cta: '📋 Veja a análise completa abaixo',
+      bonus: '💡 Tudo pronto para você aplicar',
+      fullResponse: content,
     };
-    const languageInstruction = languageInstructions[targetLanguage] || languageInstructions['pt-BR'];
-    const messages = [
-      {
-        role: 'system',
-        content: `${systemPrompt}\n\n${languageInstruction}`
-      },
-      {
-        role: 'user',
-        content: comments  // Comentários vão direto como mensagem do usuário
-      }
-    ];
-    
-    console.log('💬 VT: Mensagens estruturadas (system + user)');
-
-    // PASSO 4: Chamar OpenAI API
-    console.log('📡 VT: Enviando requisição para OpenAI API...');
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',  // Modelo mais recente
-        messages: messages,
-        temperature: 0.0,  // Mais determinístico
-        max_tokens: 2500,  // Mais tokens para respostas completas
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      const errorMessage = error.error?.message || 'Erro ao gerar oferta';
-      
-      // Detectar erro de quota/créditos
-      if (response.status === 429 || errorMessage.includes('quota') || errorMessage.includes('billing')) {
-        const quotaError = new Error('QUOTA_EXCEEDED');
-        quotaError.adminMessage = '💳 Conta OpenAI sem créditos! Adicione créditos em: https://platform.openai.com/account/billing';
-        quotaError.userMessage = '🔧 Sistema temporariamente indisponível. Tente novamente em alguns minutos.';
-        quotaError.originalError = errorMessage;
-        throw quotaError;
-      }
-      
-      // Detectar erro de autenticação
-      if (response.status === 401) {
-        const authError = new Error('AUTH_FAILED');
-        authError.adminMessage = '🔑 Chave da API OpenAI inválida ou expirada. Gere uma nova em: https://platform.openai.com/api-keys';
-        authError.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
-        throw authError;
-      }
-      
-      throw new Error(errorMessage);
-    }
-
-    console.log('📥 VT: Resposta recebida. Status:', response.status);
-    
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    
-    console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
-    
-    // PASSO 5: Parse seguro do JSON
-    let offerData = safeJsonParse(content);
-    
-    // PASSO 6: Validar estrutura
-    if (!offerData.title || !offerData.subtitle || !offerData.bullets || !offerData.cta) {
-      console.warn('⚠️ VT: JSON incompleto, verificando formato alternativo...');
-      
-      // Se for formato completo da Sophia (com sections, pains, etc), converter
-      if (offerData.offer) {
-        console.log('🔄 VT: Convertendo formato completo para formato simples...');
-        offerData = {
-          title: offerData.offer.headline || '🎯 Oferta Especial',
-          subtitle: offerData.offer.subheadline || 'Transforme sua realidade',
-          bullets: offerData.offer.benefits?.map(b => `✅ ${b}`) || [
-            '✅ Acesso completo',
-            '✅ Suporte dedicado',
-            '✅ Garantia total',
-            '✅ Bônus exclusivos'
-          ],
-          cta: offerData.offer.cta || '🚀 QUERO AGORA!',
-          bonus: offerData.offer.bonus || '🎁 Bônus especial incluído',
-        };
-      }
-    }
-    
-    const normalized = {
-      title: offerData.title || '🎯 Oferta Especial',
-      subtitle: offerData.subtitle || '',
-      bullets: Array.isArray(offerData.bullets)
-        ? offerData.bullets
-        : offerData.bullets
-          ? [offerData.bullets].flat().map(String)
-          : [],
-      cta: offerData.cta || '🚀 QUERO AGORA!',
-      bonus: offerData.bonus || '',
-      fullResponse: offerData.fullResponse || content
-    };
-    
-    console.log('✅ VT: Oferta gerada com sucesso!');
-    return normalized;
   } catch (error) {
-    console.error('Erro ao gerar oferta:', error);
+    console.error('❌ VT: Erro ao gerar oferta:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gera prompt para Lovable/IA Builder
+ * @param {string} offerData - Dados da oferta campeã
+ * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Prompt para Lovable
+ */
+export const generateLovable = async (offerData, agent = 'sophia', targetLanguage = 'português brasileiro') => {
+  try {
+    console.log(`🎨 VT: Gerando prompt Lovable com ${agent}_lovable...`);
+    
+    const agentId = `${agent}_lovable`;
+    const userMessage = `Com base nesta oferta, gere o prompt completo para Lovable em ${targetLanguage}:\n\n${offerData}`;
+    
+    return await callOpenAI(agentId, userMessage, targetLanguage);
+  } catch (error) {
+    console.error('❌ VT: Erro ao gerar Lovable:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gera quiz persuasivo
+ * @param {string} offerData - Dados da oferta campeã
+ * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Quiz completo
+ */
+export const generateQuiz = async (offerData, agent = 'sophia', targetLanguage = 'português brasileiro') => {
+  try {
+    console.log(`📝 VT: Gerando quiz com ${agent}_quiz...`);
+    
+    const agentId = `${agent}_quiz`;
+    const userMessage = `Com base nesta oferta, gere o quiz completo em ${targetLanguage}:\n\n${offerData}`;
+    
+    return await callOpenAI(agentId, userMessage, targetLanguage);
+  } catch (error) {
+    console.error('❌ VT: Erro ao gerar quiz:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gera estrutura WordPress/Elementor
+ * @param {string} offerData - Dados da oferta campeã
+ * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Estrutura WordPress
+ */
+export const generateWordPress = async (offerData, agent = 'sophia', targetLanguage = 'português brasileiro') => {
+  try {
+    console.log(`🔧 VT: Gerando WordPress com ${agent}_wordpress...`);
+    
+    const agentId = `${agent}_wordpress`;
+    const userMessage = `Com base nesta oferta, gere a estrutura WordPress completa em ${targetLanguage}:\n\n${offerData}`;
+    
+    return await callOpenAI(agentId, userMessage, targetLanguage);
+  } catch (error) {
+    console.error('❌ VT: Erro ao gerar WordPress:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gera ebook para Canva
+ * @param {string} offerData - Dados da oferta campeã
+ * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Estrutura do ebook
+ */
+export const generateEbookCanva = async (offerData, agent = 'sophia', targetLanguage = 'português brasileiro') => {
+  try {
+    console.log(`📦 VT: Gerando ebook Canva com ${agent}_entregavel_canva...`);
+    
+    const agentId = `${agent}_entregavel_canva`;
+    const userMessage = `Com base nesta oferta, gere a estrutura completa do ebook para Canva em ${targetLanguage}:\n\n${offerData}`;
+    
+    return await callOpenAI(agentId, userMessage, targetLanguage);
+  } catch (error) {
+    console.error('❌ VT: Erro ao gerar ebook Canva:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gera ebook para Gama
+ * @param {string} offerData - Dados da oferta campeã
+ * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Estrutura do ebook
+ */
+export const generateEbookGama = async (offerData, agent = 'sophia', targetLanguage = 'português brasileiro') => {
+  try {
+    console.log(`📦 VT: Gerando ebook Gama com ${agent}_gama...`);
+    
+    const agentId = `${agent}_gama`;
+    const userMessage = `Com base nesta oferta, gere a estrutura completa do ebook para Gama em ${targetLanguage}:\n\n${offerData}`;
+    
+    return await callOpenAI(agentId, userMessage, targetLanguage);
+  } catch (error) {
+    console.error('❌ VT: Erro ao gerar ebook Gama:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gera criativos para anúncios
+ * @param {string} offerData - Dados da oferta campeã
+ * @param {string} agent - Agente IA (sophia ou sofia)
+ * @param {string} targetLanguage - Idioma alvo
+ * @returns {Promise<string>} - Criativos completos
+ */
+export const generateCreatives = async (offerData, agent = 'sophia', targetLanguage = 'português brasileiro') => {
+  try {
+    console.log(`🎯 VT: Gerando criativos com ${agent}_criativos...`);
+    
+    const agentId = `${agent}_criativos`;
+    const userMessage = `Com base nesta oferta, gere os criativos completos em ${targetLanguage}:\n\n${offerData}`;
+    
+    return await callOpenAI(agentId, userMessage, targetLanguage);
+  } catch (error) {
+    console.error('❌ VT: Erro ao gerar criativos:', error);
     throw error;
   }
 };
