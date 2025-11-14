@@ -109,6 +109,15 @@ const translations = {
     status: 'Status',
     active: 'Ativo',
     inactive: 'Inativo',
+    close: 'Fechar',
+    creating: 'Criando...',
+    changing: 'Alterando...',
+    
+    // User Management
+    createUser: 'Cadastrar Usuário',
+    createUserButton: 'Criar Usuário',
+    changePassword: 'Alterar Senha',
+    forcePasswordChange: '🔒 Troca de Senha Obrigatória',
   },
   'en-US': {
     login: 'Login',
@@ -211,6 +220,14 @@ const translations = {
     status: 'Status',
     active: 'Active',
     inactive: 'Inactive',
+    close: 'Close',
+    creating: 'Creating...',
+    changing: 'Changing...',
+    
+    createUser: 'Create User',
+    createUserButton: 'Create User',
+    changePassword: 'Change Password',
+    forcePasswordChange: '🔒 Required Password Change',
   },
   'es-ES': {
     login: 'Iniciar sesión',
@@ -310,6 +327,14 @@ const translations = {
     status: 'Estado',
     active: 'Activo',
     inactive: 'Inactivo',
+    close: 'Cerrar',
+    creating: 'Creando...',
+    changing: 'Cambiando...',
+    
+    createUser: 'Registrar Usuario',
+    createUserButton: 'Crear Usuario',
+    changePassword: 'Cambiar Contraseña',
+    forcePasswordChange: '🔒 Cambio de Contraseña Obligatorio',
   },
 };
 

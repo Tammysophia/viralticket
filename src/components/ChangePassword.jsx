@@ -6,8 +6,10 @@ import Button from './Button';
 import Input from './Input';
 import Modal from './Modal';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../hooks/useLanguage';
 
 const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(isForced);
   
   // Atualizar modal quando isForced mudar
@@ -138,14 +140,14 @@ const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
           size="sm"
         >
           <Lock className="w-4 h-4 mr-2" />
-          Alterar Senha
+          {t('changePassword')}
         </Button>
       )}
 
       <Modal
         isOpen={showModal}
         onClose={handleClose}
-        title={isForced ? '🔒 Troca de Senha Obrigatória' : 'Alterar Senha'}
+        title={isForced ? t('forcePasswordChange') : t('changePassword')}
         closeOnOverlayClick={!isForced}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -228,7 +230,7 @@ const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
                 variant="secondary"
                 className="flex-1"
               >
-                Cancelar
+                {t('cancel')}
               </Button>
             )}
             <Button
@@ -237,7 +239,7 @@ const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
               disabled={loading}
               className={`${isForced ? 'w-full' : 'flex-1'} bg-gradient-to-r from-purple-600 to-pink-600`}
             >
-              {loading ? 'Alterando...' : 'Alterar Senha'}
+              {loading ? t('changing') : t('changePassword')}
             </Button>
           </div>
         </form>

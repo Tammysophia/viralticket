@@ -7,6 +7,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import toast, { Toaster } from 'react-hot-toast';
 import Input from '../components/Input';
 import Button from '../components/Button';
+import LanguageSelector from '../components/LanguageSelector';
 import { validateEmail, validatePassword } from '../utils/validation';
 
 const Login = () => {
@@ -177,11 +178,9 @@ const Login = () => {
           </Button>
         </form>
 
-        {/* Toggle */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-400 text-center">
-            Acesso apenas via compra ou convite do administrador
-          </p>
+        {/* Language Selector */}
+        <div className="mt-6 flex justify-center">
+          <LanguageSelector />
         </div>
       </motion.div>
     </div>

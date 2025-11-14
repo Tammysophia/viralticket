@@ -9,8 +9,10 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { PLANS } from '../utils/plans';
+import { useLanguage } from '../hooks/useLanguage';
 
 const AdminCreateUser = ({ onUserCreated }) => {
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [generatedCredentials, setGeneratedCredentials] = useState(null);
@@ -175,13 +177,13 @@ Acesse: ${window.location.origin}/login`;
         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
       >
         <UserPlus className="w-5 h-5 mr-2" />
-        Cadastrar Usuário
+        {t('createUser')}
       </Button>
 
       <Modal
         isOpen={showModal}
         onClose={handleClose}
-        title="Cadastrar Novo Usuário"
+        title={t('createUser')}
       >
         {!generatedCredentials ? (
           <form onSubmit={handleCreate} className="space-y-4">
@@ -236,7 +238,7 @@ Acesse: ${window.location.origin}/login`;
                 variant="secondary"
                 className="flex-1"
               >
-                Cancelar
+                {t('cancel')}
               </Button>
               <Button
                 type="submit"
@@ -244,7 +246,7 @@ Acesse: ${window.location.origin}/login`;
                 disabled={creating}
                 className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
               >
-                {creating ? 'Criando...' : 'Criar Usuário'}
+                {creating ? t('creating') : t('createUserButton')}
               </Button>
             </div>
           </form>
@@ -326,7 +328,7 @@ Acesse: ${window.location.origin}/login`;
               variant="secondary"
               className="w-full"
             >
-              Fechar
+              {t('close')}
             </Button>
           </div>
         )}
