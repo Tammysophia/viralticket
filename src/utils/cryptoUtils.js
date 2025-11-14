@@ -39,16 +39,23 @@ export const encrypt = (text) => {
  * @returns {string} - Texto descriptografado
  */
 export const decrypt = (encryptedText) => {
-  if (!encryptedText) return '';
+  if (!encryptedText) {
+    console.warn('🔒 VT: Texto vazio para descriptografar');
+    return '';
+  }
   
   try {
     // Verificar se está criptografado
     if (!encryptedText.startsWith('enc_')) {
+      console.log('🔓 VT: Texto não criptografado, retornando original');
       return encryptedText;
     }
     
+    console.log('🔒 VT: Iniciando descriptografia...');
+    
     // Remover prefixo
     const encrypted = encryptedText.substring(4);
+    console.log('🔒 VT: Prefixo removido, tamanho:', encrypted.length);
     
     // Reverter rotação de caracteres
     const unrotated = encrypted.split('').map((char, index) => {
@@ -56,17 +63,25 @@ export const decrypt = (encryptedText) => {
       const rotation = (index % ENCRYPTION_KEY.length);
       return String.fromCharCode(code - rotation);
     }).join('');
+    console.log('🔒 VT: Rotação revertida');
     
     // Decodificar Base64
     const decoded = atob(unrotated);
+    console.log('🔒 VT: Base64 decodificado, tamanho:', decoded.length);
     
     // Remover salt
-    const [, text] = decoded.split(':');
+    const parts = decoded.split(':');
+    const text = parts.length > 1 ? parts[1] : decoded;
     
-    return text || decoded;
+    console.log('✅ VT: Descriptografia concluída! Tamanho final:', text.length);
+    console.log('✅ VT: Começa com:', text.substring(0, 5) + '...');
+    
+    return text;
   } catch (error) {
-    console.error('Erro ao descriptografar:', error);
-    return encryptedText;
+    console.error('❌ VT: Erro ao descriptografar:', error);
+    console.error('❌ VT: Texto problemático:', encryptedText.substring(0, 20) + '...');
+    // Em caso de erro, retornar o texto original (pode estar em plain text)
+    return encryptedText.startsWith('enc_') ? '' : encryptedText;
   }
 };
 

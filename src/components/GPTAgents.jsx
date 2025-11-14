@@ -94,7 +94,7 @@ const GPTAgents = () => {
                     </div>
                   </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold mb-1 gradient-primary bg-clip-text text-transparent truncate relative z-20">
+                      <h3 className="text-xl font-bold mb-1 text-white truncate relative z-20">
                       {agent.name}
                     </h3>
                       <p className="text-sm text-gray-400 relative z-20">{agent.description}</p>
