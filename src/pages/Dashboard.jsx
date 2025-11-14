@@ -11,6 +11,7 @@ import KanbanMonitoring from '../components/KanbanMonitoring';
 import KanbanModeling from '../components/KanbanModeling';
 import GPTAgents from '../components/GPTAgents';
 import WhatsAppButton from '../components/WhatsAppButton';
+import ChangePassword from '../components/ChangePassword';
 import OfferEditor from '../components/OfferEditor'; // VT: Editor de ofertas
 import Card from '../components/Card';
 import PlanBadge from '../components/PlanBadge';
@@ -100,6 +101,7 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <ChangePassword />
                   <PlanBadge plan={user?.plan} size="lg" />
                 </div>
               </div>

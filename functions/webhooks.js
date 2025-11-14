@@ -16,6 +16,29 @@ const admin = require('firebase-admin');
 const db = admin.firestore();
 
 /**
+ * Gera um token único para criação de senha
+ */
+async function generatePasswordToken(email) {
+  const token = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}`;
+  
+  // Calcular expiração (24 horas)
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 24);
+  
+  // Salvar token no Firestore
+  await db.collection('passwordTokens').doc(token).set({
+    email,
+    type: 'create',
+    token,
+    used: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    expiresAt: expiresAt.toISOString(),
+  });
+  
+  return token;
+}
+
+/**
  * Webhook genérico para todas as plataformas
  * URL: https://us-central1-[PROJECT_ID].cloudfunctions.net/processWebhook
  */
@@ -254,9 +277,18 @@ async function createOrUpdateUser(email, plan, status) {
       userData.avatar = `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`;
       userData.dailyUsage = { offers: 0, urls: 0 };
       userData.createdAt = admin.firestore.FieldValue.serverTimestamp();
-
+      userData.status = 'pending_password'; // Aguardando criação de senha
+      
+      // Gerar token de criação de senha
+      const token = await generatePasswordToken(email);
+      userData.passwordToken = token;
+      
       await usersRef.add(userData);
-      logger.info(`✅ Usuário criado: ${email} - Plano: ${plan}`);
+      logger.info(`✅ Usuário criado: ${email} - Plano: ${plan} - Token: ${token.substring(0, 20)}...`);
+      
+      // TODO: Enviar email com link de criação de senha
+      // const resetURL = `https://viralticket.vercel.app/criar-senha?token=${token}`;
+      // await sendPasswordCreationEmail(email, resetURL);
     } else {
       // Atualizar usuário existente
       const userDoc = snapshot.docs[0];

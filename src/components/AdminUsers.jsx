@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MoreVertical, Edit, Ban } from 'lucide-react';
+import AdminCreateUser from './AdminCreateUser';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Card from './Card';
@@ -102,7 +103,10 @@ const AdminUsers = () => {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">Gerenciar Usuários</h3>
-          <p className="text-sm text-gray-400">Total: {users.length} usuários</p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-gray-400">Total: {users.length} usuários</p>
+            <AdminCreateUser onUserCreated={loadUsers} />
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">

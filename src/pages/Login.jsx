@@ -10,7 +10,7 @@ import Button from '../components/Button';
 import { validateEmail, validatePassword } from '../utils/validation';
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin] = useState(true); // Sempre login, cadastro removido
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -48,19 +48,12 @@ const Login = () => {
     }
 
     try {
-      if (isLogin) {
-        await login(email, password);
-        // Toast já é mostrado no AuthContext
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 500);
-      } else {
-        await register(email, password);
-        // Toast já é mostrado no AuthContext
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 500);
-      }
+      // Apenas login, cadastro via webhook ou admin
+      await login(email, password);
+      // Toast já é mostrado no AuthContext
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     } catch (err) {
       // Erros já tratados no AuthContext com toasts específicos
       console.error('Auth error:', err);
@@ -186,18 +179,9 @@ const Login = () => {
 
         {/* Toggle */}
         <div className="mt-6 text-center">
-          <button
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setErrors({});
-            }}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
-          >
-            {isLogin ? t('dontHaveAccount') : t('alreadyHaveAccount')}{' '}
-            <span className="text-purple-400 font-semibold">
-              {isLogin ? t('register') : t('login')}
-            </span>
-          </button>
+          <p className="text-sm text-gray-400 text-center">
+            Acesso apenas via compra ou convite do administrador
+          </p>
         </div>
       </motion.div>
     </div>

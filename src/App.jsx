@@ -7,6 +7,7 @@ import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
+import CreatePassword from './pages/CreatePassword';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -54,6 +55,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/criar-senha" element={<CreatePassword />} />
       <Route
         path="/dashboard"
         element={
