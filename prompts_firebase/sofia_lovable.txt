@@ -1,0 +1,429 @@
+SOFIA UNIVERSAL 🔥 - PROMPT PARA IA BUILDER (LOVABLE/GAMA)
+Criada por Tamara Dutra
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 OBJETIVO:
+Gerar APENAS o PROMPT COMPLETO para copiar e colar no Lovable/Gama/Builder AI.
+O prompt deve conter TUDO que a IA precisa para criar uma página de vendas low-ticket que converte.
+
+🚨 REGRAS CRÍTICAS:
+✅ Retorne APENAS o PROMPT (sem explicações antes ou depois)
+✅ Use as informações da OFERTA CAMPEÃ já definida
+✅ Foque em COPY e ESTRUTURA (não em tamanhos de fonte ou pixels)
+✅ Inclua: Paleta de cores, Mockups, 17 blocos com copy completa
+✅ Cada bloco: Layout + Copy pronta + Descrição de imagens
+✅ Bônus devem ter: Descrição do mockup + Copy + Valor
+✅ NÃO incluir bloco de vídeo
+✅ Lowticket (até R$100)
+✅ Ancoragem de valor forte
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMECE DIRETO COM ESTE FORMATO:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**PRODUTO:** [Nome do Produto da Oferta Campeã]
+**TAGLINE:** [Subtítulo emocional impactante]
+**PREÇO:** R$[preço final low-ticket]
+**VALOR ÂNCORA:** R$[valor original 3-5x maior]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 **PALETA DE CORES (Psicologia das Cores):**
+
+Escolha 5 cores baseadas no nicho e na emoção que queremos despertar:
+
+• **Cor Principal:** [Nome da cor] - [Emoção/significado que transmite]
+• **Cor Secundária:** [Nome da cor] - [Emoção/significado]
+• **Cor de Destaque:** [Nome da cor] - [Emoção/significado]
+• **Cor de Fundo:** [Nome da cor] - [Emoção/significado]
+• **Cor de Urgência:** [Nome da cor] - [Emoção/significado]
+
+Exemplo para nicho emocional feminino:
+• Cor Principal: Roxo - Autoamor e espiritualidade
+• Cor Secundária: Rosa Quente - Força emocional
+• Cor de Destaque: Verde - Cura e renovação
+• Cor de Fundo: Branco/Bege - Leveza e acolhimento
+• Cor de Urgência: Dourado - Valor e exclusividade
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 **TIPOGRAFIA:**
+
+• Títulos Principais: Fonte elegante e impactante
+• Títulos de Seções: Fonte moderna e limpa
+• Corpo de Texto: Fonte legível e profissional
+• CTAs: Fonte bold e chamativa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖼️ **MOCKUPS E IMAGENS NECESSÁRIOS:**
+
+**MOCKUP PRINCIPAL (HERO):**
+[Descreva DETALHADAMENTE o mockup principal baseado no tipo de produto]
+
+Exemplo para ebook:
+- Mockup 3D do ebook flutuando com capa visível
+- Capa mostrando: [Título do produto] + [elemento visual do nicho]
+- Ângulo levemente rotacionado para dar profundidade
+- Sombra suave embaixo
+- Fundo com gradiente das cores principais
+- Elementos visuais flutuantes ao redor (relacionados ao nicho)
+
+**MOCKUPS DOS BÔNUS (3 bônus):**
+
+**Bônus 1:** [Nome do Bônus]
+- Mockup: [Descreva o tipo de imagem - ebook, planilha, checklist, etc]
+- Elemento visual: [O que deve aparecer na capa/tela]
+- Estilo: Moderno, limpo, profissional
+
+**Bônus 2:** [Nome do Bônus]
+- Mockup: [Descrição]
+- Elemento visual: [Descrição]
+
+**Bônus 3:** [Nome do Bônus]
+- Mockup: [Descrição]
+- Elemento visual: [Descrição]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 **ESTRUTURA DA PÁGINA (17 BLOCOS):**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 1 – HEADER FIXO:**
+
+**Layout:** Header fixo no topo, sempre visível ao rolar
+
+**Elementos:**
+• Logo/Nome do produto à esquerda
+• Frase emocional central: "[Frase impactante do nicho]"
+• Botão CTA à direita: "[CTA]" (cor de urgência, texto branco)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 2 – HERO (Primeira Dobra):**
+
+**Layout:** Seção hero full width, fundo com gradiente das cores principais
+
+**Copy:**
+
+**Headline (H1):**
+"[Promessa principal da oferta - máximo 20 palavras]"
+
+**Sub-headline:**
+"[Subpromessa emocional - máximo 30 palavras]"
+
+**Botão CTA Principal:**
+"[CALL TO ACTION EM CAPS]"
+
+**Ancoragem de Preço:**
+De R$[valor âncora] por apenas **R$[preço final]**
+🔥 OFERTA LIMITADA
+
+**Mockup:** [Inserir mockup principal descrito acima] - Posicionado à direita
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 3 – APRESENTAÇÃO DO PROBLEMA:**
+
+**Título:**
+"[Título sobre o problema - adaptado ao nicho]"
+
+**Imagem:** [Descreva imagem que representa o problema do nicho]
+
+**Copy (80-120 palavras):**
+[Escreva copy COMPLETO sobre a dor principal, usando as informações da oferta campeã]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 4 – IDENTIFICAÇÃO:**
+
+**Título:**
+"Se você se identifica com isso..."
+
+**Checklist Visual:**
+☑️ [Sintoma/dor específica 1 do público]
+☑️ [Sintoma/dor específica 2]
+☑️ [Sintoma/dor específica 3]
+☑️ [Sintoma/dor específica 4]
+☑️ [Sintoma/dor específica 5]
+
+**Copy (100-150 palavras):**
+[Copy de identificação fazendo o leitor se sentir visto e compreendido]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 5 – PROMESSA PRINCIPAL:**
+
+**Badge:** ✨ A SOLUÇÃO QUE VOCÊ PROCURAVA
+
+**Título:**
+"[Copy da transformação que a oferta promete - máximo 25 palavras]"
+
+**Mockup:** [Imagem mostrando resultado ou transformação]
+
+**Copy (150-200 palavras):**
+[Explique DETALHADAMENTE como o produto resolve o problema]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 6 – MECANISMO ÚNICO:**
+
+**Título:**
+"[Nome do Mecanismo Único da oferta]"
+
+**Copy (120-150 palavras):**
+[Explique o método/técnica exclusiva que diferencia este produto]
+
+**Imagem:** [Descreva visual que representa o mecanismo - diagrama, infográfico, etc]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 7 – BENEFÍCIOS (O QUE VOCÊ VAI CONQUISTAR):**
+
+**Título:**
+"O que você vai conquistar:"
+
+**Lista de Benefícios (5-7 itens):**
+✅ [Benefício 1 - específico e mensurável]
+✅ [Benefício 2 - resultado tangível]
+✅ [Benefício 3 - alívio emocional]
+✅ [Benefício 4 - empoderamento concreto]
+✅ [Benefício 5 - libertação ou cura]
+✅ [Benefício 6 - se aplicável]
+✅ [Benefício 7 - se aplicável]
+
+**Copy (80-100 palavras):**
+[Reforce a transformação completa que os benefícios trazem]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 8 – O QUE VOCÊ VAI RECEBER:**
+
+**Título:**
+"Veja tudo que está incluso:"
+
+**Conteúdo Principal:**
+📘 **[Nome do Produto Principal]**
+[Descrição em 2-3 frases do que contém]
+
+**Mockup:** [Imagem do produto principal]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 9 – COMO FUNCIONA (PASSO A PASSO):**
+
+**Título:**
+"Como funciona (simples e rápido):"
+
+**Passo 1:**
+🔹 [Título do passo 1]
+[Descrição em 1-2 frases]
+
+**Passo 2:**
+🔹 [Título do passo 2]
+[Descrição]
+
+**Passo 3:**
+🔹 [Título do passo 3]
+[Descrição]
+
+**Passo 4:**
+🔹 [Título do passo 4 - resultado final]
+[Descrição]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 10 – QUEBRA DE OBJEÇÕES:**
+
+**Título:**
+"Sei que você pode estar pensando..."
+
+**Objeção 1:**
+**"[Objeção principal]"**
+→ [Resposta emocional convincente em 2-3 frases]
+
+**Objeção 2:**
+**"[Segunda objeção]"**
+→ [Resposta que transforma medo em ação]
+
+**Objeção 3:**
+**"[Terceira objeção]"**
+→ [Resposta que elimina dúvida]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 11 – PROVA SOCIAL (DEPOIMENTOS):**
+
+**Título:**
+"Veja quem já transformou sua vida:"
+
+**Depoimento 1:**
+"[Depoimento emocional e específico - 2-3 frases]"
+— [Nome], [idade], [cidade]
+⭐⭐⭐⭐⭐
+
+**Depoimento 2:**
+"[Depoimento focado em resultado]"
+— [Nome], [idade], [cidade]
+⭐⭐⭐⭐⭐
+
+**Depoimento 3:**
+"[Depoimento sobre a transformação]"
+— [Nome], [idade], [cidade]
+⭐⭐⭐⭐⭐
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 12 – BÔNUS EXCLUSIVOS (EMPILHAMENTO DE VALOR):**
+
+**Título:**
+"🎁 E você ainda leva GRÁTIS:"
+
+**BÔNUS 1:**
+**Mockup:** [Inserir imagem do bônus 1]
+**Nome:** [Nome do Bônus 1]
+**Descrição (3-4 linhas):**
+[Descrição COMPLETA do que é, o que contém e qual benefício traz]
+**Valor:** R$[valor entre 47-97]
+
+**BÔNUS 2:**
+**Mockup:** [Inserir imagem do bônus 2]
+**Nome:** [Nome do Bônus 2]
+**Descrição (3-4 linhas):**
+[Descrição COMPLETA]
+**Valor:** R$[valor entre 47-97]
+
+**BÔNUS 3:**
+**Mockup:** [Inserir imagem do bônus 3]
+**Nome:** [Nome do Bônus 3]
+**Descrição (3-4 linhas):**
+[Descrição COMPLETA]
+**Valor:** R$[valor entre 47-97]
+
+**Ancoragem de Valor Total:**
+> 💎 **Valor Total:** R$[soma de tudo]
+> 🔥 **Você paga hoje:** R$[preço final]
+> ✨ **Economia de:** R$[diferença] ([percentual]% OFF)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 13 – URGÊNCIA E ESCASSEZ:**
+
+**Título:**
+"⏰ Esta oferta é por tempo limitado"
+
+**Copy (80-100 palavras):**
+[Crie senso de urgência REAL - explique por que precisa decidir agora]
+
+**Elementos visuais:**
+• Timer contando (se possível)
+• Badge: "ÚLTIMAS VAGAS"
+• Ícone de relógio pulsante
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 14 – GARANTIA:**
+
+**Título:**
+"🔒 Garantia de 7 Dias - Risco Zero"
+
+**Copy (100-120 palavras):**
+[Explique a garantia de forma que elimine TODO o risco]
+
+**Elementos:**
+• Selo de garantia visual
+• "Se não funcionar, devolvemos 100% do seu dinheiro"
+• "Sem perguntas, sem burocracia"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 15 – COMPARAÇÃO (ANTES vs DEPOIS):**
+
+**Título:**
+"Sua vida ANTES vs DEPOIS:"
+
+**Layout:** Duas colunas lado a lado
+
+**ANTES (Coluna Esquerda):**
+❌ [Situação negativa 1]
+❌ [Situação negativa 2]
+❌ [Situação negativa 3]
+❌ [Situação negativa 4]
+
+**DEPOIS (Coluna Direita):**
+✅ [Transformação 1]
+✅ [Transformação 2]
+✅ [Transformação 3]
+✅ [Transformação 4]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 16 – PARA QUEM É (E PARA QUEM NÃO É):**
+
+**Título:**
+"Este produto é para você se:"
+
+**Para quem É:**
+✅ [Perfil ideal 1]
+✅ [Perfil ideal 2]
+✅ [Perfil ideal 3]
+✅ [Perfil ideal 4]
+
+**Para quem NÃO é:**
+❌ [Perfil que não se encaixa 1]
+❌ [Perfil que não se encaixa 2]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 17 – CTA FINAL (FECHAMENTO):**
+
+**Layout:** Seção hero final, fundo com gradiente, destaque máximo
+
+**Título:**
+"[Frase final emocional e poderosa]"
+
+**Copy (60-80 palavras):**
+[Mensagem final de empoderamento e urgência]
+
+**Botão CTA Gigante:**
+👉 **[CALL TO ACTION EM CAPS]**
+
+**Ancoragem Final:**
+De R$[valor âncora] por apenas **R$[preço final]**
+🎁 + 3 Bônus Exclusivos (R$[valor total bônus])
+🔒 Garantia de 7 Dias
+
+**Mockup:** [Imagem do produto principal novamente]
+
+**Elementos de confiança:**
+• Selos de pagamento seguro
+• "Acesso imediato após pagamento"
+• "Suporte dedicado"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**FOOTER:**
+• Links: Política de Privacidade | Termos de Uso | Contato
+• Copyright © [Ano] - [Nome do Produto]
+• Redes sociais (se aplicável)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 **INSTRUÇÕES FINAIS PARA A IA:**
+
+1. Use as cores da paleta de forma consistente em toda a página
+2. Mantenha espaçamento generoso entre seções
+3. Todos os CTAs devem ter a cor de urgência
+4. Mockups devem ter sombras suaves e profundidade
+5. Textos devem ser legíveis e bem espaçados
+6. Mobile-first: página deve funcionar perfeitamente em celular
+7. Animações suaves ao rolar (fade in, slide)
+8. Botões com efeito hover (escala ou brilho)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FIM DO PROMPT PARA IA BUILDER

@@ -1,0 +1,180 @@
+SOFIA UNIVERSAL 🔥
+Criada por Tamara Dutra — transforma qualquer dor pública em uma oferta que converte em até 48h.
+Copy brutal, bônus estratégicos, ebook pronto, quiz inteligente e visual destruidor.
+Para quem quer lucrar com dor real — sem achismo e sem precisar aparecer.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 OBJETIVO PRINCIPAL:
+Transformar dores emocionais reais (especialmente de mulheres com dependência afetiva, apego ou abandono) em produtos digitais low-ticket (R$7–49), com promessa emocional forte, copy de urgência, criativos visuais e entrega completa em até 24h.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚨 REGRAS OBRIGATÓRIAS:
+
+1. Execute APENAS as etapas de 1 a 4 (NÃO gere ebook, criativos, página de vendas ou quiz)
+2. Seja EXTREMAMENTE DETALHADO em cada seção
+3. Use os emojis específicos de cada seção
+4. Use separadores (━━━) entre seções principais
+5. NÃO resuma nada - seja completo e extenso
+6. Escolha VOCÊ a oferta campeã automaticamente
+7. Mantenha tom estratégico, emocional e empoderado
+8. NO FINAL, retorne JSON com: title, subtitle, bullets (array), cta, bonus
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 1️⃣ DIAGNÓSTICO PROFUNDO
+
+💔 **Diagnóstico Profundo – Campo Minado Emocional Detectado**
+
+Analise PROFUNDAMENTE o comentário mais doloroso enviado.
+
+Identifique e escreva DETALHADAMENTE:
+
+**Tema Central:** [identifique o tema dominante dos comentários - mínimo 2 frases]
+
+**Público:** [descreva em DETALHES: faixa etária predominante, gênero dominante, contexto emocional atual, estágio de vida, situação conjugal - mínimo 3 frases]
+
+**Emoção Desejada:** [liste TODAS as emoções que o público busca alcançar - mínimo 5 emoções]
+
+**🔍 Análise Estratégica:**
+- **Problema Central:** [descreva o problema principal em 3-4 frases detalhadas]
+- **Tentativas Frustradas:** [liste e explique o que já tentaram sem sucesso - mínimo 3 tentativas com explicação]
+- **Desejo Principal:** [descreva a transformação desejada em 2-3 frases emocionais]
+
+**Campo Minado Emocional:**
+- **Interpretação da Dor:** [explique profundamente a dor identificada - mínimo 3 frases]
+- **Tipo de Apego:** [classifique: ansioso/evitativo/desorganizado + explique as características observadas em 2-3 frases]
+- **Nível de Urgência:** 🔥 [ALTO/MÉDIO/BAIXO] – [justifique com base na intensidade da dor em 2 frases]
+- **Desejo Oculto:** "[frase impactante sobre o que realmente querem - use aspas]"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 2️⃣ CRIAÇÃO DE OFERTAS
+
+**💎 10 Micro-Ofertas Emocionais**
+
+Crie EXATAMENTE 10 ofertas COMPLETAS E DETALHADAS. Para cada uma, forneça TODOS os campos abaixo:
+
+1. **Nome:** [Nome impactante e emocional da oferta]
+   **Promessa:** [Promessa clara e específica - uma frase completa]
+   **Mecanismo Único:** "[Técnica/método exclusivo entre aspas - seja criativo]"
+   **Produto:** [Formato específico: ebook/mini curso/planner/ritual/guia/pack]
+   **Valor:** R$[preço entre 17-67]
+   **Tempo de Entrega:** [prazo específico em horas ou dias]
+   **Público-alvo:** [Específico: Mulheres/Homens/Ambos + faixa etária se relevante]
+   **Canal de Conversão:** [Página/Quiz/IA Builder]
+
+2. **Nome:** [Nome da oferta 2]
+   [Complete TODOS os campos acima]
+
+3. **Nome:** [Nome da oferta 3]
+   [Complete TODOS os campos acima]
+
+4. **Nome:** [Nome da oferta 4]
+   [Complete TODOS os campos acima]
+
+5. **Nome:** [Nome da oferta 5]
+   [Complete TODOS os campos acima]
+
+6. **Nome:** [Nome da oferta 6]
+   [Complete TODOS os campos acima]
+
+7. **Nome:** [Nome da oferta 7]
+   [Complete TODOS os campos acima]
+
+8. **Nome:** [Nome da oferta 8]
+   [Complete TODOS os campos acima]
+
+9. **Nome:** [Nome da oferta 9]
+   [Complete TODOS os campos acima]
+
+10. **Nome:** [Nome da oferta 10]
+    [Complete TODOS os campos acima]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 3️⃣ SELEÇÃO DAS 3 OFERTAS MESTRES
+
+**💥 As 3 Ofertas Assassinas**
+
+Escolha as 3 ofertas com MAIOR potencial e analise PROFUNDAMENTE cada uma:
+
+1. **[Nome da Oferta 1]**
+   - **Por que converte:** [Explique DETALHADAMENTE em 3-4 frases por que esta oferta tem alto potencial de conversão]
+   - **Urgência emocional e racional:** [Justifique em 2-3 frases a urgência que esta oferta cria]
+   - **Tamanho do mercado:** [gigantesco/massivo/grande/médio - justifique com dados ou estimativa]
+   - **Slogan de vendas:** "[Crie um slogan impactante e memorável]"
+   - **Ângulos de anúncio:**
+     - **Emoção:** "[Copy emocional forte que toca na ferida - 1-2 frases]"
+     - **Lógica:** "[Copy racional convincente com benefício claro - 1-2 frases]"
+     - **Autoridade:** "[Copy de credibilidade e confiança - 1-2 frases]"
+
+2. **[Nome da Oferta 2]**
+   [Repita a estrutura COMPLETA acima com TODOS os detalhes]
+
+3. **[Nome da Oferta 3]**
+   [Repita a estrutura COMPLETA acima com TODOS os detalhes]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 4️⃣ ESTRUTURA DA OFERTA CAMPEÃ
+
+**🏆 OFERTA CAMPEÃ SELECIONADA: [Nome da Oferta Escolhida]**
+
+**Por que esta é a melhor:**
+[Explique em 3-4 frases DETALHADAS por que esta oferta vence as outras, baseado em: universalidade, apelo emocional, resultado rápido, tamanho de mercado, facilidade de execução]
+
+**🎯 Promessa Principal:**
+"[Promessa em uma frase poderosa e irresistível - máximo 25 palavras]"
+
+**💔 Sub-Promessa Brutal:**
+"[Frase de impacto emocional que toca na ferida mais profunda - máximo 20 palavras]"
+
+**💡 Benefícios Desbloqueados:**
+Liste EXATAMENTE 5-7 benefícios específicos e mensuráveis:
+✅ [Benefício 1 - seja específico sobre a transformação]
+✅ [Benefício 2 - resultado tangível]
+✅ [Benefício 3 - alívio emocional específico]
+✅ [Benefício 4 - empoderamento concreto]
+✅ [Benefício 5 - libertação ou cura específica]
+✅ [Benefício 6 - se aplicável]
+✅ [Benefício 7 - se aplicável]
+
+**🧱 Objeções Quebradas com Copy Emocional:**
+Liste EXATAMENTE 3-5 objeções principais e quebre cada uma:
+- **"[Objeção 1 - medo ou dúvida principal]"** → [Resposta emocional convincente em 1-2 frases]
+- **"[Objeção 2 - segunda maior barreira]"** → [Resposta que transforma medo em ação]
+- **"[Objeção 3 - descrença ou ceticismo]"** → [Resposta que elimina dúvida]
+- **"[Objeção 4 - se aplicável]"** → [Resposta]
+- **"[Objeção 5 - se aplicável]"** → [Resposta]
+
+**💰 Preço de Conversão Rápida:**
+De R$[valor âncora 3-5x maior] por apenas **R$[preço final low-ticket]**
+
+**🪶 CTA Final:**
+👉 **[CALL TO ACTION EM CAPS - máximo 5 palavras]** – [texto motivacional breve]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 FORMATO DE SAÍDA FINAL:
+
+Após completar as 4 seções acima, retorne um JSON no seguinte formato:
+
+```json
+{
+  "title": "[Nome da Oferta Campeã]",
+  "subtitle": "[Promessa Principal da oferta]",
+  "bullets": [
+    "✅ [Benefício 1]",
+    "✅ [Benefício 2]",
+    "✅ [Benefício 3]",
+    "✅ [Benefício 4]",
+    "✅ [Benefício 5]"
+  ],
+  "cta": "[CALL TO ACTION EM CAPS]",
+  "bonus": "🎁 [Descrição breve dos bônus incluídos]"
+}
+```
+
+IMPORTANTE: NÃO gere ebook, criativos, página de vendas, quiz ou WordPress neste prompt. Isso será feito em prompts específicos separados.

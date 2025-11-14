@@ -1,8 +1,8 @@
-# 🔥 PROMPTS SEPARADOS - SOPHIA FÊNIX
+# 🔥 PROMPTS SEPARADOS - SOPHIA FÊNIX & SOFIA UNIVERSAL
 
 ## 📋 Visão Geral
 
-Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados para economizar tokens e gerar respostas mais focadas.
+Este diretório contém os **14 prompts separados** (7 para cada IA), otimizados para economizar tokens e gerar respostas mais focadas.
 
 ## 🎯 Como Funciona
 
@@ -13,7 +13,7 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 ❌ Mais lento e mais caro  
 
 ### DEPOIS (Solução):
-✅ **7 prompts separados** no Firebase  
+✅ **7 prompts separados por IA** no Firebase  
 ✅ Gera **SÓ o que o usuário pedir**  
 ✅ **Economiza 60-70% de tokens**  
 ✅ Respostas mais limpas e focadas  
@@ -23,7 +23,37 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ## 📦 Estrutura dos Prompts
 
-### 1. **sophia.txt** - Prompt Principal (Seções 1-4)
+### 🔥 SOPHIA FÊNIX (7 prompts)
+
+Focada em **dores emocionais** (dependência afetiva, apego, abandono).
+
+1. **sophia.txt** - Prompt Principal (Seções 1-4)
+2. **sophia_lovable.txt** - IA Builder (Lovable/Gama)
+3. **sophia_quiz.txt** - Quiz de Vendas (15 perguntas)
+4. **sophia_wordpress.txt** - WordPress/Elementor (17 blocos)
+5. **sophia_entregavel_canva.txt** - Ebook Canva (30 páginas)
+6. **sophia_gama.txt** - Ebook Gama (20 capítulos)
+7. **sophia_criativos.txt** - Criativos (5 posts + 3 vídeos)
+
+---
+
+### 🌟 SOFIA UNIVERSAL (7 prompts)
+
+Focada em **qualquer nicho** (universal, adaptável).
+
+1. **sofia.txt** - Prompt Principal (Seções 1-4)
+2. **sofia_lovable.txt** - IA Builder (Lovable/Gama)
+3. **sofia_quiz.txt** - Quiz de Vendas (15 perguntas)
+4. **sofia_wordpress.txt** - WordPress/Elementor (17 blocos)
+5. **sofia_entregavel_canva.txt** - Ebook Canva (30 páginas)
+6. **sofia_gama.txt** - Ebook Gama (20 capítulos)
+7. **sofia_criativos.txt** - Criativos (5 posts + 3 vídeos)
+
+---
+
+## 🎯 Detalhamento dos Prompts
+
+### 1. **Prompt Principal** (sophia.txt / sofia.txt)
 **Quando usar:** Ao extrair comentários e gerar oferta inicial
 
 **O que gera:**
@@ -37,7 +67,7 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ---
 
-### 2. **sophia_lovable.txt** - Prompt para IA Builder (Lovable/Gama)
+### 2. **IA Builder** (sophia_lovable.txt / sofia_lovable.txt)
 **Quando usar:** Quando usuário clicar "Gerar Lovable" ou "Gerar Gama"
 
 **O que gera:**
@@ -51,21 +81,22 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ---
 
-### 3. **sophia_quiz.txt** - Quiz de Vendas Diretas
+### 3. **Quiz de Vendas** (sophia_quiz.txt / sofia_quiz.txt)
 **Quando usar:** Quando usuário clicar "Gerar Quiz"
 
 **O que gera:**
-- 15 perguntas emocionais de qualificação
+- **15 perguntas emocionais** de qualificação
+- Perguntas focadas em **VENDA IMEDIATA**
 - 3 perfis de resultado personalizados
 - Copy de conversão para cada perfil
-- CTA direto com oferta
+- CTA direto com oferta **LOW-TICKET**
 - Sistema de pontuação
 
 **Economiza:** ~65% de tokens
 
 ---
 
-### 4. **sophia_wordpress.txt** - WordPress/Elementor (17 Blocos)
+### 4. **WordPress/Elementor** (sophia_wordpress.txt / sofia_wordpress.txt)
 **Quando usar:** Quando usuário clicar "Gerar WordPress"
 
 **O que gera:**
@@ -79,7 +110,7 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ---
 
-### 5. **sophia_entregavel_canva.txt** - Ebook para Canva
+### 5. **Ebook Canva** (sophia_entregavel_canva.txt / sofia_entregavel_canva.txt)
 **Quando usar:** Quando usuário clicar "Gerar Ebook Canva"
 
 **O que gera:**
@@ -93,7 +124,7 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ---
 
-### 6. **sophia_gama.txt** - Ebook para Gama (Estruturado)
+### 6. **Ebook Gama** (sophia_gama.txt / sofia_gama.txt)
 **Quando usar:** Quando usuário clicar "Gerar Ebook Gama"
 
 **O que gera:**
@@ -107,7 +138,7 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ---
 
-### 7. **sophia_criativos.txt** - Criativos de Vendas (Posts + Vídeos)
+### 7. **Criativos** (sophia_criativos.txt / sofia_criativos.txt)
 **Quando usar:** Quando usuário clicar "Gerar Criativos"
 
 **O que gera:**
@@ -121,21 +152,55 @@ Este diretório contém os **7 prompts separados** da Sophia Fênix, otimizados 
 
 ---
 
+## 💰 Economia de Tokens
+
+### Cenário: Usuário quer gerar oferta + página Lovable
+
+**ANTES (Prompt Único):**
+```
+Extração de comentários: 500 tokens
+Prompt gigante: 8000 tokens
+Resposta completa: 12000 tokens
+TOTAL: ~20500 tokens
+```
+
+**DEPOIS (Prompts Separados):**
+```
+Extração de comentários: 500 tokens
+Prompt principal: 2000 tokens
+Resposta seção 1-4: 3000 tokens
+Prompt Lovable: 1500 tokens
+Resposta Lovable: 2500 tokens
+TOTAL: ~9500 tokens
+```
+
+**💰 ECONOMIA: 54% de tokens!**
+
+---
+
 ## 🔧 Como Configurar no Firebase
 
 ### Passo 1: Criar os Documentos
 
-Na coleção `agent_templates`, crie **7 documentos**:
+Na coleção `agent_templates`, crie **14 documentos**:
 
 ```
 agent_templates/
-├── sophia                    ← Prompt principal
-├── sophia_lovable           ← IA Builder
-├── sophia_quiz              ← Quiz
-├── sophia_wordpress         ← WordPress
-├── sophia_entregavel_canva  ← Ebook Canva
-├── sophia_gama              ← Ebook Gama
-└── sophia_criativos         ← Criativos
+├── sophia                    ← Sophia Fênix - Principal
+├── sophia_lovable           ← Sophia Fênix - IA Builder
+├── sophia_quiz              ← Sophia Fênix - Quiz
+├── sophia_wordpress         ← Sophia Fênix - WordPress
+├── sophia_entregavel_canva  ← Sophia Fênix - Ebook Canva
+├── sophia_gama              ← Sophia Fênix - Ebook Gama
+├── sophia_criativos         ← Sophia Fênix - Criativos
+│
+├── sofia                     ← Sofia Universal - Principal
+├── sofia_lovable            ← Sofia Universal - IA Builder
+├── sofia_quiz               ← Sofia Universal - Quiz
+├── sofia_wordpress          ← Sofia Universal - WordPress
+├── sofia_entregavel_canva   ← Sofia Universal - Ebook Canva
+├── sofia_gama               ← Sofia Universal - Ebook Gama
+└── sofia_criativos          ← Sofia Universal - Criativos
 ```
 
 ### Passo 2: Preencher os Documentos
@@ -167,47 +232,43 @@ Exemplo para `sophia`:
    - Verificar no console: "Buscando prompt específico: sophia_lovable"
    - Deve gerar SÓ o prompt Lovable (sem repetir análise)
 
----
-
-## 📊 Comparação de Tokens
-
-### Cenário: Usuário quer gerar oferta + página Lovable
-
-**ANTES (Prompt Único):**
-```
-Extração de comentários: 500 tokens
-Prompt gigante: 8000 tokens
-Resposta completa: 12000 tokens
-TOTAL: ~20500 tokens
-```
-
-**DEPOIS (Prompts Separados):**
-```
-Extração de comentários: 500 tokens
-Prompt principal: 2000 tokens
-Resposta seção 1-4: 3000 tokens
-Prompt Lovable: 1500 tokens
-Resposta Lovable: 2500 tokens
-TOTAL: ~9500 tokens
-```
-
-**💰 ECONOMIA: 54% de tokens!**
+3. **Teste Quiz:**
+   - Após gerar oferta → Clicar "Gerar Quiz"
+   - Verificar: **15 perguntas focadas em venda imediata**
+   - CTA direto no resultado
 
 ---
 
 ## ✅ Checklist de Implementação
 
-- [ ] Criar 7 documentos no Firebase (`agent_templates`)
-- [ ] Copiar conteúdo dos arquivos .txt para campo `prompt`
-- [ ] Testar prompt principal (sophia)
-- [ ] Testar prompt Lovable (sophia_lovable)
-- [ ] Testar prompt Quiz (sophia_quiz)
-- [ ] Testar prompt WordPress (sophia_wordpress)
-- [ ] Testar prompt Canva (sophia_entregavel_canva)
-- [ ] Testar prompt Gama (sophia_gama)
-- [ ] Testar prompt Criativos (sophia_criativos)
-- [ ] Verificar logs no console (busca correta de prompts)
-- [ ] Medir economia de tokens (antes vs depois)
+### Sophia Fênix:
+- [ ] Criar documento `sophia` no Firebase
+- [ ] Criar documento `sophia_lovable`
+- [ ] Criar documento `sophia_quiz`
+- [ ] Criar documento `sophia_wordpress`
+- [ ] Criar documento `sophia_entregavel_canva`
+- [ ] Criar documento `sophia_gama`
+- [ ] Criar documento `sophia_criativos`
+
+### Sofia Universal:
+- [ ] Criar documento `sofia` no Firebase
+- [ ] Criar documento `sofia_lovable`
+- [ ] Criar documento `sofia_quiz`
+- [ ] Criar documento `sofia_wordpress`
+- [ ] Criar documento `sofia_entregavel_canva`
+- [ ] Criar documento `sofia_gama`
+- [ ] Criar documento `sofia_criativos`
+
+### Testes:
+- [ ] Testar prompt principal (sophia/sofia)
+- [ ] Testar prompt Lovable
+- [ ] Testar prompt Quiz (verificar 15 perguntas)
+- [ ] Testar prompt WordPress
+- [ ] Testar prompt Canva
+- [ ] Testar prompt Gama
+- [ ] Testar prompt Criativos
+- [ ] Verificar logs no console
+- [ ] Medir economia de tokens
 
 ---
 
@@ -218,6 +279,9 @@ TOTAL: ~9500 tokens
 
 ### Problema: "Ainda gera tudo de uma vez"
 **Solução:** Verifique se o código está chamando o prompt específico corretamente (veja `openaiService.js` e `AIChat.jsx`)
+
+### Problema: "Quiz tem menos de 15 perguntas"
+**Solução:** Verifique se colou o conteúdo COMPLETO do arquivo `sophia_quiz.txt` ou `sofia_quiz.txt`
 
 ### Problema: "Resposta vazia ou incompleta"
 **Solução:** Verifique se o campo `prompt` no Firebase contém o texto COMPLETO do arquivo .txt
@@ -233,23 +297,18 @@ TOTAL: ~9500 tokens
 2. **Mantenha a estrutura dos prompts** - Cada prompt foi otimizado para gerar exatamente o que precisa
 3. **Use o prompt principal SEMPRE primeiro** - Ele gera a base que os outros prompts usam
 4. **Prompts específicos NÃO repetem análise** - Eles assumem que a oferta já foi gerada
+5. **Quiz tem 15 perguntas de VENDA** - Focadas em qualificar e converter para low-ticket
 
 ---
 
-## 🎯 Próximos Passos
+## 🎯 Diferenças entre Sophia Fênix e Sofia Universal
 
-Após configurar os prompts da Sophia Fênix, repita o processo para a **Sofia Universal**:
-
-```
-agent_templates/
-├── sofia                     ← Prompt principal
-├── sofia_lovable            ← IA Builder
-├── sofia_quiz               ← Quiz
-├── sofia_wordpress          ← WordPress
-├── sofia_entregavel_canva   ← Ebook Canva
-├── sofia_gama               ← Ebook Gama
-└── sofia_criativos          ← Criativos
-```
+| Característica | Sophia Fênix | Sofia Universal |
+|---|---|---|
+| **Foco** | Dores emocionais (apego, abandono) | Qualquer nicho |
+| **Público** | Mulheres com dependência afetiva | Universal |
+| **Tom** | Empoderador, emocional, íntimo | Adaptável ao nicho |
+| **Exemplos** | Relacionamentos, autoamor | Finanças, saúde, negócios, etc |
 
 ---
 
@@ -264,4 +323,5 @@ Se tiver dúvidas ou problemas, verifique:
 
 **Criado por:** Tamara Dutra  
 **Data:** Nov 14, 2025  
-**Versão:** 1.0  
+**Versão:** 2.0  
+**Total de Prompts:** 14 (7 Sophia Fênix + 7 Sofia Universal)  

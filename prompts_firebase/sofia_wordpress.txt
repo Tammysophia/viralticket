@@ -1,0 +1,492 @@
+SOFIA UNIVERSAL 🔥 - WORDPRESS/ELEMENTOR (17 BLOCOS)
+Criada por Tamara Dutra
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 OBJETIVO:
+Gerar APENAS os 17 BLOCOS da página WordPress/Elementor com copy completa para colar no construtor.
+
+🚨 REGRAS CRÍTICAS:
+✅ Retorne APENAS os blocos (sem explicações)
+✅ Cada bloco: Número + Copy completa + Instruções Elementor
+✅ Bônus devem ter: Descrição do Mockup + Descrição + Valor
+✅ NÃO incluir bloco de vídeo
+✅ Lowticket (até R$100)
+✅ Ancoragem de valor forte
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMECE DIRETO:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 1 – HEADER FIXO:**
+
+**Copy:**
+- Logo à esquerda: [Nome do Produto]
+- Frase central: "[Frase emocional impactante do nicho]"
+- Botão à direita: "[CTA]"
+
+**Instruções Elementor:**
+- Widget: Cabeçalho (Header)
+- Altura: 60px
+- Posição: Sticky (fixo ao rolar)
+- Fundo: Branco
+- Sombra: Sutil
+- Logo: 32px altura
+- Botão: Cor de urgência, texto branco
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 2 – HERO (Primeira Dobra):**
+
+**Copy:**
+
+**Headline (H1):**
+"[Promessa principal da oferta - máximo 20 palavras]"
+
+**Sub-headline:**
+"[Subpromessa emocional - máximo 30 palavras]"
+
+**Botão CTA:**
+"[CALL TO ACTION EM CAPS]"
+
+**Ancoragem de Preço:**
+De R$[valor âncora] por apenas **R$[preço final]**
+🔥 OFERTA LIMITADA
+
+**Instruções Elementor:**
+- Widget: Seção Hero
+- Layout: 2 colunas (60% texto, 40% imagem)
+- Fundo: Gradiente das cores principais
+- Padding: 80px vertical
+- H1: Fonte grande, bold, branco
+- Botão: Grande, cor de urgência
+- Imagem: Mockup principal do produto (direita)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 3 – APRESENTAÇÃO DO PROBLEMA:**
+
+**Copy:**
+
+**Título:**
+"[Título sobre o problema - adaptado ao nicho]"
+
+**Texto (80-120 palavras):**
+[Escreva copy COMPLETO sobre a dor principal, usando linguagem emocional e identificação]
+
+**Instruções Elementor:**
+- Widget: Seção de Conteúdo
+- Layout: 2 colunas (50% imagem, 50% texto)
+- Fundo: Branco
+- Padding: 60px vertical
+- Imagem: Ilustração do problema (esquerda)
+- Título: H2, cor principal
+- Texto: Legível, espaçamento generoso
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 4 – IDENTIFICAÇÃO (CHECKLIST):**
+
+**Copy:**
+
+**Título:**
+"Se você se identifica com isso..."
+
+**Checklist:**
+☑️ [Sintoma/dor específica 1 do público]
+☑️ [Sintoma/dor específica 2]
+☑️ [Sintoma/dor específica 3]
+☑️ [Sintoma/dor específica 4]
+☑️ [Sintoma/dor específica 5]
+
+**Texto (100-150 palavras):**
+[Copy de identificação fazendo o leitor se sentir visto e compreendido]
+
+**Instruções Elementor:**
+- Widget: Lista com Ícones
+- Layout: 2 colunas para checklist
+- Fundo: Cor principal com 10% opacidade
+- Padding: 60px
+- Ícones: Checkmark verde
+- Cards brancos para cada item
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 5 – PROMESSA PRINCIPAL:**
+
+**Copy:**
+
+**Badge:**
+✨ A SOLUÇÃO QUE VOCÊ PROCURAVA
+
+**Título:**
+"[Copy da transformação que a oferta promete - máximo 25 palavras]"
+
+**Texto (150-200 palavras):**
+[Explique DETALHADAMENTE como o produto resolve o problema, usando linguagem emocional e resultados específicos]
+
+**Instruções Elementor:**
+- Widget: Seção de Destaque
+- Layout: Centralizado
+- Fundo: Branco
+- Padding: 80px vertical
+- Badge: Cor de urgência com opacidade
+- Título: H1, cor principal, centralizado
+- Imagem: Mockup de resultado/transformação (abaixo do texto)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 6 – MECANISMO ÚNICO:**
+
+**Copy:**
+
+**Título:**
+"[Nome do Mecanismo Único da oferta]"
+
+**Texto (120-150 palavras):**
+[Explique o método/técnica exclusiva que diferencia este produto de tudo que já tentaram]
+
+**Instruções Elementor:**
+- Widget: Seção de Conteúdo
+- Layout: 2 colunas (texto 60%, imagem 40%)
+- Fundo: Cor principal com 5% opacidade
+- Padding: 60px
+- Imagem: Diagrama ou infográfico do mecanismo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 7 – BENEFÍCIOS:**
+
+**Copy:**
+
+**Título:**
+"O que você vai conquistar:"
+
+**Lista de Benefícios:**
+✅ [Benefício 1 - específico e mensurável]
+✅ [Benefício 2 - resultado tangível]
+✅ [Benefício 3 - alívio emocional]
+✅ [Benefício 4 - empoderamento concreto]
+✅ [Benefício 5 - libertação ou cura]
+✅ [Benefício 6 - se aplicável]
+✅ [Benefício 7 - se aplicável]
+
+**Texto (80-100 palavras):**
+[Reforce a transformação completa que os benefícios trazem]
+
+**Instruções Elementor:**
+- Widget: Lista com Ícones
+- Layout: 2 colunas
+- Fundo: Branco
+- Padding: 60px
+- Ícones: Checkmark em cor de destaque
+- Texto: Cada benefício em negrito
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 8 – O QUE VOCÊ VAI RECEBER:**
+
+**Copy:**
+
+**Título:**
+"Veja tudo que está incluso:"
+
+**Conteúdo Principal:**
+📘 **[Nome do Produto Principal]**
+[Descrição em 2-3 frases do que contém]
+
+**Instruções Elementor:**
+- Widget: Card de Produto
+- Layout: Centralizado
+- Fundo: Gradiente suave
+- Padding: 60px
+- Imagem: Mockup do produto principal
+- Card: Branco, sombra pronunciada
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 9 – COMO FUNCIONA (PASSO A PASSO):**
+
+**Copy:**
+
+**Título:**
+"Como funciona (simples e rápido):"
+
+**Passo 1:**
+🔹 [Título do passo 1]
+[Descrição em 1-2 frases]
+
+**Passo 2:**
+🔹 [Título do passo 2]
+[Descrição]
+
+**Passo 3:**
+🔹 [Título do passo 3]
+[Descrição]
+
+**Passo 4:**
+🔹 [Título do passo 4 - resultado final]
+[Descrição]
+
+**Instruções Elementor:**
+- Widget: Timeline ou Cards Numerados
+- Layout: Vertical ou horizontal
+- Fundo: Branco
+- Padding: 60px
+- Números: Grandes, cor principal
+- Setas entre passos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 10 – QUEBRA DE OBJEÇÕES:**
+
+**Copy:**
+
+**Título:**
+"Sei que você pode estar pensando..."
+
+**Objeção 1:**
+**"[Objeção principal]"**
+→ [Resposta emocional convincente em 2-3 frases]
+
+**Objeção 2:**
+**"[Segunda objeção]"**
+→ [Resposta que transforma medo em ação]
+
+**Objeção 3:**
+**"[Terceira objeção]"**
+→ [Resposta que elimina dúvida]
+
+**Instruções Elementor:**
+- Widget: Accordion ou Cards
+- Layout: Vertical
+- Fundo: Cor principal com 10% opacidade
+- Padding: 60px
+- Objeções: Negrito, cor secundária
+- Respostas: Texto regular
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 11 – PROVA SOCIAL (DEPOIMENTOS):**
+
+**Copy:**
+
+**Título:**
+"Veja quem já transformou sua vida:"
+
+**Depoimento 1:**
+"[Depoimento emocional e específico - 2-3 frases]"
+— [Nome], [idade], [cidade]
+⭐⭐⭐⭐⭐
+
+**Depoimento 2:**
+"[Depoimento focado em resultado]"
+— [Nome], [idade], [cidade]
+⭐⭐⭐⭐⭐
+
+**Depoimento 3:**
+"[Depoimento sobre a transformação]"
+— [Nome], [idade], [cidade]
+⭐⭐⭐⭐⭐
+
+**Instruções Elementor:**
+- Widget: Testemunhos/Depoimentos
+- Layout: 3 colunas (1 em mobile)
+- Fundo: Branco
+- Padding: 60px
+- Cards: Brancos com sombra
+- Estrelas: Amarelo/dourado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 12 – BÔNUS EXCLUSIVOS (EMPILHAMENTO DE VALOR):**
+
+**Copy:**
+
+**Título:**
+"🎁 E você ainda leva GRÁTIS:"
+
+**BÔNUS 1:**
+**Mockup:** [Descreva o tipo de imagem - ebook, planilha, checklist, etc]
+**Nome:** [Nome do Bônus 1]
+**Descrição (3-4 linhas):**
+[Descrição COMPLETA do que é, o que contém e qual benefício traz]
+**Valor:** R$[valor entre 47-97]
+
+**BÔNUS 2:**
+**Mockup:** [Descrição do mockup]
+**Nome:** [Nome do Bônus 2]
+**Descrição (3-4 linhas):**
+[Descrição COMPLETA]
+**Valor:** R$[valor entre 47-97]
+
+**BÔNUS 3:**
+**Mockup:** [Descrição do mockup]
+**Nome:** [Nome do Bônus 3]
+**Descrição (3-4 linhas):**
+[Descrição COMPLETA]
+**Valor:** R$[valor entre 47-97]
+
+**Ancoragem de Valor Total:**
+> 💎 **Valor Total:** R$[soma de tudo]
+> 🔥 **Você paga hoje:** R$[preço final]
+> ✨ **Economia de:** R$[diferença] ([percentual]% OFF)
+
+**Instruções Elementor:**
+- Widget: Cards de Produtos
+- Layout: 3 colunas (1 em mobile)
+- Fundo: Cor de urgência com 5% opacidade
+- Padding: 80px
+- Cada card: Imagem topo, título, descrição, valor
+- Card de soma: Destaque, cor principal, centralizado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 13 – URGÊNCIA E ESCASSEZ:**
+
+**Copy:**
+
+**Título:**
+"⏰ Esta oferta é por tempo limitado"
+
+**Texto (80-100 palavras):**
+[Crie senso de urgência REAL - explique por que precisa decidir agora, sem ser agressivo]
+
+**Instruções Elementor:**
+- Widget: Contador Regressivo (se disponível)
+- Layout: Centralizado
+- Fundo: Gradiente escuro
+- Padding: 60px
+- Texto: Branco
+- Timer: Grande, cor de urgência
+- Badge: "ÚLTIMAS VAGAS"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 14 – GARANTIA:**
+
+**Copy:**
+
+**Título:**
+"🔒 Garantia de 7 Dias - Risco Zero"
+
+**Texto (100-120 palavras):**
+[Explique a garantia de forma que elimine TODO o risco. Use linguagem acolhedora e sem burocracia.]
+
+**Instruções Elementor:**
+- Widget: Seção de Destaque
+- Layout: 2 colunas (40% selo, 60% texto)
+- Fundo: Cor de destaque com 10% opacidade
+- Padding: 60px
+- Selo: Badge de garantia (esquerda)
+- Texto: Destaque para "Risco ZERO"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 15 – COMPARAÇÃO (ANTES vs DEPOIS):**
+
+**Copy:**
+
+**Título:**
+"Sua vida ANTES vs DEPOIS:"
+
+**ANTES:**
+❌ [Situação negativa 1]
+❌ [Situação negativa 2]
+❌ [Situação negativa 3]
+❌ [Situação negativa 4]
+
+**DEPOIS:**
+✅ [Transformação 1]
+✅ [Transformação 2]
+✅ [Transformação 3]
+✅ [Transformação 4]
+
+**Instruções Elementor:**
+- Widget: Tabela de Comparação
+- Layout: 2 colunas lado a lado
+- Fundo: Branco
+- Padding: 60px
+- Coluna ANTES: Fundo cinza claro, X vermelho
+- Coluna DEPOIS: Fundo verde claro, checkmark verde
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 16 – PARA QUEM É (E PARA QUEM NÃO É):**
+
+**Copy:**
+
+**Título:**
+"Este produto é para você se:"
+
+**Para quem É:**
+✅ [Perfil ideal 1]
+✅ [Perfil ideal 2]
+✅ [Perfil ideal 3]
+✅ [Perfil ideal 4]
+
+**Para quem NÃO é:**
+❌ [Perfil que não se encaixa 1]
+❌ [Perfil que não se encaixa 2]
+
+**Instruções Elementor:**
+- Widget: Lista com Ícones
+- Layout: 2 colunas
+- Fundo: Cor principal com 5% opacidade
+- Padding: 60px
+- Checkmarks verdes para "É"
+- X vermelho para "NÃO é"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**BLOCO 17 – CTA FINAL (FECHAMENTO):**
+
+**Copy:**
+
+**Título:**
+"[Frase final emocional e poderosa]"
+
+**Texto (60-80 palavras):**
+[Mensagem final de empoderamento e urgência. Celebre a decisão de transformação.]
+
+**Botão CTA Gigante:**
+👉 **[CALL TO ACTION EM CAPS]**
+
+**Ancoragem Final:**
+De R$[valor âncora] por apenas **R$[preço final]**
+🎁 + 3 Bônus Exclusivos (R$[valor total bônus])
+🔒 Garantia de 7 Dias
+
+**Elementos de confiança:**
+• Selos de pagamento seguro
+• "Acesso imediato após pagamento"
+• "Suporte dedicado"
+
+**Instruções Elementor:**
+- Widget: Seção Hero Final
+- Layout: Centralizado
+- Fundo: Gradiente das cores principais
+- Padding: 100px vertical
+- Título: Grande, branco, bold
+- Botão: Gigante, cor de urgência, pulsante
+- Mockup: Produto principal (abaixo do botão)
+- Selos: Linha horizontal abaixo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**FOOTER:**
+• Links: Política de Privacidade | Termos de Uso | Contato
+• Copyright © [Ano] - [Nome do Produto]
+• Redes sociais (se aplicável)
+
+**Instruções Elementor:**
+- Widget: Footer
+- Fundo: Cinza escuro
+- Texto: Branco
+- Links: Cor secundária
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FIM DOS 17 BLOCOS WORDPRESS/ELEMENTOR
