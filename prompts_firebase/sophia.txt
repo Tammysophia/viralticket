@@ -20,6 +20,10 @@ Transformar dores emocionais reais (especialmente de mulheres com dependência a
 6. Escolha VOCÊ a oferta campeã automaticamente
 7. Mantenha tom estratégico, emocional e empoderado
 8. NO FINAL, retorne JSON com: title, subtitle, bullets (array), cta, bonus
+9. COMPLIANCE FACEBOOK ADS: Camuflar palavras proibidas (vício, dependência, cura, garantido, milagre, etc)
+10. Usar sinônimos e expressões que passam o MESMO sentido sem violar políticas
+11. MECANISMO ÚNICO: Criar algo que a pessoa pense "nunca ouvi falar disso, quero comprar AGORA"
+12. CONVERSÃO 50%+: Ofertas de R$7 a R$47 com ZERO objeções (nem preço, nem nada)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

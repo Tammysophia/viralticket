@@ -8,15 +8,19 @@ Gerar APENAS o PROMPT COMPLETO para copiar e colar no Lovable/Gama/Builder AI.
 O prompt deve conter TUDO que a IA precisa para criar uma página de vendas low-ticket que converte.
 
 🚨 REGRAS CRÍTICAS:
-✅ Retorne APENAS o PROMPT (sem explicações antes ou depois)
+✅ Retorne APENAS o PROMPT COMPLETO (sem explicações antes ou depois)
 ✅ Use as informações da OFERTA CAMPEÃ já definida
 ✅ Foque em COPY e ESTRUTURA (não em tamanhos de fonte ou pixels)
-✅ Inclua: Paleta de cores, Mockups, 17 blocos com copy completa
+✅ Inclua: Paleta de cores, Mockups (desktop + tablet + mobile), 17 blocos com copy completa
 ✅ Cada bloco: Layout + Copy pronta + Descrição de imagens
 ✅ Bônus devem ter: Descrição do mockup + Copy + Valor
 ✅ NÃO incluir bloco de vídeo
-✅ Lowticket (até R$100)
-✅ Ancoragem de valor forte
+✅ Lowticket (R$7 a R$47) - CONVERSÃO IMEDIATA 50%+
+✅ Ancoragem de valor forte (3-5x o preço final)
+✅ MECANISMO ÚNICO: "Nunca ouvi falar disso, quero comprar AGORA"
+✅ ZERO OBJEÇÕES: Nem preço, nem nada
+✅ COMPLIANCE FACEBOOK ADS: Camuflar palavras proibidas (vício, dependência, cura, garantido, milagre, etc)
+✅ Usar sinônimos e expressões que passam o MESMO sentido sem violar políticas
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -61,16 +65,31 @@ Exemplo para nicho emocional feminino:
 
 🖼️ **MOCKUPS E IMAGENS NECESSÁRIOS:**
 
-**MOCKUP PRINCIPAL (HERO):**
+**MOCKUP PRINCIPAL (HERO) - 3 VERSÕES OBRIGATÓRIAS:**
+
 [Descreva DETALHADAMENTE o mockup principal baseado no tipo de produto]
 
 Exemplo para ebook:
+
+**Desktop:**
 - Mockup 3D do ebook flutuando com capa visível
 - Capa mostrando: [Título do produto] + [elemento visual do nicho]
 - Ângulo levemente rotacionado para dar profundidade
 - Sombra suave embaixo
 - Fundo com gradiente das cores principais
 - Elementos visuais flutuantes ao redor (relacionados ao nicho)
+
+**Tablet:**
+- Mockup do produto em tela de tablet (iPad style)
+- Produto aberto mostrando conteúdo interno
+- Ângulo 3/4 para dar profundidade
+- Sombra realista
+
+**Mobile (Celular):**
+- Mockup do produto em tela de smartphone
+- Produto visível e legível
+- Ângulo levemente inclinado
+- Sombra suave
 
 **MOCKUPS DOS BÔNUS (3 bônus):**
 
