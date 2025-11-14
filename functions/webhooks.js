@@ -17,26 +17,15 @@ const { sendPasswordCreationEmail } = require('./services/emailService');
 const db = admin.firestore();
 
 /**
- * Gera um token único para criação de senha
+ * Gera uma senha temporária aleatória
  */
-async function generatePasswordToken(email) {
-  const token = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}`;
-  
-  // Calcular expiração (24 horas)
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + 24);
-  
-  // Salvar token no Firestore
-  await db.collection('passwordTokens').doc(token).set({
-    email,
-    type: 'create',
-    token,
-    used: false,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    expiresAt: expiresAt.toISOString(),
-  });
-  
-  return token;
+function generateTempPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let password = '';
+  for (let i = 0; i < 8; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `Temp${password}!`;
 }
 
 /**
@@ -299,23 +288,40 @@ async function createOrUpdateUser(email, plan, status) {
 
     if (snapshot.empty) {
       // Criar novo usuário
-      userData.name = email.split('@')[0];
-      userData.avatar = `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=8B5CF6&color=fff`;
+      const displayName = email.split('@')[0];
+      const tempPassword = generateTempPassword();
+      
+      // 1. Criar usuário no Firebase Auth
+      let authUser;
+      try {
+        authUser = await admin.auth().createUser({
+          email,
+          password: tempPassword,
+          displayName,
+        });
+        logger.info(`✅ Usuário criado no Auth: ${email}`);
+      } catch (authError) {
+        logger.error(`❌ Erro ao criar usuário no Auth: ${authError.message}`);
+        throw authError;
+      }
+      
+      // 2. Criar perfil no Firestore
+      userData.uid = authUser.uid;
+      userData.displayName = displayName;
+      userData.name = displayName;
+      userData.avatar = `https://ui-avatars.com/api/?name=${displayName}&background=8B5CF6&color=fff`;
       userData.dailyUsage = { offers: 0, urls: 0 };
       userData.createdAt = admin.firestore.FieldValue.serverTimestamp();
-      userData.status = 'pending_password'; // Aguardando criação de senha
+      userData.status = 'active';
+      userData.mustChangePassword = true; // Forçar troca de senha no primeiro login
       
-      // Gerar token de criação de senha
-      const token = await generatePasswordToken(email);
-      userData.passwordToken = token;
+      await db.collection('users').doc(authUser.uid).set(userData);
+      logger.info(`✅ Perfil criado no Firestore: ${email} - Plano: ${plan}`);
       
-      await usersRef.add(userData);
-      logger.info(`✅ Usuário criado: ${email} - Plano: ${plan} - Token: ${token.substring(0, 20)}...`);
-      
-      // Enviar email com link de criação de senha
+      // 3. Enviar email com credenciais
       try {
-        await sendPasswordCreationEmail(email, token, userData.name);
-        logger.info(`📧 Email de criação de senha enviado para ${email}`);
+        await sendPasswordCreationEmail(email, tempPassword, displayName);
+        logger.info(`📧 Email com credenciais enviado para ${email}`);
       } catch (emailError) {
         logger.error(`❌ Erro ao enviar email para ${email}:`, emailError);
         // Não falhar o webhook se o email falhar

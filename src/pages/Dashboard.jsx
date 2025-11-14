@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Youtube, Sparkles, KanbanSquare, Bot, TrendingUp, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
@@ -25,8 +25,16 @@ const Dashboard = () => {
   const [aiInitialText, setAiInitialText] = useState('');
   const [editingOffer, setEditingOffer] = useState(null); // VT: Oferta sendo editada
   const [showOfferEditor, setShowOfferEditor] = useState(false); // VT: Modal de edição
+  const [showForcePasswordChange, setShowForcePasswordChange] = useState(false);
   const { user } = useAuth();
   const { t } = useLanguage();
+  
+  // Verificar se usuário precisa trocar senha
+  useEffect(() => {
+    if (user?.mustChangePassword) {
+      setShowForcePasswordChange(true);
+    }
+  }, [user]);
 
   const tabs = [
     { id: 'youtube', label: t('youtubeExtractor'), icon: Youtube },
@@ -161,6 +169,14 @@ const Dashboard = () => {
         onClose={handleCloseEditor}
         offer={editingOffer}
       />
+      
+      {/* Modal de troca de senha obrigatória */}
+      {showForcePasswordChange && (
+        <ChangePassword 
+          isForced={true}
+          onPasswordChanged={() => setShowForcePasswordChange(false)}
+        />
+      )}
       
       {/* Botão WhatsApp Suporte */}
       <WhatsAppButton />

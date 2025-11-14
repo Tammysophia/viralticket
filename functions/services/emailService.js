@@ -5,21 +5,19 @@ const functions = require('firebase-functions');
 const resend = new Resend(functions.config().resend.api_key);
 
 /**
- * Envia email de criação de senha
+ * Envia email com credenciais de acesso
  * @param {string} email - Email do destinatário
- * @param {string} token - Token de ativação
+ * @param {string} tempPassword - Senha temporária
  * @param {string} userName - Nome do usuário (opcional)
  * @returns {Promise<Object>} Resultado do envio
  */
-async function sendPasswordCreationEmail(email, token, userName = '') {
-  const creationLink = `https://viralticket.vercel.app/criar-senha?token=${token}`;
-  
+async function sendPasswordCreationEmail(email, tempPassword, userName = '') {
   try {
     const { data, error } = await resend.emails.send({
       from: 'ViralTicket <nao-responda@viralticket.com>', // Ajuste para seu domínio
       to: [email],
-      subject: 'Crie sua senha de acesso - ViralTicket',
-      html: generatePasswordCreationHTML(creationLink, userName),
+      subject: 'Suas credenciais de acesso - ViralTicket',
+      html: generateCredentialsHTML(email, tempPassword, userName),
     });
 
     if (error) {
@@ -36,9 +34,9 @@ async function sendPasswordCreationEmail(email, token, userName = '') {
 }
 
 /**
- * Gera HTML do email de criação de senha
+ * Gera HTML do email com credenciais
  */
-function generatePasswordCreationHTML(link, userName) {
+function generateCredentialsHTML(email, tempPassword, userName) {
   const greeting = userName ? `Olá, ${userName}!` : 'Olá!';
   
   return `
@@ -115,19 +113,19 @@ function generatePasswordCreationHTML(link, userName) {
           <h2>${greeting}</h2>
           <p>Bem-vindo ao <strong>ViralTicket</strong>! Sua conta foi criada com sucesso.</p>
           
-          <p>Para começar a usar a plataforma, você precisa criar sua senha de acesso. Clique no botão abaixo:</p>
+          <p>Use as credenciais abaixo para fazer login:</p>
           
-          <div style="text-align: center;">
-            <a href="${link}" class="button">Criar Minha Senha</a>
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 5px 0;"><strong>Senha Temporária:</strong> <code style="background-color: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 14px;">${tempPassword}</code></p>
           </div>
           
-          <p>Ou copie e cole este link no seu navegador:</p>
-          <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 12px;">
-            ${link}
-          </p>
+          <div style="text-align: center;">
+            <a href="https://viralticket.vercel.app/login" class="button">Acessar Plataforma</a>
+          </div>
           
           <div class="warning">
-            <strong>⚠️ Importante:</strong> Este link expira em <strong>24 horas</strong>. Se você não criar sua senha neste período, precisará solicitar um novo link.
+            <strong>⚠️ IMPORTANTE:</strong> Por segurança, <strong>altere sua senha</strong> no primeiro acesso!
           </div>
         </div>
         

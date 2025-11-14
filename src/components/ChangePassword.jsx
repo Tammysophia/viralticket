@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -7,8 +7,15 @@ import Input from './Input';
 import Modal from './Modal';
 import toast from 'react-hot-toast';
 
-const ChangePassword = () => {
-  const [showModal, setShowModal] = useState(false);
+const ChangePassword = ({ isForced = false, onPasswordChanged }) => {
+  const [showModal, setShowModal] = useState(isForced);
+  
+  // Atualizar modal quando isForced mudar
+  useEffect(() => {
+    if (isForced) {
+      setShowModal(true);
+    }
+  }, [isForced]);
   const [loading, setLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -69,6 +76,15 @@ const ChangePassword = () => {
       // Atualizar senha
       await updatePassword(user, formData.newPassword);
       
+      // Atualizar flag no Firestore
+      if (isForced) {
+        const { db } = await import('../config/firebase');
+        const { doc, updateDoc } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'users', user.uid), {
+          mustChangePassword: false,
+        });
+      }
+      
       toast.success('✅ Senha alterada com sucesso!');
       
       // Resetar form e fechar modal
@@ -78,6 +94,11 @@ const ChangePassword = () => {
         confirmPassword: '',
       });
       setShowModal(false);
+      
+      // Callback para notificar que senha foi alterada
+      if (onPasswordChanged) {
+        onPasswordChanged();
+      }
     } catch (error) {
       console.error('Erro ao alterar senha:', error);
       
@@ -94,6 +115,12 @@ const ChangePassword = () => {
   };
 
   const handleClose = () => {
+    // Não permitir fechar se for troca forçada
+    if (isForced) {
+      toast.error('⚠️ Você precisa alterar sua senha antes de continuar');
+      return;
+    }
+    
     setShowModal(false);
     setFormData({
       currentPassword: '',
@@ -104,19 +131,22 @@ const ChangePassword = () => {
 
   return (
     <>
-      <Button
-        onClick={() => setShowModal(true)}
-        variant="secondary"
-        size="sm"
-      >
-        <Lock className="w-4 h-4 mr-2" />
-        Alterar Senha
-      </Button>
+      {!isForced && (
+        <Button
+          onClick={() => setShowModal(true)}
+          variant="secondary"
+          size="sm"
+        >
+          <Lock className="w-4 h-4 mr-2" />
+          Alterar Senha
+        </Button>
+      )}
 
       <Modal
         isOpen={showModal}
         onClose={handleClose}
-        title="Alterar Senha"
+        title={isForced ? '🔒 Troca de Senha Obrigatória' : 'Alterar Senha'}
+        closeOnOverlayClick={!isForced}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
@@ -176,6 +206,14 @@ const ChangePassword = () => {
             </button>
           </div>
 
+          {isForced && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <p className="text-sm text-yellow-300">
+                <strong>⚠️ ATENÇÃO:</strong> Por segurança, você deve alterar sua senha temporária antes de usar a plataforma.
+              </p>
+            </div>
+          )}
+          
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
             <p className="text-sm text-blue-300">
               ℹ️ Sua senha deve ter no mínimo 6 caracteres.
@@ -183,19 +221,21 @@ const ChangePassword = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button
-              type="button"
-              onClick={handleClose}
-              variant="secondary"
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
+            {!isForced && (
+              <Button
+                type="button"
+                onClick={handleClose}
+                variant="secondary"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+            )}
             <Button
               type="submit"
               loading={loading}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+              className={`${isForced ? 'w-full' : 'flex-1'} bg-gradient-to-r from-purple-600 to-pink-600`}
             >
               {loading ? 'Alterando...' : 'Alterar Senha'}
             </Button>
