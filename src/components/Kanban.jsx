@@ -1,23 +1,22 @@
-// VT: Kanban integrado com Firestore em tempo real
-import { useState, useEffect } from 'react';
+// ...existing code...
+import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp, Copy } from 'lucide-react';
+import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { formatDate } from '../utils/validation';
 import toast from 'react-hot-toast';
-import { subscribeToUserOffers, updateOffer, deleteOffer, duplicateOfferForModeling } from '../services/offersService';
+import { subscribeToUserOffers, updateOffer, deleteOffer } from '../services/offersService';
 
 const DAYS_IN_MS = 24 * 60 * 60 * 1000;
 
-const Kanban = ({ onEditOffer }) => {
+const Kanban = ({ onEditOffer, onOpenModeling }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-    // VT: Mapeamento de status para colunas
   const STATUS_MAP = {
     pendente: 'pending',
     execucao: 'inExecution',
@@ -33,29 +32,18 @@ const Kanban = ({ onEditOffer }) => {
     completed: 'concluido',
   };
 
-  // VT: Estrutura de colunas
   const [columns, setColumns] = useState({
-    pending: {
-      id: 'pending',
-      title: t('pending') || 'Pendente',
-      items: [],
-    },
-    inExecution: {
-      id: 'inExecution',
-      title: t('inExecution') || 'Em Execução',
-      items: [],
-    },
-    modeling: {
-      id: 'modeling',
-      title: t('modeling') || 'Modelando',
-      items: [],
-    },
-    completed: {
-      id: 'completed',
-      title: t('completed') || 'Concluído',
-      items: [],
-    },
+    pending: { id: 'pending', title: t('pending') || 'Pendente', items: [] },
+    inExecution: { id: 'inExecution', title: t('inExecution') || 'Em Execução', items: [] },
+    modeling: { id: 'modeling', title: t('modeling') || 'Modelando', items: [] },
+    completed: { id: 'completed', title: t('completed') || 'Concluído', items: [] },
   });
+
+  // refs para dados mais recentes
+  const offersRef = useRef([]);
+  const columnsRef = useRef(columns);
+  useEffect(() => { columnsRef.current = columns; }, [columns]);
+  useEffect(() => { offersRef.current = offers; }, [offers]);
 
   useEffect(() => {
     setColumns((prev) => ({
@@ -66,46 +54,36 @@ const Kanban = ({ onEditOffer }) => {
     }));
   }, [t]);
 
-  // VT: Listener em tempo real do Firestore
+  // listener real-time: APENAS ofertas geradas pela IA (type: 'oferta')
   useEffect(() => {
     if (!user?.id) return;
+    setLoading(true);
 
-    // VT: Carregamos apenas ofertas do tipo "oferta" para manter o Kanban principal isolado das modelagens
     const unsubscribe = subscribeToUserOffers(
       user.id,
       (updatedOffers) => {
         setOffers(updatedOffers);
+        offersRef.current = updatedOffers;
         organizeOffersByStatus(updatedOffers);
-        console.log(
-          '🔥 Ofertas carregadas:',
-          updatedOffers.map((offer) => ({
-            id: offer.id,
-            title: offer.title,
-            type: offer.type,
-          })),
-        );
         setLoading(false);
       },
-      'oferta',
+      'oferta' // filtrar somente ofertas geradas pela IA
     );
 
     return () => unsubscribe();
   }, [user?.id]);
 
-  // VT: Organizar ofertas por status
   const organizeOffersByStatus = (allOffers) => {
     const organized = {
-      pending: { ...columns.pending, items: [] },
-      inExecution: { ...columns.inExecution, items: [] },
-      modeling: { ...columns.modeling, items: [] },
-      completed: { ...columns.completed, items: [] },
+      pending: { ...columnsRef.current.pending, items: [] },
+      inExecution: { ...columnsRef.current.inExecution, items: [] },
+      modeling: { ...columnsRef.current.modeling, items: [] },
+      completed: { ...columnsRef.current.completed, items: [] },
     };
 
     allOffers.forEach((offer) => {
       const columnId = STATUS_MAP[offer.status] || 'pending';
-      const targetColumn = organized[columnId] ? columnId : 'modeling';
-
-      organized[targetColumn].items.push({
+      const item = {
         id: offer.id,
         title: offer.title,
         subtitle: offer.subtitle || offer.copy?.adDescription || '',
@@ -114,116 +92,86 @@ const Kanban = ({ onEditOffer }) => {
         status: offer.status,
         modeling: offer.modeling,
         type: offer.type || 'oferta',
-        isModeledOffer: Boolean(offer.modeling?.modelavel),
-      });
+        full: offer
+      };
+      organized[columnId].items.push(item);
     });
 
     setColumns(organized);
+    columnsRef.current = organized;
   };
 
-  // VT: Drag and drop com persistência
+  // Se arrastar para 'modeling' -> duplicar (não mover a oferta original) e abrir modelagem
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
-
     if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const original = offersRef.current.find(o => o.id === draggableId);
+    if (!original) return;
+
+    // Não permite mais arrastar para modelagem - usar o botão Duplicar
+    if (destination.droppableId === 'modeling') {
+      toast.error('Use o botão "Duplicar" para criar uma modelagem');
+      organizeOffersByStatus(offersRef.current);
       return;
     }
 
-    const sourceColumn = columns[source.droppableId];
-    const destColumn = columns[destination.droppableId];
+    // caso normal: mover entre colunas do mesmo Kanban (ofertas)
+    const sourceColumn = columnsRef.current[source.droppableId];
+    const destColumn = columnsRef.current[destination.droppableId];
     const sourceItems = [...sourceColumn.items];
-    const destItems =
-      source.droppableId === destination.droppableId
-        ? sourceItems
-        : [...destColumn.items];
+    const destItems = source.droppableId === destination.droppableId ? sourceItems : [...destColumn.items];
 
     const [removed] = sourceItems.splice(source.index, 1);
     destItems.splice(destination.index, 0, removed);
 
-    // VT: Atualizar UI imediatamente
     setColumns({
-      ...columns,
-      [source.droppableId]: {
-        ...sourceColumn,
-        items: sourceItems,
-      },
-      [destination.droppableId]: {
-        ...destColumn,
-        items: destItems,
-      },
+      ...columnsRef.current,
+      [source.droppableId]: { ...sourceColumn, items: sourceItems },
+      [destination.droppableId]: { ...destColumn, items: destItems },
     });
 
-    // VT: Salvar novo status no Firestore
     try {
       const newStatus = REVERSE_STATUS_MAP[destination.droppableId];
       const newType = newStatus === 'modelando' ? 'modelagem' : 'oferta';
-
-      // VT: Mantemos o objeto local coerente com o novo status/tipo
-      removed.status = newStatus;
-      removed.type = newType;
-
       await updateOffer(draggableId, { status: newStatus, type: newType });
-      toast.success('Oferta movida com sucesso!');
+      toast.success('Oferta movida!');
     } catch (error) {
       toast.error('Erro ao mover oferta');
-      console.error('VT: Erro ao atualizar status:', error);
-      // VT: Reverter UI em caso de erro
-      organizeOffersByStatus(offers);
+      console.error(error);
+      organizeOffersByStatus(offersRef.current);
     }
   };
 
-  // VT: Excluir oferta com confirmação
-    const handleDelete = async (offerId, offerTitle) => {
-      if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) {
-        return;
-      }
-
-      try {
-        await deleteOffer(offerId);
-
-        setOffers((prevOffers) => prevOffers.filter((o) => o.id !== offerId));
-        organizeOffersByStatus(offers.filter((o) => o.id !== offerId));
-
-        toast.success('✅ Oferta excluída!');
-      } catch (error) {
-        toast.error('❌ Erro ao excluir oferta');
-        console.error('VT: Erro ao excluir:', error);
-      }
-    };
-
-  const columnColors = {
-    pending: 'border-yellow-500/30',
-    inExecution: 'border-blue-500/30',
-    modeling: 'border-purple-500/30',
-    completed: 'border-green-500/30',
+  const handleDelete = async (offerId, offerTitle) => {
+    if (!window.confirm(`Tem certeza que deseja excluir "${offerTitle}"?`)) return;
+    try {
+      await deleteOffer(offerId);
+      setOffers(prev => prev.filter(o => o.id !== offerId));
+      organizeOffersByStatus(offers.filter(o => o.id !== offerId));
+      toast.success('Oferta excluída');
+    } catch (err) {
+      toast.error('Erro ao excluir');
+      console.error(err);
+    }
   };
 
   const handleEditClick = (offerId) => {
-    if (!onEditOffer) {
-      toast.error('Erro ao abrir editor');
+    const full = offersRef.current.find(o => o.id === offerId);
+    if (!full) {
+      toast.error('Oferta não encontrada');
       return;
     }
-
-    const fullOffer = offers.find((offer) => offer.id === offerId);
-    onEditOffer(offerId, fullOffer);
-  };
-
-  const handleDuplicate = async (offerId) => {
-    const originalOffer = offers.find((offer) => offer.id === offerId);
-    if (!originalOffer) {
-      toast.error('Oferta não encontrada para duplicação');
-      return;
-    }
-
-    try {
-      await duplicateOfferForModeling(originalOffer);
-      toast.success('Oferta duplicada para modelagem!');
-    } catch (error) {
-      toast.error('Erro ao duplicar oferta');
-      console.error('VT: Erro ao duplicar oferta para modelagem:', error);
+    if (typeof onEditOffer === 'function') {
+      onEditOffer(offerId, full);
+    } else {
+      // fallback: abrir /oferta/:id (se não existir, apenas log)
+      window.location.href = `/oferta/${offerId}`;
     }
   };
+
+
 
   if (loading) {
     return (
@@ -262,210 +210,80 @@ const Kanban = ({ onEditOffer }) => {
                   )}
 
                   {column.items.map((item, index) => {
-                      const monitorDays = item.modeling?.monitorDays || 7;
-                      const monitorStart = item.modeling?.monitorStart
-                        ? new Date(item.modeling.monitorStart)
-                        : null;
-                      const elapsedDays = monitorStart
-                        ? Math.max(
-                            0,
-                            Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS),
-                          )
-                        : 0;
-                      const progressPercent = monitorStart
-                        ? Math.min((elapsedDays / monitorDays) * 100, 100)
-                        : 0;
-                      return (
-                        <Draggable key={item.id} draggableId={item.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className={`glass border ${columnColors[column.id]} rounded-lg p-4 cursor-move transition-all ${
-                                snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
-                              }`}
-                            >
-                          <div className="flex items-center gap-2 mb-2">
-                            <img
-                              src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
-                              alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
-                              className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.nextSibling;
-                                if (fallback) fallback.style.display = 'inline-block';
-                              }}
-                            />
-                            <span className="text-2xl" style={{ display: 'none' }}>
-                              {item.agent === 'sophia' ? '🔥' : '🌟'}
-                            </span>
-                            <span className="text-xs text-purple-400 font-semibold">
-                              {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
-                            </span>
-                          </div>
+                    const monitorDays = item.modeling?.monitorDays || 7;
+                    const monitorStart = item.modeling?.monitorStart ? new Date(item.modeling.monitorStart) : null;
+                    const elapsedDays = monitorStart ? Math.max(0, Math.floor((Date.now() - monitorStart.getTime()) / DAYS_IN_MS)) : 0;
+                    const progressPercent = monitorStart ? Math.min((elapsedDays / monitorDays) * 100, 100) : 0;
 
-                          <h4
-                            className="font-bold mb-1 text-white cursor-grab active:cursor-grabbing"
-                            {...provided.dragHandleProps}
+                    return (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`glass border rounded-lg p-4 cursor-move transition-all ${
+                              snapshot.isDragging ? 'rotate-2 scale-105 shadow-xl' : ''
+                            }`}
                           >
-                            {item.title}
-                          </h4>
-
-                          {item.subtitle && (
-                            <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>
-                          )}
-
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                            <Calendar className="w-3 h-3" />
-                            <span>{formatDate(item.date)}</span>
-                          </div>
-
-                            {item.isModeledOffer && (
-                            <div className="mb-3">
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold shadow-lg">
-                                🏆 OFERTA MODELADA
+                            <div className="flex items-center gap-2 mb-2">
+                              <img
+                                src={item.agent === 'sophia' ? 'https://iili.io/KbegFWu.png' : 'https://iili.io/KieLs1V.png'}
+                                alt={item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
+                                className="w-8 h-8 rounded-full object-cover border border-purple-500/50"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                              <span className="text-xs text-white relative z-10 font-semibold">
+                                {item.agent === 'sophia' ? 'Sophia Fênix' : 'Sofia Universal'}
                               </span>
                             </div>
-                          )}
+
+                            <h4 className="font-bold mb-1 text-white cursor-grab active:cursor-grabbing" {...provided.dragHandleProps}>
+                              {item.title}
+                            </h4>
+
+                            {item.subtitle && <p className="text-xs text-gray-400 mb-2 line-clamp-2">{item.subtitle}</p>}
+
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                              <Calendar className="w-3 h-3" />
+                              <span>{formatDate(item.date)}</span>
+                            </div>
 
                             {item.modeling && (item.modeling.fanpageUrl || item.modeling.salesPageUrl || item.modeling.creativesCount > 0) && (
-                            <div className="mb-3 p-3 glass border border-cyan-500/30 rounded-lg bg-cyan-900/10">
-                              <div className="flex items-center gap-2 mb-2">
-                                <TrendingUp className="w-4 h-4 text-cyan-400" />
-                                  <span className="text-xs font-bold text-cyan-300">
-                                    {t('monitoringProgress')}
-                                  </span>
-                              </div>
-
-                              <div className="space-y-1 text-xs">
-                                {item.modeling.creativesCount > 0 && (
-                                  <div className="flex items-center justify-between">
+                              <div className="mb-3 p-3 rounded-lg bg-cyan-900/10 border border-cyan-500/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <TrendingUp className="w-4 h-4 text-cyan-400" />
+                                  <span className="text-xs font-bold text-cyan-300">{t('monitoringProgress')}</span>
+                                </div>
+                                <div className="space-y-1 text-xs">
+                                  {item.modeling.creativesCount > 0 && (
+                                    <div className="flex items-center justify-between">
                                       <span className="text-gray-400">{t('creativesLabel')}</span>
-                                      <span
-                                        className={`font-semibold ${
-                                          item.modeling.creativesCount >= 7
-                                            ? 'text-green-400'
-                                            : 'text-white'
-                                        }`}
-                                      >
+                                      <span className={item.modeling.creativesCount >= 7 ? 'text-green-400' : 'text-white'}>
                                         {item.modeling.creativesCount}/7
-                                    </span>
-                                  </div>
-                                )}
-
-                                {item.modeling.fanpageUrl && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-green-400">✓</span>
-                                    <span className="text-green-400 text-xs">Fanpage</span>
-                                  </div>
-                                )}
-
-                                {item.modeling.salesPageUrl && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-green-400">✓</span>
-                                    <span className="text-green-400 text-xs">PV</span>
-                                  </div>
-                                )}
-
-                                {item.modeling.checkoutUrl && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-green-400">✓</span>
-                                    <span className="text-green-400 text-xs">Checkout</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                            {column.id === 'modeling' && item.modeling && (
-                              <div className="mb-3 space-y-2">
-                              <div className="flex gap-2 flex-wrap">
-                                {item.modeling.modelavel && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                    ✅ Modelável
-                                  </span>
-                                )}
-                                {item.modeling.trend === 'caindo' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
-                                    🚫 Parar
-                                  </span>
-                                )}
-                                  {item.modeling.trend === 'subindo' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                                    📈 Subindo
-                                  </span>
-                                )}
-                                {item.modeling.trend === 'estavel' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
-                                    ➡️ Estável
-                                  </span>
-                                )}
-                              </div>
-
-                                {item.modeling.monitorStart && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs text-gray-400">
-                                      <span>{t('monitoringProgress')}</span>
-                                      <span>
-                                        {elapsedDays}/{monitorDays} {t('days')}
                                       </span>
                                     </div>
-                                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                                        style={{ width: `${progressPercent}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                      {t('monitoringRemaining')}: {Math.max(monitorDays - elapsedDays, 0)}
-                                    </p>
-                                  </div>
-                                )}
-                            </div>
-                          )}
+                                  )}
+                                  {item.modeling.fanpageUrl && <div className="flex items-center gap-1"><span className="text-green-400">✓</span><span className="text-green-400 text-xs">Fanpage</span></div>}
+                                  {item.modeling.salesPageUrl && <div className="flex items-center gap-1"><span className="text-green-400">✓</span><span className="text-green-400 text-xs">PV</span></div>}
+                                  {item.modeling.checkoutUrl && <div className="flex items-center gap-1"><span className="text-green-400">✓</span><span className="text-green-400 text-xs">Checkout</span></div>}
+                                </div>
+                              </div>
+                            )}
 
-                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                              {item.type !== 'modelagem' && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDuplicate(item.id);
-                                  }}
-                                  className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                                >
-                                  <Copy className="w-3 h-3" />
-                                  Duplicar para Modelagem
-                                </button>
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleEditClick(item.id);
-                                }}
-                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors"
-                              >
-                                <Edit2 className="w-3 h-3" />
-                                Editar
+                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10 flex-wrap">
+                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEditClick(item.id); }} className="flex-1 min-w-[100px] flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-sm transition-colors">
+                                <Edit2 className="w-3 h-3" /> Editar
                               </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDelete(item.id, item.title);
-                                }}
-                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                Excluir
+
+                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(item.id, item.title); }} className="flex-1 min-w-[100px] flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 text-sm transition-colors">
+                                <Trash2 className="w-3 h-3" /> Excluir
                               </button>
+                            </div>
                           </div>
-                        </div>
-                          )}
-                        </Draggable>
-                      );
-                    })}
+                        )}
+                      </Draggable>
+                    );
+                  })}
                   {provided.placeholder}
                 </div>
               )}
@@ -478,3 +296,4 @@ const Kanban = ({ onEditOffer }) => {
 };
 
 export default Kanban;
+// ...existing code...

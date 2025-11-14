@@ -1,7 +1,8 @@
 // VT: Kanban de Monitoramento - Ofertas da biblioteca do Facebook em teste de 7 dias
 import { useState, useEffect, useRef } from 'react';
+import MonitoringForm from './MonitoringForm';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp, ArrowRight } from 'lucide-react';
+import { Calendar, Edit2, Trash2, AlertCircle, TrendingUp, ArrowRight, Plus } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
@@ -16,6 +17,7 @@ const KanbanMonitoring = ({ onEditOffer, onMoveToModeling }) => {
   const { user } = useAuth();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
 
   const STATUS_MAP = {
     monitorando: 'monitoring',
@@ -163,7 +165,18 @@ const KanbanMonitoring = ({ onEditOffer, onMoveToModeling }) => {
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <>
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-semibold transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          Adicionar Monitoramento
+        </button>
+      </div>
+
+      <DragDropContext onDragEnd={onDragEnd}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
         {Object.values(columns).map((column) => (
           <div key={column.id} className="space-y-3">
@@ -305,6 +318,9 @@ const KanbanMonitoring = ({ onEditOffer, onMoveToModeling }) => {
         ))}
       </div>
     </DragDropContext>
+
+    <MonitoringForm isOpen={showForm} onClose={() => setShowForm(false)} />
+    </>
   );
 };
 

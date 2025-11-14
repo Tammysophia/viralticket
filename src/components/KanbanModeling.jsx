@@ -1,7 +1,8 @@
 // VT: Kanban de Modelagem - Ofertas aprovadas sendo modeladas
 import { useState, useEffect, useRef } from 'react';
+import ModelingForm from './ModelingForm';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Calendar, Edit2, Trash2, AlertCircle, FileText, Image } from 'lucide-react';
+import { Calendar, Edit2, Trash2, AlertCircle, FileText, Image, Plus } from 'lucide-react';
 import Card from './Card';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
@@ -14,6 +15,8 @@ const KanbanModeling = ({ onEditOffer }) => {
   const { user } = useAuth();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingOffer, setEditingOffer] = useState(null);
 
   const STATUS_MAP = {
     pendente: 'pending',
@@ -137,9 +140,13 @@ const KanbanModeling = ({ onEditOffer }) => {
       toast.error('Modelagem não encontrada');
       return;
     }
-    if (typeof onEditOffer === 'function') {
-      onEditOffer(offerId, full);
-    }
+    setEditingOffer(full);
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingOffer(null);
   };
 
   if (loading) {
@@ -154,7 +161,18 @@ const KanbanModeling = ({ onEditOffer }) => {
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <>
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          Adicionar Modelagem
+        </button>
+      </div>
+
+      <DragDropContext onDragEnd={onDragEnd}>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 px-2">
         {Object.values(columns).map((column) => (
           <div key={column.id} className="space-y-3">
@@ -276,6 +294,13 @@ const KanbanModeling = ({ onEditOffer }) => {
         ))}
       </div>
     </DragDropContext>
+
+    <ModelingForm 
+      isOpen={showForm} 
+      onClose={handleCloseForm}
+      offer={editingOffer}
+    />
+    </>
   );
 };
 
