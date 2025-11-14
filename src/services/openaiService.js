@@ -5,27 +5,45 @@ import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * Busca o prompt do agente no Firestore
- * @param {string} agentId - ID do agente (sophia, sofia)
+ * @param {string} agentId - ID do agente (sophia, sofia, sophia_lovable, etc)
+ * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress)
  * @returns {Promise<string|null>} - Prompt ou null se não encontrar
  */
-const getAgentPromptFromFirestore = async (agentId) => {
+const getAgentPromptFromFirestore = async (agentId, specificPrompt = null) => {
   try {
-    console.log(`🔍 VT: Buscando prompt do agente "${agentId}" no Firestore...`);
+    // Se specificPrompt foi fornecido, buscar prompt específico
+    const promptId = specificPrompt ? `${agentId}_${specificPrompt}` : agentId;
+    
+    console.log(`🔍 VT: Buscando prompt "${promptId}" no Firestore...`);
     
     if (!db) {
       console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
       return null;
     }
 
-    const docRef = doc(db, 'agent_templates', agentId);
+    const docRef = doc(db, 'agent_templates', promptId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       const data = docSnap.data();
-      console.log(`✅ VT: Prompt encontrado para "${agentId}"`);
+      console.log(`✅ VT: Prompt encontrado para "${promptId}"`);
       return data.prompt || data.systemPrompt || null;
     } else {
-      console.warn(`⚠️ VT: Prompt não encontrado no Firestore para "${agentId}"`);
+      console.warn(`⚠️ VT: Prompt "${promptId}" não encontrado no Firestore`);
+      
+      // Se não encontrou prompt específico, tentar buscar o prompt principal
+      if (specificPrompt) {
+        console.log(`🔄 VT: Tentando buscar prompt principal "${agentId}"...`);
+        const mainDocRef = doc(db, 'agent_templates', agentId);
+        const mainDocSnap = await getDoc(mainDocRef);
+        
+        if (mainDocSnap.exists()) {
+          const data = mainDocSnap.data();
+          console.log(`✅ VT: Usando prompt principal "${agentId}" como fallback`);
+          return data.prompt || data.systemPrompt || null;
+        }
+      }
+      
       return null;
     }
   } catch (error) {
@@ -195,9 +213,10 @@ export const verifyAPIConnection = async () => {
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
  * @param {string} targetLanguage - Idioma alvo (pt-BR, en-US, es-ES)
+ * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress) - NOVO
  * @returns {Promise<Object>} - Oferta gerada
  */
-export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR') => {
+export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null) => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
@@ -205,6 +224,10 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     console.log('🔑 VT: Comprimento da chave:', apiKey?.length);
     console.log('🔑 VT: Primeira parte:', apiKey?.substring(0, 7));
     console.log('🔑 VT: Última parte:', apiKey?.substring(apiKey?.length - 4));
+    
+    if (specificPrompt) {
+      console.log(`🎯 VT: Usando prompt específico: ${agent}_${specificPrompt}`);
+    }
     
     if (!apiKey) {
       const error = new Error('API_KEY_NOT_FOUND');
@@ -221,8 +244,8 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       throw error;
     }
 
-    // PASSO 1: Buscar prompt do Firestore
-    let systemPrompt = await getAgentPromptFromFirestore(agent);
+    // PASSO 1: Buscar prompt do Firestore (com suporte a prompts específicos)
+    let systemPrompt = await getAgentPromptFromFirestore(agent, specificPrompt);
     
     // PASSO 2: Se não encontrou, usar fallback hardcoded
     if (!systemPrompt) {

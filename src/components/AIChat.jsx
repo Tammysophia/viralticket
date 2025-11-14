@@ -292,101 +292,29 @@ POST 1:
         'ia-builder': 'IA Builder (Lovable/Gama)'
       };
 
-      // ✅ IMPORTANTE: NÃO repetir análise - só gerar formato específico
-      const offerContext = `Você já fez a análise completa e definiu a OFERTA CAMPEÃ.
-
-AGORA gere APENAS a PÁGINA DE VENDAS no formato escolhido, SEM repetir diagnóstico, micro-ofertas ou seleção.
-
-Use as informações da oferta campeã já identificada anteriormente.`;
-
-      // ✅ INSTRUÇÕES ESPECÍFICAS POR FORMATO
-      let specificInstructions = '';
+      // ✅ NOVO: Mapear formato para nome do prompt específico no Firebase
+      const promptMapping = {
+        'wordpress': 'wordpress',
+        'quiz': 'quiz',
+        'ia-builder': 'lovable'  // ia-builder usa o prompt lovable
+      };
       
-      if (format === 'wordpress') {
-        specificInstructions = `Gere APENAS os 17 BLOCOS da página WordPress/Elementor:
+      const specificPromptType = promptMapping[format];
+      
+      console.log(`🎯 VT: Buscando prompt específico: ${selectedAgent}_${specificPromptType}`);
+      
+      // ✅ Contexto mínimo com informações da oferta já gerada
+      const offerContext = `OFERTA CAMPEÃ JÁ DEFINIDA:
+Título: ${output.title}
+Subtítulo: ${output.subtitle}
+Benefícios: ${output.bullets.join(', ')}
+CTA: ${output.cta}
+Bônus: ${output.bonus}
 
-REGRAS:
-✅ Retorne APENAS os blocos (sem explicações)
-✅ Cada bloco: Número + Copy completa + Instruções Elementor
-✅ Bônus devem ter: Mockup + Descrição + Valor
-✅ NÃO incluir bloco de vídeo
-✅ Lowticket (até R$100)
+Gere APENAS o formato solicitado usando essas informações.`;
 
-ESTRUTURA DOS BÔNUS:
-- BLOCO 12: 3 Bônus com mockup + descrição completa + valor individual
-- Cada bônus: [Mockup] + Título + Descrição (3-4 linhas) + Valor (R$X)
-
-COMECE DIRETO:
-BLOCO 1 – HEADER FIXO:
-Copy:
-- Logo à esquerda
-- Frase central: [frase]
-- Botão: [CTA]
-
-Instruções Elementor:
-- Widget cabeçalho
-- Altura 60px
-- Sombra sutil
-
-BLOCO 2 – HERO:
-[continuar...]`;
-      } else if (format === 'quiz') {
-        specificInstructions = `Gere APENAS o QUIZ DE VENDAS DIRETAS (15 perguntas):
-
-✅ NÃO repita análise ou diagnóstico
-✅ Vá DIRETO para as 15 perguntas
-✅ Perguntas focadas em VENDER (não educar)
-✅ Cada pergunta qualifica lead e aumenta desejo de compra
-✅ 3-4 opções que levam à compra
-✅ Resultado final: CTA DIRETO por perfil
-✅ Ao final pessoa COMPRA
-
-COMECE DIRETO:
-PERGUNTA 1:
-[sua pergunta aqui]
-Opções: [opções aqui]`;
-      } else if (format === 'ia-builder') {
-        specificInstructions = `Gere o PROMPT COMPLETO para copiar e colar no Lovable/Gama.
-
-REGRAS CRÍTICAS:
-✅ Retorne APENAS o PROMPT (sem explicações antes ou depois)
-✅ Prompt deve incluir: Paleta de cores, Tipografia, Mockups, 17 blocos numerados com copy completa
-✅ Cada bloco: Layout + Elementos + Copy pronta
-✅ Bônus devem ter: Mockup + Descrição completa + Valor
-✅ NÃO coloque vídeo na página (remover bloco 8 de vídeo)
-✅ Formato: Lowticket (oferta até R$100)
-
-ESTRUTURA DOS BÔNUS:
-- Remover BLOCO 8 (vídeo)
-- BLOCO 12: 3 Bônus com mockup + descrição completa (3-4 linhas) + valor individual
-- Total bônus deve justificar valor âncora
-
-COMECE DIRETO COM:
-PRODUTO: [nome]
-TAGLINE: [tagline]
-PREÇO: R$[valor]
-VALOR ÂNCORA: R$[valor_original]
-
-🎨 PALETA DE CORES:
-[cores aqui]
-
-📐 TIPOGRAFIA:
-[tipografia aqui]
-
-📦 ESTRUTURA DA PÁGINA (17 BLOCOS - SEM BLOCO 8):
-BLOCO 1 – HEADER:
-[layout + copy]
-..."`;
-      }
-
-      // ✅ PROMPT OTIMIZADO (NÃO repetir - economizar tokens)
-      const optimizedPrompt = `${offerContext}
-
-${specificInstructions}
-
-REGRA CRÍTICA: NÃO repita nada já gerado. Vá DIRETO ao ponto. Seja conciso.`;
-
-      const pageData = await generateOffer(optimizedPrompt, selectedAgent, getLanguageForAI());
+      // ✅ Chamar generateOffer com prompt específico do Firebase
+      const pageData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
 
       // Adicionar ao output existente
       setOutput(prev => ({
@@ -420,43 +348,26 @@ REGRA CRÍTICA: NÃO repita nada já gerado. Vá DIRETO ao ponto. Seja conciso.`
         'gama': 'Gama (estrutura completa)'
       };
 
-      // ✅ NÃO repetir análise - só gerar ebook
-      const offerContext = `Você já fez a análise. AGORA gere APENAS o EBOOK no formato escolhido, SEM repetir nada.`;
-
-      // ✅ INSTRUÇÕES ESPECÍFICAS POR FORMATO
-      let specificInstructions = '';
+      // ✅ NOVO: Usar prompts específicos do Firebase para Ebook
+      // Nota: Ebook usa o mesmo sistema de prompts separados
+      // Os prompts no Firebase devem ser: sophia_canva, sophia_gama, sofia_canva, sofia_gama
       
-      if (format === 'canva') {
-        specificInstructions = `Gere APENAS o EBOOK em formato CANVA:
+      const specificPromptType = format; // 'canva' ou 'gama'
+      
+      console.log(`📘 VT: Buscando prompt específico de ebook: ${selectedAgent}_${specificPromptType}`);
+      
+      // ✅ Contexto mínimo com informações da oferta já gerada
+      const offerContext = `OFERTA CAMPEÃ JÁ DEFINIDA:
+Título: ${output.title}
+Subtítulo: ${output.subtitle}
+Benefícios: ${output.bullets.join(', ')}
+CTA: ${output.cta}
+Bônus: ${output.bonus}
 
-✅ NÃO repita análise
-✅ Vá DIRETO para as páginas do ebook
-✅ 20+ páginas numeradas
-✅ Copy completa de cada página
+Gere APENAS o ebook no formato solicitado usando essas informações.`;
 
-COMECE DIRETO:
-PÁGINA 1:
-[conteúdo aqui]`;
-      } else if (format === 'gama') {
-        specificInstructions = `Gere APENAS o EBOOK em formato GAMA:
-
-✅ NÃO repita análise
-✅ Vá DIRETO para o sumário e capítulos
-✅ 20+ páginas bem estruturadas
-
-COMECE DIRETO:
-SUMÁRIO:
-[sumário aqui]`;
-      }
-
-      // ✅ PROMPT OTIMIZADO (NÃO repetir)
-      const optimizedPrompt = `${offerContext}
-
-${specificInstructions}
-
-REGRA CRÍTICA: NÃO repita nada. Vá DIRETO ao ponto.`;
-
-      const ebookData = await generateOffer(optimizedPrompt, selectedAgent, getLanguageForAI());
+      // ✅ Chamar generateOffer com prompt específico do Firebase
+      const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
 
       // Adicionar ao output existente
       setOutput(prev => ({
