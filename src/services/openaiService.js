@@ -151,8 +151,8 @@ const safeJsonParse = (content) => {
           '✅ 3 ofertas campeãs selecionadas',
           '✅ Estrutura completa do produto'
         ],
-        cta: '🚀 VER ANÁLISE COMPLETA NO CONSOLE',
-        bonus: '🎁 Análise detalhada disponível nos logs do navegador (F12)'
+        cta: '🚀 Veja a análise completa abaixo',
+        bonus: '🎁 Análise detalhada pronta para uso'
       };
     }
   } catch (error) {
