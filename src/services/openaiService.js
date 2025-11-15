@@ -144,7 +144,7 @@ const safeJsonParse = (content) => {
       
       return {
         title: '🎯 Oferta Especial',
-        subtitle: 'Análise detalhada gerada. Verifique o console para detalhes completos.',
+        subtitle: 'Análise completa e estruturada da sua oferta',
         bullets: [
           '✅ Análise profunda do público-alvo',
           '✅ 10 micro-ofertas personalizadas criadas',
