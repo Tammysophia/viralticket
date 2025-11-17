@@ -354,20 +354,29 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       }
     }
     
-    // VT: Limpar resposta de JSON e mensagens técnicas
+    // VT: Limpar resposta de JSON e mensagens técnicas para fullResponse
     let cleanContent = content;
     
-    // Remover blocos JSON se existirem
+    // Remover blocos JSON completos (```json ... ```)
     cleanContent = cleanContent.replace(/```json[\s\S]*?```/gi, '');
-    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?\}/g, '');
+    
+    // Remover objetos JSON soltos (qualquer coisa entre { e } que contenha "title")
+    cleanContent = cleanContent.replace(/\{[^{}]*"title"[^{}]*\}/g, '');
+    
+    // Remover JSON multi-linha mais complexo
+    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?"subtitle"[\s\S]*?"bullets"[\s\S]*?\}/g, '');
+    
+    // Remover linhas que começam com JSON
+    cleanContent = cleanContent.replace(/^\s*\{.*$/gm, '');
     
     // Remover mensagens técnicas comuns
     cleanContent = cleanContent.replace(/.*prompt.*não.*configurado.*/gi, '');
     cleanContent = cleanContent.replace(/.*fallback.*/gi, '');
     cleanContent = cleanContent.replace(/.*hardcoded.*/gi, '');
     cleanContent = cleanContent.replace(/.*Firestore.*/gi, '');
+    cleanContent = cleanContent.replace(/.*usando prompt padrão.*/gi, '');
     
-    // Limpar linhas vazias extras
+    // Limpar linhas vazias extras (3 ou mais quebras seguidas)
     cleanContent = cleanContent.replace(/\n{3,}/g, '\n\n').trim();
     
     const normalized = {
