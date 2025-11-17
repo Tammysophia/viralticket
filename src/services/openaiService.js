@@ -354,6 +354,22 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       }
     }
     
+    // VT: Limpar resposta de JSON e mensagens técnicas
+    let cleanContent = content;
+    
+    // Remover blocos JSON se existirem
+    cleanContent = cleanContent.replace(/```json[\s\S]*?```/gi, '');
+    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?\}/g, '');
+    
+    // Remover mensagens técnicas comuns
+    cleanContent = cleanContent.replace(/.*prompt.*não.*configurado.*/gi, '');
+    cleanContent = cleanContent.replace(/.*fallback.*/gi, '');
+    cleanContent = cleanContent.replace(/.*hardcoded.*/gi, '');
+    cleanContent = cleanContent.replace(/.*Firestore.*/gi, '');
+    
+    // Limpar linhas vazias extras
+    cleanContent = cleanContent.replace(/\n{3,}/g, '\n\n').trim();
+    
     const normalized = {
       title: offerData.title || '🎯 Oferta Especial',
       subtitle: offerData.subtitle || '',
@@ -364,7 +380,7 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
           : [],
       cta: offerData.cta || '🚀 QUERO AGORA!',
       bonus: offerData.bonus || '',
-      fullResponse: offerData.fullResponse || content
+      fullResponse: cleanContent || content
     };
     
     console.log('✅ VT: Oferta gerada com sucesso!');
