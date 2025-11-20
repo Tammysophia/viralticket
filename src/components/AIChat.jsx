@@ -247,15 +247,14 @@ const AIChat = ({ initialText = '' }) => {
       // ✅ NOVO: Usar prompt específico do Firebase para Criativos
       console.log(`🎨 VT: Buscando prompt específico de criativos: ${selectedAgent}_criativos`);
       
-      // ✅ Contexto mínimo com informações da oferta já gerada
-      const offerContext = `OFERTA CAMPEÃ JÁ DEFINIDA:
-Título: ${output.title}
-Subtítulo: ${output.subtitle}
-Benefícios: ${output.bullets.join(', ')}
-CTA: ${output.cta}
-Bônus: ${output.bonus}
+      // ✅ Contexto COMPLETO com a oferta já gerada
+      const offerContext = `OFERTA COMPLETA JÁ GERADA:
 
-Gere APENAS os criativos (posts + vídeos) usando essas informações.`;
+${output.fullResponse}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const creativesData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), 'criativos');
@@ -304,15 +303,14 @@ Gere APENAS os criativos (posts + vídeos) usando essas informações.`;
       
       console.log(`🎯 VT: Buscando prompt específico: ${selectedAgent}_${specificPromptType}`);
       
-      // ✅ Contexto mínimo com informações da oferta já gerada
-      const offerContext = `OFERTA CAMPEÃ JÁ DEFINIDA:
-Título: ${output.title}
-Subtítulo: ${output.subtitle}
-Benefícios: ${output.bullets.join(', ')}
-CTA: ${output.cta}
-Bônus: ${output.bonus}
+      // ✅ Contexto COMPLETO com a oferta já gerada
+      const offerContext = `OFERTA COMPLETA JÁ GERADA:
 
-Gere APENAS o formato solicitado usando essas informações.`;
+${output.fullResponse}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Com base na oferta completa acima, gere APENAS o formato solicitado.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const pageData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
