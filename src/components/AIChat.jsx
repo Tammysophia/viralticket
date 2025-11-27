@@ -220,6 +220,12 @@ const AIChat = ({ initialText = '' }) => {
     success('Oferta copiada!');
   };
 
+  // ✅ NOVO: Funções de copiar independentes para cada seção
+  const handleCopySectionText = (text, sectionName) => {
+    navigator.clipboard.writeText(text);
+    success(`✅ ${sectionName} copiada!`);
+  };
+
   // VT: Limpar oferta do painel (botão lixeira)
   const handleClearOutput = () => {
     if (window.confirm('🗑️ Tem certeza que deseja apagar esta oferta do painel?\n\n(A oferta já salva no Kanban não será afetada)')) {
@@ -259,10 +265,11 @@ Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const creativesData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), 'criativos');
 
-      // Adicionar ao output existente
+      // ✅ NOVO: Armazenar criativos separadamente
       setOutput(prev => ({
         ...prev,
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 🎨 CRIATIVOS (POSTS + VÍDEOS)\n\n' + (creativesData.fullResponse || 'Criativos gerados com sucesso!')
+        creatives: creativesData.fullResponse || 'Criativos gerados com sucesso!',
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### ✨ CRIATIVOS (POSTS + VÍDEOS)\n\n' + (creativesData.fullResponse || 'Criativos gerados com sucesso!')
       }));
 
       success('✅ Criativos gerados (Posts + Vídeos)!');
@@ -315,9 +322,13 @@ Com base na oferta completa acima, gere APENAS o formato solicitado.`;
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const pageData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
 
-      // Adicionar ao output existente
+      // ✅ NOVO: Armazenar página de vendas separadamente
       setOutput(prev => ({
         ...prev,
+        pageFormat: {
+          ...prev.pageFormat,
+          [format]: pageData.fullResponse || 'Página gerada com sucesso!'
+        },
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + (pageData.fullResponse || 'Página gerada com sucesso!')
       }));
 
@@ -373,9 +384,13 @@ Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
 
-      // ✅ Adicionar ao output existente
+      // ✅ NOVO: Armazenar e-book separadamente
       setOutput(prev => ({
         ...prev,
+        ebookFormat: {
+          ...prev.ebookFormat,
+          [format]: ebookData.fullResponse || 'Ebook gerado com sucesso!'
+        },
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
 
@@ -557,17 +572,83 @@ Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
 
                   {/* Botões de ação */}
                   <div className="mt-8 pt-6 border-t border-purple-500/30 space-y-6">
-                    {/* Botão de copiar */}
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(output.fullResponse);
-                        success('✅ Análise completa copiada!');
-                      }}
-                      className="w-full glass border border-purple-500/50 hover:border-purple-400 rounded-lg px-6 py-3 font-semibold text-purple-300 hover:text-purple-200 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Copy size={20} />
-                      {t('copyCompleteAnalysis')}
-                    </button>
+                    {/* ✅ NOVO: Botões de copiar independentes para cada seção */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Copiar Análise Completa */}
+                      <button
+                        onClick={() => handleCopySectionText(output.fullResponse, 'Análise Completa')}
+                        className="glass border border-purple-500/50 hover:border-purple-400 rounded-lg px-4 py-3 font-semibold text-purple-300 hover:text-purple-200 transition-all flex items-center justify-center gap-2 text-sm"
+                      >
+                        <Copy size={18} />
+                        📋 Copiar Análise
+                      </button>
+                      
+                      {/* Copiar Canva */}
+                      {output.ebookFormat?.canva && (
+                        <button
+                          onClick={() => handleCopySectionText(output.ebookFormat.canva, 'Canva')}
+                          className="glass border border-cyan-500/50 hover:border-cyan-400 rounded-lg px-4 py-3 font-semibold text-cyan-300 hover:text-cyan-200 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                          <Copy size={18} />
+                          🎨 Copiar Canva
+                        </button>
+                      )}
+                      
+                      {/* Copiar Gama */}
+                      {output.ebookFormat?.gama && (
+                        <button
+                          onClick={() => handleCopySectionText(output.ebookFormat.gama, 'Gama')}
+                          className="glass border border-orange-500/50 hover:border-orange-400 rounded-lg px-4 py-3 font-semibold text-orange-300 hover:text-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                          <Copy size={18} />
+                          ⚡ Copiar Gama
+                        </button>
+                      )}
+                      
+                      {/* Copiar WordPress */}
+                      {output.pageFormat?.wordpress && (
+                        <button
+                          onClick={() => handleCopySectionText(output.pageFormat.wordpress, 'WordPress')}
+                          className="glass border border-blue-500/50 hover:border-blue-400 rounded-lg px-4 py-3 font-semibold text-blue-300 hover:text-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                          <Copy size={18} />
+                          🔧 Copiar WordPress
+                        </button>
+                      )}
+                      
+                      {/* Copiar Quiz */}
+                      {output.pageFormat?.quiz && (
+                        <button
+                          onClick={() => handleCopySectionText(output.pageFormat.quiz, 'Quiz')}
+                          className="glass border border-green-500/50 hover:border-green-400 rounded-lg px-4 py-3 font-semibold text-green-300 hover:text-green-200 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                          <Copy size={18} />
+                          🎯 Copiar Quiz
+                        </button>
+                      )}
+                      
+                      {/* Copiar IA Builder */}
+                      {output.pageFormat?.lovable && (
+                        <button
+                          onClick={() => handleCopySectionText(output.pageFormat.lovable, 'IA Builder')}
+                          className="glass border border-pink-500/50 hover:border-pink-400 rounded-lg px-4 py-3 font-semibold text-pink-300 hover:text-pink-200 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                          <Copy size={18} />
+                          🤖 Copiar IA Builder
+                        </button>
+                      )}
+                      
+                      {/* Copiar Criativos */}
+                      {output.creatives && (
+                        <button
+                          onClick={() => handleCopySectionText(output.creatives, 'Criativos')}
+                          className="glass border border-yellow-500/50 hover:border-yellow-400 rounded-lg px-4 py-3 font-semibold text-yellow-300 hover:text-yellow-200 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                          <Copy size={18} />
+                          ✨ Copiar Criativos
+                        </button>
+                      )}
+                    </div>
 
                     {/* VT: Botões de escolha - SEMPRE APARECEM */}
                     {output.fullResponse && (
