@@ -347,7 +347,7 @@ Com base na oferta completa acima, gere APENAS o formato solicitado.`;
         'gama': 'Gama (estrutura completa)'
       };
 
-      // ✅ NOVO: Usar prompts específicos do Firebase para Ebook
+      // ✅ CORRIGIDO: Usar prompts específicos do Firebase para Ebook
       // Nota: Ebook usa o mesmo sistema de prompts separados
       // Os prompts no Firebase: sophia_entregavel_canva, sophia_gama, sofia_entregavel_canva, sofia_gama
       
@@ -361,24 +361,25 @@ Com base na oferta completa acima, gere APENAS o formato solicitado.`;
       
       console.log(`📘 VT: Buscando prompt específico de ebook: ${selectedAgent}_${specificPromptType}`);
       
-      // ✅ Contexto mínimo com informações da oferta já gerada
-      const offerContext = `OFERTA CAMPEÃ JÁ DEFINIDA:
-Título: ${output.title}
-Subtítulo: ${output.subtitle}
-Benefícios: ${output.bullets.join(', ')}
-CTA: ${output.cta}
-Bônus: ${output.bonus}
+      // ✅ CORRIGIDO: Contexto COMPLETO com a oferta já gerada (assim como handleGeneratePageFormat)
+      const offerContext = `OFERTA COMPLETA JÁ GERADA:
 
-Gere APENAS o ebook no formato solicitado usando essas informações.`;
+${output.fullResponse}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
 
-      // Adicionar ao output existente
+      // ✅ Adicionar ao output existente
       setOutput(prev => ({
         ...prev,
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
+
+      console.log(`✅ VT: Ebook (${format}) gerado com sucesso usando a oferta completa!`);
 
       success(`✅ Ebook (${formatNames[format]}) gerado!`);
     } catch (err) {
