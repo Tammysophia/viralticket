@@ -260,7 +260,7 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       
       const fallbackPrompts = {
         sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
+        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus. O Módulo Gama deve gerar o conteúdo COMPLETO do e-book (título, subtítulo, capítulos, tópicos, desenvolvimento, conclusão, CTA final) e NUNCA repetir a oferta principal.`
       };
       
       systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
@@ -412,14 +412,19 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     // Limpeza de blocos de código genéricos (``` ... ```)
     cleanContent = cleanContent.replace(/```[\s\S]*?```/gi, '');
     
-    // Limpeza de JSON solto (qualquer coisa entre { e } que contenha "title")
+    // Limpeza de blocos de código genéricos (``` ... ```)
+    cleanContent = cleanContent.replace(/```[\s\S]*?```/gi, '');// Limpeza de JSON solto (qualquer coisa entre { e } que contenha "title")
     // Esta regex é a última linha de defesa para JSONs não formatados
     // Aumentando a agressividade para remover qualquer JSON que comece com { e termine com }
     // e contenha "title", "subtitle", "bullets" ou "cta"
+    // Esta regex é a última linha de defesa e deve ser a mais agressiva
     cleanContent = cleanContent.replace(/\{[\s\S]*?("title"|"subtitle"|"bullets"|"cta")[\s\S]*?\}/gi, '');
     
-    // Remover linhas que começam com JSON
-    cleanContent = cleanContent.replace(/^\s*\{.*$/gm, '');
+    // Adicionando regex para remover o bloco de código JSON vazado (json { ... })
+    cleanContent = cleanContent.replace(/json\s*\{[\s\S]*?\}/gi, '');
+    
+    // Remover qualquer fragmento de código JG, JGIS, JS ou sintaxe parecida
+    cleanContent = cleanContent.replace(/JG|JGIS|JS/gi, '');nt = cleanContent.replace(/^\s*\{.*$/gm, '');
     
     // Remover mensagens técnicas comuns
     cleanContent = cleanContent.replace(/.*prompt.*não.*configurado.*/gi, '');
