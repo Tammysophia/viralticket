@@ -217,6 +217,13 @@ export const verifyAPIConnection = async () => {
  * @returns {Promise<Object>} - Oferta gerada
  */
 export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {
+    // FORÇAR SOFIA UNIVERSAL A USAR LÓGICA DA SOFIA FÊNIX (sophia)
+    // Isso garante que o prompt do Firestore e a lógica de fallback sejam os mesmos,
+    // eliminando a diferença que pode estar causando o JSON poluído.
+    if (agent === 'sofia') {
+      console.log('🔄 VT: Forçando agente "sofia" a usar lógica de prompt de "sophia" para consistência.');
+      agent = 'sophia';
+    }
   try {
     const apiKey = await getServiceAPIKey('openai');
     
@@ -407,7 +414,9 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     
     // Limpeza de JSON solto (qualquer coisa entre { e } que contenha "title")
     // Esta regex é a última linha de defesa para JSONs não formatados
-    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?\}/gi, '');
+    // Aumentando a agressividade para remover qualquer JSON que comece com { e termine com }
+    // e contenha "title", "subtitle", "bullets" ou "cta"
+    cleanContent = cleanContent.replace(/\{[\s\S]*?("title"|"subtitle"|"bullets"|"cta")[\s\S]*?\}/gi, '');
     
     // Remover linhas que começam com JSON
     cleanContent = cleanContent.replace(/^\s*\{.*$/gm, '');
