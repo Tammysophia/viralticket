@@ -268,7 +268,7 @@ Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
       // ✅ NOVO: Armazenar criativos separadamente
       setOutput(prev => ({
         ...prev,
-        creatives: creativesData.fullResponse || 'Criativos gerados com sucesso!',
+        creatives: creativesData.fullResponse.replace(/json\s*\{[\s\S]*?"title"[\s\S]*?\}/gi, '').trim() || 'Criativos gerados com sucesso!',
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### ✨ CRIATIVOS (POSTS + VÍDEOS)\n\n' + (creativesData.fullResponse || 'Criativos gerados com sucesso!')
       }));
 
@@ -327,7 +327,7 @@ Com base na oferta completa acima, gere APENAS o formato solicitado.`;
         ...prev,
         pageFormat: {
           ...prev.pageFormat,
-          [format]: pageData.fullResponse || 'Página gerada com sucesso!'
+          [format]: pageData.fullResponse.replace(/json\s*\{[\s\S]*?"title"[\s\S]*?\}/gi, '').trim() || 'Página gerada com sucesso!'
         },
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + (pageData.fullResponse || 'Página gerada com sucesso!')
       }));
@@ -389,7 +389,7 @@ Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
         ...prev,
         ebookFormat: {
           ...prev.ebookFormat,
-          [format]: ebookData.fullResponse || 'Ebook gerado com sucesso!'
+          [format]: ebookData.fullResponse.replace(/json\s*\{[\s\S]*?"title"[\s\S]*?\}/gi, '').trim() || 'Ebook gerado com sucesso!'
         },
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
