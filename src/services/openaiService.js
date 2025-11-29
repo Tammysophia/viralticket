@@ -367,30 +367,46 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     }
     
     // VT: Limpar resposta de JSON e mensagens técnicas para fullResponse
+    // A limpeza agressiva é necessária para a Sofia Universal, que tende a incluir o JSON no meio do texto.
+    // O JSON que deve ser removido é o que foi extraído com sucesso em safeJsonParse.
+    // O JSON é o que contém a estrutura {title, subtitle, bullets, cta, bonus}.
+    
     let cleanContent = content;
     
-    // Remover blocos JSON completos (```json ... ```)
+    // Tentar remover o JSON extraído de forma mais robusta.
+    // O JSON extraído é o offerData. Se ele for válido, ele deve ser removido do content.
+    let jsonToRemove = '';
+    try {
+      // Tentar serializar o objeto extraído para remover a string exata.
+      // Isso é mais seguro do que regex complexas.
+      jsonToRemove = JSON.stringify(offerData, null, 2);
+    } catch (e) {
+      console.warn('⚠️ VT: Falha ao serializar offerData para limpeza, usando regex agressiva.');
+    }
+    
+    if (jsonToRemove) {
+      // Tentar remover a string JSON exata (com ou sem formatação de quebra de linha)
+      // Escapar caracteres especiais para a regex
+      const escapedJson = jsonToRemove.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      
+      // Tentar remover a string exata, ignorando espaços em branco e quebras de linha
+      // O 'g' é importante para remover todas as ocorrências
+      const regexExact = new RegExp(escapedJson.replace(/\s/g, '\\s*'), 'gi');
+      cleanContent = cleanContent.replace(regexExact, '');
+      
+      // Tentar remover o JSON com aspas simples ou sem aspas (se a IA for inconsistente)
+      // Esta é uma tentativa de remover o JSON mesmo que a formatação tenha mudado
+      cleanContent = cleanContent.replace(new RegExp(escapedJson.replace(/"/g, '[\'"]?').replace(/\s/g, '\\s*'), 'gi'), '');
+    }
+    
+    // Limpeza de blocos de código JSON (```json ... ```)
     cleanContent = cleanContent.replace(/```json[\s\S]*?```/gi, '');
     
-    // Remover objetos JSON soltos (qualquer coisa entre { e } que contenha "title")
-    cleanContent = cleanContent.replace(/\{[^{}]*"title"[^{}]*\}/g, '');
+    // Limpeza de blocos de código genéricos (``` ... ```)
+    cleanContent = cleanContent.replace(/```[\s\S]*?```/gi, '');
     
-    // Remover JSON multi-linha mais complexo
-    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?"subtitle"[\s\S]*?"bullets"[\s\S]*?\}/g, '');
-    
-    // Remover qualquer JSON que comece com { e termine com } e contenha "title" (mais agressivo)
-    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?\}/g, '');
-    
-    // Remover a palavra "json" seguida de { (para remover o cabeçalho)
-    cleanContent = cleanContent.replace(/json\s*\{/gi, '{');
-    
-    // Remover qualquer texto que comece com "json" e termine com "}" (para remover o cabeçalho e o rodapé)
-    cleanContent = cleanContent.replace(/json\s*\{[\s\S]*?\}/gi, '');
-    
-    // Remover o JSON da Oferta Campeã (mais agressivo)
-    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?"subtitle"[\s\S]*?"bullets"[\s\S]*?\}/gi, '');
-    
-    // Remover qualquer JSON que comece com { e termine com } e contenha "title" (mais agressivo)
+    // Limpeza de JSON solto (qualquer coisa entre { e } que contenha "title")
+    // Esta regex é a última linha de defesa para JSONs não formatados
     cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?\}/gi, '');
     
     // Remover linhas que começam com JSON
@@ -405,6 +421,7 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     
     // Limpar linhas vazias extras (3 ou mais quebras seguidas)
     cleanContent = cleanContent.replace(/\n{3,}/g, '\n\n').trim();
+
     
     const normalized = {
       title: offerData.title || '🎯 Oferta Especial',
