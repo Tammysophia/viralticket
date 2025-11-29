@@ -263,7 +263,7 @@ ${output.fullResponse}
 Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
-      const creativesData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), 'criativos');
+      const creativesData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), 'criativos', true);
 
       // ✅ NOVO: Armazenar criativos separadamente
       setOutput(prev => ({

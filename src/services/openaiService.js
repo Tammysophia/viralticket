@@ -378,6 +378,9 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     // Remover JSON multi-linha mais complexo
     cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?"subtitle"[\s\S]*?"bullets"[\s\S]*?\}/g, '');
     
+    // Remover qualquer JSON que comece com { e termine com } e contenha "title" (mais agressivo)
+    cleanContent = cleanContent.replace(/\{[\s\S]*?"title"[\s\S]*?\}/g, '');
+    
     // Remover linhas que começam com JSON
     cleanContent = cleanContent.replace(/^\s*\{.*$/gm, '');
     
