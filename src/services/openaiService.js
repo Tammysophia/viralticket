@@ -253,7 +253,7 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       
       const fallbackPrompts = {
         sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
+        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`
       };
       
       systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
