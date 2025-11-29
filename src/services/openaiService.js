@@ -14,10 +14,10 @@ const getAgentPromptFromFirestore = async (agentId, specificPrompt = null) => {
     // Se specificPrompt foi fornecido, buscar prompt específico
     const promptId = specificPrompt ? `${agentId}_${specificPrompt}` : agentId;
     
-    console.log(`🔍 VT: Buscando prompt "${promptId}" no Firestore...`);
+    // Removido log sensível: console.log(`🔍 VT: Buscando prompt "${promptId}" no Firestore...`);
     
     if (!db) {
-      console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
+      // Removido log sensível: console.warn('⚠️ VT: Firestore não configurado, usando prompt fallback');
       return null;
     }
 
@@ -26,20 +26,20 @@ const getAgentPromptFromFirestore = async (agentId, specificPrompt = null) => {
 
     if (docSnap.exists()) {
       const data = docSnap.data();
-      console.log(`✅ VT: Prompt encontrado para "${promptId}"`);
+      // Removido log sensível: console.log(`✅ VT: Prompt encontrado para "${promptId}"`);
       return data.prompt || data.systemPrompt || null;
     } else {
-      console.warn(`⚠️ VT: Prompt "${promptId}" não encontrado no Firestore`);
+      // Removido log sensível: console.warn(`⚠️ VT: Prompt "${promptId}" não encontrado no Firestore`);
       
       // Se não encontrou prompt específico, tentar buscar o prompt principal
       if (specificPrompt) {
-        console.log(`🔄 VT: Tentando buscar prompt principal "${agentId}"...`);
+        // Removido log sensível: console.log(`🔄 VT: Tentando buscar prompt principal "${agentId}"...`);
         const mainDocRef = doc(db, 'agent_templates', agentId);
         const mainDocSnap = await getDoc(mainDocRef);
         
         if (mainDocSnap.exists()) {
           const data = mainDocSnap.data();
-          console.log(`✅ VT: Usando prompt principal "${agentId}" como fallback`);
+          // Removido log sensível: console.log(`✅ VT: Usando prompt principal "${agentId}" como fallback`);
           return data.prompt || data.systemPrompt || null;
         }
       }
@@ -47,122 +47,33 @@ const getAgentPromptFromFirestore = async (agentId, specificPrompt = null) => {
       return null;
     }
   } catch (error) {
-    console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
+    // Removido log sensível: console.error(`❌ VT: Erro ao buscar prompt do Firestore:`, error);
     return null;
   }
 };
 
 /**
- * Parse seguro de JSON removendo markdown
+ * Parse seguro de JSON (simplificado para uso geral)
  * @param {string} content - Conteúdo a parsear
- * @returns {Object} - JSON parseado
+ * @returns {Object|null} - JSON parseado ou null se falhar
  */
 const safeJsonParse = (content) => {
   try {
-    console.log('📝 VT: Tentando parsear JSON da resposta da IA...');
-    console.log('📏 VT: Tamanho da resposta:', content.length, 'caracteres');
-    
-    // Tentar parsear direto primeiro
-    try {
-      const parsed = JSON.parse(content);
-      console.log('✅ VT: JSON parseado com sucesso (sem limpeza necessária)!');
-      return parsed;
-    } catch (e) {
-      // Se falhar, tentar extrair JSON de resposta complexa da Sophia Universal
-      console.log('🧹 VT: Resposta complexa detectada, procurando JSON...');
-      
-      // Procurar por blocos ```json```
-      const jsonBlockMatch = content.match(/```json\s*\n?([\s\S]*?)\n?```/i);
-      if (jsonBlockMatch) {
-        console.log('🔍 VT: Encontrado bloco ```json```');
-        try {
-          const parsed = JSON.parse(jsonBlockMatch[1].trim());
-          console.log('✅ VT: JSON extraído de bloco markdown!');
-          return parsed;
-        } catch (e2) {
-          console.log('⚠️ VT: Bloco markdown não é JSON válido');
-        }
+    // Tentar parsear direto
+    const parsed = JSON.parse(content);
+    return parsed;
+  } catch (e) {
+    // Tentar extrair JSON de bloco ```json```
+    const jsonBlockMatch = content.match(/```json\s*\n?([\s\S]*?)\n?```/i);
+    if (jsonBlockMatch) {
+      try {
+        const parsed = JSON.parse(jsonBlockMatch[1].trim());
+        return parsed;
+      } catch (e2) {
+        // Falha ao parsear bloco markdown
       }
-      
-      // Procurar por padrão específico: {"title": ... }
-      const patterns = [
-        // Procurar objeto com title, subtitle, bullets, cta, bonus
-        /\{\s*"title"\s*:\s*"[^"]*"\s*,\s*"subtitle"\s*:\s*"[^"]*"\s*,\s*"bullets"\s*:\s*\[[^\]]*\]\s*,\s*"cta"\s*:\s*"[^"]*"\s*,\s*"bonus"\s*:\s*"[^"]*"\s*\}/s,
-        // Procurar objeto mais flexível
-        /\{[^{}]*"title"[^{}]*"subtitle"[^{}]*"bullets"[^{}]*"cta"[^{}]*"bonus"[^{}]*\}/s,
-      ];
-      
-      for (let i = 0; i < patterns.length; i++) {
-        const match = content.match(patterns[i]);
-        if (match) {
-          console.log(`🔍 VT: Encontrado JSON com padrão ${i + 1}`);
-          try {
-            // Extrair o match e tentar balancear chaves
-            let jsonStr = match[0];
-            const parsed = JSON.parse(jsonStr);
-            console.log('✅ VT: JSON extraído com padrão!');
-            return parsed;
-          } catch (e3) {
-            console.log(`⚠️ VT: Padrão ${i + 1} não parseou`);
-          }
-        }
-      }
-      
-      // Extrair TODOS os objetos JSON da resposta e procurar o que tem a estrutura correta
-      const allJsonObjects = [];
-      let depth = 0;
-      let start = -1;
-      
-      for (let i = 0; i < content.length; i++) {
-        if (content[i] === '{') {
-          if (depth === 0) start = i;
-          depth++;
-        } else if (content[i] === '}') {
-          depth--;
-          if (depth === 0 && start !== -1) {
-            const jsonStr = content.substring(start, i + 1);
-            try {
-              const parsed = JSON.parse(jsonStr);
-              // Verificar se tem a estrutura que precisamos
-              if (parsed.title && parsed.subtitle && parsed.bullets && parsed.cta) {
-                console.log('✅ VT: JSON válido encontrado na resposta!');
-                return parsed;
-              }
-              allJsonObjects.push(parsed);
-            } catch (e) {
-              // Ignorar JSONs inválidos
-            }
-            start = -1;
-          }
-        }
-      }
-      
-      console.log(`🔍 VT: Encontrados ${allJsonObjects.length} objetos JSON na resposta`);
-      
-      // Se não encontrou JSON válido, criar estrutura básica a partir do texto
-      console.warn('⚠️ VT: Nenhum JSON válido encontrado, criando estrutura básica...');
-      
-      return {
-        title: '🎯 Oferta Especial',
-        subtitle: 'Análise completa e estruturada da sua oferta',
-        bullets: [
-          '✅ Análise profunda do público-alvo',
-          '✅ 10 micro-ofertas personalizadas criadas',
-          '✅ 3 ofertas campeãs selecionadas',
-          '✅ Estrutura completa do produto'
-        ],
-        cta: '🚀 Veja a análise completa abaixo',
-        bonus: '🎁 Análise detalhada pronta para uso'
-      };
     }
-  } catch (error) {
-    console.error('❌ VT: Erro ao parsear JSON:', error);
-    console.error('📄 VT: Primeiros 1000 chars:', content.substring(0, 1000));
-    
-    const err = new Error('PARSE_ERROR');
-    err.adminMessage = 'A IA retornou análise completa mas sem JSON final. Adicione no final do prompt: "Ao final, retorne JSON: {title, subtitle, bullets, cta, bonus}"';
-    err.userMessage = '🔧 Sistema em manutenção. Tente novamente em instantes.';
-    throw err;
+    return null;
   }
 };
 
@@ -209,31 +120,26 @@ export const verifyAPIConnection = async () => {
 };
 
 /**
- * Gera uma oferta irresistível usando GPT
+ * Gera a estrutura do e-book do Gama usando GPT
  * @param {string} comments - Comentários para análise
  * @param {string} agent - Agente IA (sophia ou sofia)
  * @param {string} targetLanguage - Idioma alvo (pt-BR, en-US, es-ES)
  * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress) - NOVO
- * @returns {Promise<Object>} - Oferta gerada
+ * @returns {Promise<Object>} - Estrutura do e-book gerada
  */
-export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {
+export const generateEbookStructure = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {
     // FORÇAR SOFIA UNIVERSAL A USAR LÓGICA DA SOFIA FÊNIX (sophia)
-    // Isso garante que o prompt do Firestore e a lógica de fallback sejam os mesmos,
-    // eliminando a diferença que pode estar causando o JSON poluído.
     if (agent === 'sofia') {
-      console.log('🔄 VT: Forçando agente "sofia" a usar lógica de prompt de "sophia" para consistência.');
+      // Removido log sensível: console.log('🔄 VT: Forçando agente "sofia" a usar lógica de prompt de "sophia" para consistência.');
       agent = 'sophia';
     }
   try {
     const apiKey = await getServiceAPIKey('openai');
     
-    console.log('🔑 VT: Chave OpenAI obtida:', apiKey ? 'SIM' : 'NÃO');
-    console.log('🔑 VT: Comprimento da chave:', apiKey?.length);
-    console.log('🔑 VT: Primeira parte:', apiKey?.substring(0, 7));
-    console.log('🔑 VT: Última parte:', apiKey?.substring(apiKey?.length - 4));
+    // Removidos logs sensíveis de chave de API
     
     if (specificPrompt) {
-      console.log(`🎯 VT: Usando prompt específico: ${agent}_${specificPrompt}`);
+      // Removido log sensível: console.log(`🎯 VT: Usando prompt específico: ${agent}_${specificPrompt}`);
     }
     
     if (!apiKey) {
@@ -256,17 +162,17 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     
     // PASSO 2: Se não encontrou, usar fallback hardcoded
     if (!systemPrompt) {
-      console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
+      // Removido log sensível: console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
       
       const fallbackPrompts = {
-        sophia: `Você é Sophia Fênix. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus.`,
-        sofia: `Você é Sofia Universal. Analise os comentários e crie uma oferta persuasiva em JSON com: title, subtitle, bullets (array de 4), cta, bonus. O Módulo Gama deve gerar o conteúdo COMPLETO do e-book (título, subtítulo, capítulos, tópicos, desenvolvimento, conclusão, CTA final) e NUNCA repetir a oferta principal.`
+        sophia: `Você é Sophia Fênix. Crie a estrutura completa de um e-book (título, subtítulo, capítulos, tópicos, desenvolvimento, conclusão, CTA final) com base nos comentários fornecidos. Retorne o resultado em texto livre, sem JSON obrigatório.`,
+        sofia: `Você é Sofia Universal. Crie a estrutura completa de um e-book (título, subtítulo, capítulos, tópicos, desenvolvimento, conclusão, CTA final) com base nos comentários fornecidos. Retorne o resultado em texto livre, sem JSON obrigatório.`
       };
       
       systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
     }
     
-    console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
+    // Removido log sensível: console.log('📋 VT: System prompt preparado (tamanho:', systemPrompt.length, 'caracteres)');
     
     // PASSO 3: Estruturar mensagens corretamente
     const languageInstructions = {
@@ -286,10 +192,10 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       }
     ];
     
-    console.log('💬 VT: Mensagens estruturadas (system + user)');
+    // Removido log sensível: console.log('💬 VT: Mensagens estruturadas (system + user)');
 
     // PASSO 4: Chamar OpenAI API
-    console.log('📡 VT: Enviando requisição para OpenAI API...');
+    // Removido log sensível: console.log('📡 VT: Enviando requisição para OpenAI API...');
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -307,7 +213,7 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
 
     if (!response.ok) {
       const error = await response.json();
-      const errorMessage = error.error?.message || 'Erro ao gerar oferta';
+      const errorMessage = error.error?.message || 'Erro ao gerar estrutura do e-book';
       
       // Detectar erro de quota/créditos
       if (response.status === 429 || errorMessage.includes('quota') || errorMessage.includes('billing')) {
@@ -329,15 +235,16 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       throw new Error(errorMessage);
     }
 
-    console.log('📥 VT: Resposta recebida. Status:', response.status);
+    // Removido log sensível: console.log('📥 VT: Resposta recebida. Status:', response.status);
     
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
+    // Removido log sensível: console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
     
+    // Se isTextOnly for true, retorna o conteúdo puro
     if (isTextOnly) {
-      console.log('📝 VT: Retornando como texto puro (isTextOnly=true)');
+      // Removido log sensível: console.log('📝 VT: Retornando como texto puro (isTextOnly=true)');
       return {
         fullResponse: content,
         title: 'Resultado Gerado',
@@ -348,112 +255,38 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       };
     }
     
-    // PASSO 5: Parse seguro do JSON
-    let offerData = safeJsonParse(content);
+    // Lógica de JSON final apenas se for solicitado (isTextOnly=false e a IA retornar JSON)
+    // A IA não é mais forçada a retornar JSON, mas se retornar, tentamos parsear.
+    let resultData = safeJsonParse(content);
     
-    // PASSO 6: Validar estrutura
-    if (!offerData.title || !offerData.subtitle || !offerData.bullets || !offerData.cta) {
-      console.warn('⚠️ VT: JSON incompleto, verificando formato alternativo...');
-      
-      // Se for formato completo da Sophia (com sections, pains, etc), converter
-      if (offerData.offer) {
-        console.log('🔄 VT: Convertendo formato completo para formato simples...');
-        offerData = {
-          title: offerData.offer.headline || '🎯 Oferta Especial',
-          subtitle: offerData.offer.subheadline || 'Transforme sua realidade',
-          bullets: offerData.offer.benefits?.map(b => `✅ ${b}`) || [
-            '✅ Acesso completo',
-            '✅ Suporte dedicado',
-            '✅ Garantia total',
-            '✅ Bônus exclusivos'
-          ],
-          cta: offerData.offer.cta || '🚀 QUERO AGORA!',
-          bonus: offerData.offer.bonus || '🎁 Bônus especial incluído',
-        };
-      }
+    // Se a IA retornou JSON e ele é válido, usamos ele.
+    if (resultData) {
+      // Removido log sensível: console.log('✅ VT: JSON válido encontrado na resposta.');
+      // Retorna o JSON parseado, mas com a chave fullResponse contendo o JSON como string
+      return {
+        ...resultData,
+        fullResponse: JSON.stringify(resultData, null, 2)
+      };
     }
     
-    // VT: Limpar resposta de JSON e mensagens técnicas para fullResponse
-    // A limpeza agressiva é necessária para a Sofia Universal, que tende a incluir o JSON no meio do texto.
-    // O JSON que deve ser removido é o que foi extraído com sucesso em safeJsonParse.
-    // O JSON é o que contém a estrutura {title, subtitle, bullets, cta, bonus}.
+    // Se não for JSON, retorna o texto livre
+    // Removido log sensível: console.log('📝 VT: Retornando texto livre (sem JSON obrigatório).');
     
-    let cleanContent = content;
-    
-    // Tentar remover o JSON extraído de forma mais robusta.
-    // O JSON extraído é o offerData. Se ele for válido, ele deve ser removido do content.
-    let jsonToRemove = '';
-    try {
-      // Tentar serializar o objeto extraído para remover a string exata.
-      // Isso é mais seguro do que regex complexas.
-      jsonToRemove = JSON.stringify(offerData, null, 2);
-    } catch (e) {
-      console.warn('⚠️ VT: Falha ao serializar offerData para limpeza, usando regex agressiva.');
-    }
-    
-    if (jsonToRemove) {
-      // Tentar remover a string JSON exata (com ou sem formatação de quebra de linha)
-      // Escapar caracteres especiais para a regex
-      const escapedJson = jsonToRemove.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      
-      // Tentar remover a string exata, ignorando espaços em branco e quebras de linha
-      // O 'g' é importante para remover todas as ocorrências
-      const regexExact = new RegExp(escapedJson.replace(/\s/g, '\\s*'), 'gi');
-      cleanContent = cleanContent.replace(regexExact, '');
-      
-      // Tentar remover o JSON com aspas simples ou sem aspas (se a IA for inconsistente)
-      // Esta é uma tentativa de remover o JSON mesmo que a formatação tenha mudado
-      cleanContent = cleanContent.replace(new RegExp(escapedJson.replace(/"/g, '[\'"]?').replace(/\s/g, '\\s*'), 'gi'), '');
-    }
-    
-    // Limpeza de blocos de código JSON (```json ... ```)
-    cleanContent = cleanContent.replace(/```json[\s\S]*?```/gi, '');
-    
-    // Limpeza de blocos de código genéricos (``` ... ```)
-    cleanContent = cleanContent.replace(/```[\s\S]*?```/gi, '');
-    
-    // Limpeza de blocos de código genéricos (``` ... ```)
-    cleanContent = cleanContent.replace(/```[\s\S]*?```/gi, '');// Limpeza de JSON solto (qualquer coisa entre { e } que contenha "title")
-    // Esta regex é a última linha de defesa para JSONs não formatados
-    // Aumentando a agressividade para remover qualquer JSON que comece com { e termine com }
-    // e contenha "title", "subtitle", "bullets" ou "cta"
-    // Esta regex é a última linha de defesa e deve ser a mais agressiva
-    cleanContent = cleanContent.replace(/\{[\s\S]*?("title"|"subtitle"|"bullets"|"cta")[\s\S]*?\}/gi, '');
-    
-    // Adicionando regex para remover o bloco de código JSON vazado (json { ... })
-    cleanContent = cleanContent.replace(/json\s*\{[\s\S]*?\}/gi, '');
-    
-    // Remover qualquer fragmento de código JG, JGIS, JS ou sintaxe parecida
-    cleanContent = cleanContent.replace(/JG|JGIS|JS/gi, '');nt = cleanContent.replace(/^\s*\{.*$/gm, '');
-    
-    // Remover mensagens técnicas comuns
-    cleanContent = cleanContent.replace(/.*prompt.*não.*configurado.*/gi, '');
-    cleanContent = cleanContent.replace(/.*fallback.*/gi, '');
-    cleanContent = cleanContent.replace(/.*hardcoded.*/gi, '');
-    cleanContent = cleanContent.replace(/.*Firestore.*/gi, '');
-    cleanContent = cleanContent.replace(/.*usando prompt padrão.*/gi, '');
-    
-    // Limpar linhas vazias extras (3 ou mais quebras seguidas)
-    cleanContent = cleanContent.replace(/\n{3,}/g, '\n\n').trim();
-
-    
+    // A limpeza agressiva de respostas foi removida.
+    // O fullResponse agora é o content puro.
     const normalized = {
-      title: offerData.title || '🎯 Oferta Especial',
-      subtitle: offerData.subtitle || '',
-      bullets: Array.isArray(offerData.bullets)
-        ? offerData.bullets
-        : offerData.bullets
-          ? [offerData.bullets].flat().map(String)
-          : [],
-      cta: offerData.cta || '🚀 QUERO AGORA!',
-      bonus: offerData.bonus || '',
-      fullResponse: cleanContent || content
+      title: 'Estrutura do E-book Gerada',
+      subtitle: 'Conteúdo de texto completo',
+      bullets: [],
+      cta: 'Copiar',
+      bonus: 'Texto',
+      fullResponse: content // Retorna a resposta crua da IA
     };
     
-    console.log('✅ VT: Oferta gerada com sucesso!');
+    // Removido log sensível: console.log('✅ VT: Estrutura do e-book gerada com sucesso!');
     return normalized;
   } catch (error) {
-    console.error('Erro ao gerar oferta:', error);
+    // Removido log sensível: console.error('Erro ao gerar estrutura do e-book:', error);
     throw error;
   }
 };
@@ -512,7 +345,16 @@ export const analyzeSentiment = async (comments) => {
     const content = data.choices[0].message.content;
     
     try {
-      return JSON.parse(content);
+      // Usa o safeJsonParse simplificado
+      const parsed = safeJsonParse(content);
+      return parsed || {
+        overall: 'neutral',
+        positive: 50,
+        neutral: 30,
+        negative: 20,
+        keyPhrases: [],
+        mainThemes: [],
+      };
     } catch (parseError) {
       return {
         overall: 'neutral',
@@ -524,7 +366,7 @@ export const analyzeSentiment = async (comments) => {
       };
     }
   } catch (error) {
-    console.error('Erro ao analisar sentimento:', error);
+    // Removido log sensível: console.error('Erro ao analisar sentimento:', error);
     throw error;
   }
 };
@@ -580,7 +422,7 @@ export const generateOfferImprovements = async (offer) => {
 
     return suggestions;
   } catch (error) {
-    console.error('Erro ao gerar sugestões:', error);
+    // Removido log sensível: console.error('Erro ao gerar sugestões:', error);
     throw error;
   }
 };
