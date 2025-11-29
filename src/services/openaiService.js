@@ -215,8 +215,7 @@ export const verifyAPIConnection = async () => {
  * @param {string} targetLanguage - Idioma alvo (pt-BR, en-US, es-ES)
  * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress) - NOVO
  * @returns {Promise<Object>} - Oferta gerada
- */
-export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null) => {
+ */export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {extOnly = false) => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
@@ -328,6 +327,18 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     const content = data.choices[0].message.content;
     
     console.log('📄 VT: Conteúdo recebido da IA (primeiros 300 chars):', content.substring(0, 300));
+    
+    if (isTextOnly) {
+      console.log('📝 VT: Retornando como texto puro (isTextOnly=true)');
+      return {
+        fullResponse: content,
+        title: 'Resultado Gerado',
+        subtitle: 'Conteúdo de texto completo',
+        bullets: [],
+        cta: 'Copiar',
+        bonus: 'Texto'
+      };
+    }
     
     // PASSO 5: Parse seguro do JSON
     let offerData = safeJsonParse(content);

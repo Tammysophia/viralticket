@@ -320,7 +320,7 @@ ${output.fullResponse}
 Com base na oferta completa acima, gere APENAS o formato solicitado.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
-      const pageData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
+      const pageData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
 
       // ✅ NOVO: Armazenar página de vendas separadamente
       setOutput(prev => ({
@@ -382,7 +382,7 @@ ${output.fullResponse}
 Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
-      const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType);
+     const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
 
       // ✅ NOVO: Armazenar e-book separadamente
       setOutput(prev => ({
