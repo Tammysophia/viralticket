@@ -384,6 +384,9 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     // Remover a palavra "json" seguida de { (para remover o cabeçalho)
     cleanContent = cleanContent.replace(/json\s*\{/gi, '{');
     
+    // Remover qualquer texto que comece com "json" e termine com "}" (para remover o cabeçalho e o rodapé)
+    cleanContent = cleanContent.replace(/json\s*\{[\s\S]*?\}/gi, '');
+    
     // Remover linhas que começam com JSON
     cleanContent = cleanContent.replace(/^\s*\{.*$/gm, '');
     
