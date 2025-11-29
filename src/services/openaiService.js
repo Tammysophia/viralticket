@@ -215,7 +215,8 @@ export const verifyAPIConnection = async () => {
  * @param {string} targetLanguage - Idioma alvo (pt-BR, en-US, es-ES)
  * @param {string} specificPrompt - Tipo específico de prompt (lovable, quiz, wordpress) - NOVO
  * @returns {Promise<Object>} - Oferta gerada
- */export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {extOnly = false) => {
+ */
+export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {
   try {
     const apiKey = await getServiceAPIKey('openai');
     
