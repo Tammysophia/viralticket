@@ -23,7 +23,10 @@ const AdminCreateUser = ({ onUserCreated }) => {
     name: '',
     email: '',
     plan: 'PRATA',
+    password: '',
   });
+  
+  const [useAutoPassword, setUseAutoPassword] = useState(true);
 
   // Gerar senha temporária aleatória
   const generateTempPassword = () => {
@@ -58,8 +61,15 @@ const AdminCreateUser = ({ onUserCreated }) => {
     setCreating(true);
 
     try {
-      // 1. Gerar senha temporária
-      const tempPassword = generateTempPassword();
+      // 1. Usar senha manual ou gerar automática
+      const tempPassword = useAutoPassword ? generateTempPassword() : formData.password;
+      
+      // Validar senha manual se não for automática
+      if (!useAutoPassword && tempPassword.length < 6) {
+        toast.error('❌ Senha deve ter no mínimo 6 caracteres');
+        setCreating(false);
+        return;
+      }
       
       // 2. Criar usuário no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
@@ -120,7 +130,8 @@ const AdminCreateUser = ({ onUserCreated }) => {
       }
       
       // Resetar form
-      setFormData({ name: '', email: '', plan: 'PRATA' });
+      setFormData({ name: '', email: '', plan: 'PRATA', password: '' });
+      setUseAutoPassword(true);
       
       // Fazer logout do usuário recém-criado para não atrapalhar a sessão do admin
       await auth.signOut();
@@ -143,13 +154,13 @@ const AdminCreateUser = ({ onUserCreated }) => {
   };
 
   const handleCopyCredentials = () => {
-    const text = `🎟️ Acesso ao ViralTicket
+    const text = `🎫 Acesso ao ViralTicket
 
 Nome: ${generatedCredentials.name}
 Email: ${generatedCredentials.email}
-Senha Temporária: ${generatedCredentials.password}
+Senha: ${generatedCredentials.password}
 
-⚠️ IMPORTANTE: Altere sua senha no primeiro acesso!
+⚠️ IMPORTANTE: Você pode alterar sua senha após o login!
 
 Acesse: ${window.location.origin}/login`;
 
@@ -167,7 +178,8 @@ Acesse: ${window.location.origin}/login`;
     setGeneratedCredentials(null);
     setCredentialsCopied(false);
     setShowPassword(false);
-    setFormData({ name: '', email: '', plan: 'PRATA' });
+    setFormData({ name: '', email: '', plan: 'PRATA', password: '' });
+    setUseAutoPassword(true);
   };
 
   return (
@@ -225,10 +237,37 @@ Acesse: ${window.location.origin}/login`;
               </select>
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-              <p className="text-sm text-blue-300">
-                ℹ️ Uma senha temporária será gerada automaticamente. O usuário deverá alterá-la no primeiro acesso.
-              </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="useAutoPassword"
+                  checked={useAutoPassword}
+                  onChange={(e) => setUseAutoPassword(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 bg-gray-800 border-gray-700 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="useAutoPassword" className="text-sm text-gray-300">
+                  Gerar senha automaticamente
+                </label>
+              </div>
+              
+              {!useAutoPassword && (
+                <Input
+                  label="Senha"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Mínimo 6 caracteres"
+                  required={!useAutoPassword}
+                />
+              )}
+              
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-sm text-blue-300">
+                  ℹ️ {useAutoPassword ? 'Uma senha temporária será gerada automaticamente.' : 'Você está definindo a senha manualmente.'} O usuário poderá alterá-la após o login.
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-3">
@@ -272,7 +311,7 @@ Acesse: ${window.location.origin}/login`;
               </div>
               
               <div>
-                <p className="text-sm text-gray-400 mb-1">Senha Temporária:</p>
+                <p className="text-sm text-gray-400 mb-1">Senha:</p>
                 <div className="flex items-center gap-2">
                   <input
                     type={showPassword ? 'text' : 'password'}
