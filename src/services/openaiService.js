@@ -296,8 +296,13 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
     
     const normalized = {
       title: 'Estrutura do E-book Gerada',
-      subtitle: 'Conteúdo de texto completo',
-      bullets: [],
+      subtitle: 'Análise completa e estruturada da sua oferta',
+      bullets: [
+        '✅ Análise profunda do público-alvo',
+        '✅ 10 micro-ofertas personalizadas criadas',
+        '✅ 3 ofertas campeãs selecionadas',
+        '✅ Estrutura completa do produto'
+      ],
       cta: 'Copiar',
       bonus: 'Texto',
       fullResponse: cleanContent // Retorna a resposta crua da IA
