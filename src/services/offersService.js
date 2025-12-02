@@ -118,8 +118,8 @@ export const createOfferFromAI = async (data) => {
       const offerData = {
       ...data,
         // VT: Tipamos explicitamente a oferta criada pela IA para separação nos Kanbans
-        type: 'oferta',
-      status: 'execucao', // VT: Nova oferta começa em execução
+              type: data.type || 'oferta', // VT: Usa o tipo passado ou 'oferta' como padrão
+      status: data.status || 'execucao', // VT: Usa o status passado ou 'execucao' como padrão
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       modeling: {
