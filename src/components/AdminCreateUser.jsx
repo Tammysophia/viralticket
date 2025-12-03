@@ -133,9 +133,6 @@ const AdminCreateUser = ({ onUserCreated }) => {
       setFormData({ name: '', email: '', plan: 'PRATA', password: '' });
       setUseAutoPassword(true);
       
-      // Fazer logout do usuário recém-criado para não atrapalhar a sessão do admin
-      await auth.signOut();
-      
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
       
