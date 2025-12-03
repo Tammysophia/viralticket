@@ -126,11 +126,7 @@ export const verifyAPIConnection = async () => {
  * @returns {Promise<Object>} - Estrutura do e-book gerada
  */
 export const generateOffer = async (comments, agent = 'sophia', targetLanguage = 'pt-BR', specificPrompt = null, isTextOnly = false) => {
-    // FORÇAR SOFIA UNIVERSAL A USAR LÓGICA DA SOFIA FÊNIX (sophia)
-    if (agent === 'sofia') {
-      // Removido log sensível: console.log('🔄 VT: Forçando agente "sofia" a usar lógica de prompt de "sophia" para consistência.');
-      agent = 'sophia';
-    }
+   
   try {
     const apiKey = await getServiceAPIKey('openai');
     
