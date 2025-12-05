@@ -131,6 +131,7 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       // Removido log sensível: console.log('🔄 VT: Forçando agente "sofia" a usar lógica de prompt de "sophia" para consistência.');
       agent = 'sophia';
     }
+   
   try {
     const apiKey = await getServiceAPIKey('openai');
     
