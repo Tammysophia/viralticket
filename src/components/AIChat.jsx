@@ -299,17 +299,23 @@ Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
       };
 
       // ✅ NOVO: Mapear formato para nome do prompt específico no Firebase
-      const specificPromptType = 'gama'; // Forçar o uso do prompt 'gama' para ambos, já que o problema é no Gama
+      const promptMapping = {
+        'canva': 'canva',
+        'gama': 'gama'
+      };
+      
+      const specificPromptType = promptMapping[format];
       
       console.log(`🎯 VT: Buscando prompt específico: ${selectedAgent}_${specificPromptType}`);
       
-      // ✅ Contexto COMPLETO com a oferta já gerada (usando o JSON da Oferta Principal)
-      const offerContext = `OFERTA PRINCIPAL EM JSON:
+      // ✅ Contexto COMPLETO com a oferta já gerada
+      const offerContext = `OFERTA COMPLETA JÁ GERADA:
+
 ${output.fullResponse}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Com base na Oferta Principal em JSON acima, gere APENAS a estrutura do E-book no formato ${formatNames[format]}.`;
+Com base na oferta completa acima, gere APENAS o formato solicitado.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
       const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
@@ -319,7 +325,7 @@ Com base na Oferta Principal em JSON acima, gere APENAS a estrutura do E-book no
         ...prev,
         ebookFormat: {
           ...prev.ebookFormat,
-          [format]: ebookData.fullResponse.trim() || 'Ebook gerado com sucesso!'
+          [format]: ebookData.fullResponse.replace(/json\s*\{[\s\S]*?"title"[\s\S]*?\}/gi, '').trim() || 'Ebook gerado com sucesso!'
         },
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
@@ -355,33 +361,29 @@ Com base na Oferta Principal em JSON acima, gere APENAS a estrutura do E-book no
         'gama': 'Gama (estrutura completa)'
       };
 
-      // ✅ CORRIGIDO: Usar prompts específicos do Firebase para Ebook
-      // Nota: Ebook usa o mesmo sistema de prompts separados
-      // Os prompts no Firebase: sophia_entregavel_canva, sophia_gama, sofia_entregavel_canva, sofia_gama
-      
-      // Mapear formato para nome correto no Firebase
+      // ✅ NOVO: Mapear formato para nome do prompt específico no Firebase
       const promptMapping = {
-        'canva': 'entregavel_canva',  // Usa entregavel_canva no Firebase
+        'canva': 'entregavel_canva',
         'gama': 'gama'
       };
       
       const specificPromptType = promptMapping[format];
       
-      console.log(`📘 VT: Buscando prompt específico de ebook: ${selectedAgent}_${specificPromptType}`);
+      console.log(`🎯 VT: Buscando prompt específico: ${selectedAgent}_${specificPromptType}`);
       
-      // ✅ CORRIGIDO: Contexto COMPLETO com a oferta já gerada (assim como handleGeneratePageFormat)
+      // ✅ Contexto COMPLETO com a oferta já gerada
       const offerContext = `OFERTA COMPLETA JÁ GERADA:
 
 ${output.fullResponse}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
+Com base na oferta completa acima, gere APENAS o formato solicitado.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
-     const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
+      const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
 
-      // ✅ NOVO: Armazenar e-book separadamente
+      // ✅ NOVO: Armazenar ebook separadamente
       setOutput(prev => ({
         ...prev,
         ebookFormat: {
@@ -390,8 +392,6 @@ Com base na oferta completa acima, gere APENAS o ebook no formato solicitado.`;
         },
         fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
-
-      console.log(`✅ VT: Ebook (${format}) gerado com sucesso usando a oferta completa!`);
 
       success(`✅ Ebook (${formatNames[format]}) gerado!`);
     } catch (err) {
