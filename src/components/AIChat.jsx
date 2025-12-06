@@ -281,8 +281,8 @@ Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
     }
   };
 
-  // VT: Gerar formato específico da Página de Vendas
-  const handleGeneratePageFormat = async (format) => {
+  // VT: Gerar formato específico da Página de Venda// VT: Gerar formato específico do Ebook
+  const handleGenerateEbookFormat = async (format) => {
     if (!output || !output.title) {
       error('Por favor, gere a oferta principal primeiro');
       return;
@@ -291,50 +291,47 @@ Com base na oferta completa acima, gere APENAS os criativos (posts + vídeos).`;
     setLoading(true);
 
     try {
-      console.log(`📄 VT: Gerando página de vendas em formato ${format}...`);
+      console.log(`📘 VT: Gerando ebook em formato ${format}...`);
 
       const formatNames = {
-        'wordpress': 'WordPress (manual/Elementor)',
-        'quiz': 'Quiz (funil diagnóstico)',
-        'ia-builder': 'IA Builder (Lovable/Gama)'
+        'canva': 'Canva (design visual simples)',
+        'gama': 'Gama (estrutura de e-book)'
       };
 
       // ✅ NOVO: Mapear formato para nome do prompt específico no Firebase
-      const promptMapping = {
-        'wordpress': 'wordpress',
-        'quiz': 'quiz',
-        'ia-builder': 'lovable'  // ia-builder usa o prompt lovable
-      };
-      
-      const specificPromptType = promptMapping[format];
+      const specificPromptType = 'gama'; // Forçar o uso do prompt 'gama' para ambos, já que o problema é no Gama
       
       console.log(`🎯 VT: Buscando prompt específico: ${selectedAgent}_${specificPromptType}`);
       
-      // ✅ Contexto COMPLETO com a oferta já gerada
-      const offerContext = `OFERTA COMPLETA JÁ GERADA:
-
+      // ✅ Contexto COMPLETO com a oferta já gerada (usando o JSON da Oferta Principal)
+      const offerContext = `OFERTA PRINCIPAL EM JSON:
 ${output.fullResponse}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Com base na oferta completa acima, gere APENAS o formato solicitado.`;
+Com base na Oferta Principal em JSON acima, gere APENAS a estrutura do E-book no formato ${formatNames[format]}.`;
 
       // ✅ Chamar generateOffer com prompt específico do Firebase
-      const pageData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
+      const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
 
-      // ✅ NOVO: Armazenar página de vendas separadamente
+      // ✅ NOVO: Armazenar ebook separadamente
       setOutput(prev => ({
         ...prev,
-        pageFormat: {
-          ...prev.pageFormat,
-          [format]: pageData.fullResponse.replace(/json\s*\{[\s\S]*?"title"[\s\S]*?\}/gi, '').trim() || 'Página gerada com sucesso!'
+        ebookFormat: {
+          ...prev.ebookFormat,
+          [format]: ebookData.fullResponse.trim() || 'Ebook gerado com sucesso!'
         },
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📄 PÁGINA DE VENDAS - ' + formatNames[format].toUpperCase() + '\n\n' + (pageData.fullResponse || 'Página gerada com sucesso!')
+        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
       }));
 
-      success(`✅ Página de vendas (${formatNames[format]}) gerada!`);
+      success(`✅ Ebook (${formatNames[format]}) gerado!`);
     } catch (err) {
-      console.error(`❌ VT: Erro ao gerar página formato ${format}:`, err);
+      console.error(`❌ VT: Erro ao gerar ebook formato ${format}:`, err);
+      error(`Erro ao gerar ebook ${format}`);
+    } finally {
+      setLoading(false);
+    }
+  };página formato ${format}:`, err);
       error(`Erro ao gerar página ${format}`);
     } finally {
       setLoading(false);
