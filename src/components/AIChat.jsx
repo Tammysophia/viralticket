@@ -340,63 +340,7 @@ Com base na oferta completa acima, gere APENAS o formato solicitado.`;
 
   };
 
-  // VT: Gerar formato específico do Ebook
-  const handleGenerateEbookFormat = async (format) => {
-    if (!output || !output.title) {
-      error('Por favor, gere a oferta principal primeiro');
-      return;
-    }
 
-    setLoading(true);
-
-    try {
-      console.log(`📘 VT: Gerando ebook em formato ${format}...`);
-
-      const formatNames = {
-        'canva': 'Canva (design visual simples)',
-        'gama': 'Gama (estrutura completa)'
-      };
-
-      // ✅ NOVO: Mapear formato para nome do prompt específico no Firebase
-      const promptMapping = {
-        'canva': 'entregavel_canva',
-        'gama': 'gama'
-      };
-      
-      const specificPromptType = promptMapping[format];
-      
-      console.log(`🎯 VT: Buscando prompt específico: ${selectedAgent}_${specificPromptType}`);
-      
-      // ✅ Contexto COMPLETO com a oferta já gerada
-      const offerContext = `OFERTA COMPLETA JÁ GERADA:
-
-${output.fullResponse}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Com base na oferta completa acima, gere APENAS o formato solicitado.`;
-
-      // ✅ Chamar generateOffer com prompt específico do Firebase
-      const ebookData = await generateOffer(offerContext, selectedAgent, getLanguageForAI(), specificPromptType, true);
-
-      // ✅ NOVO: Armazenar ebook separadamente
-      setOutput(prev => ({
-        ...prev,
-        ebookFormat: {
-          ...prev.ebookFormat,
-          [format]: ebookData.fullResponse.replace(/json\s*\{[\s\S]*?"title"[\s\S]*?\}/gi, '').trim() || 'Ebook gerado com sucesso!'
-        },
-        fullResponse: prev.fullResponse + '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n### 📘 EBOOK - ' + formatNames[format].toUpperCase() + '\n\n' + (ebookData.fullResponse || 'Ebook gerado com sucesso!')
-      }));
-
-      success(`✅ Ebook (${formatNames[format]}) gerado!`);
-    } catch (err) {
-      console.error(`❌ VT: Erro ao gerar ebook formato ${format}:`, err);
-      error(`Erro ao gerar ebook ${format}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
