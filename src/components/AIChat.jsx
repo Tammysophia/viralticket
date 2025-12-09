@@ -337,11 +337,7 @@ Com base na oferta completa acima, gere APENAS o formato solicitado.`;
     } finally {
       setLoading(false);
     }
-  };página formato ${format}:`, err);
-      error(`Erro ao gerar página ${format}`);
-    } finally {
-      setLoading(false);
-    }
+
   };
 
   // VT: Gerar formato específico do Ebook
