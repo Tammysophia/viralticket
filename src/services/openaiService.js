@@ -164,8 +164,18 @@ export const generateOffer = async (comments, agent = 'sophia', targetLanguage =
       // Removido log sensível: console.log('⚠️ VT: Usando prompt fallback (hardcoded)');
       
       const fallbackPrompts = {
-        sophia: `Você é Sophia Fênix. Crie a estrutura completa de um e-book (título, subtítulo, capítulos, tópicos, desenvolvimento, conclusão, CTA final) com base nos comentários fornecidos. Retorne o resultado em texto livre, sem JSON obrigatório.`,
-        sofia: `Você é Sofia Universal. Crie a estrutura completa de um e-book (título, subtítulo, capítulos, tópicos, desenvolvimento, conclusão, CTA final) com base nos comentários fornecidos. Retorne o resultado em texto livre, sem JSON obrigatório.`
+        sophia: `Você é Sophia Fênix, uma especialista em marketing e vendas. Sua função é analisar os comentários de um vídeo do YouTube e transformá-los em uma Oferta Principal de Alto Impacto.
+
+    O resultado DEVE ser um objeto JSON estrito, contendo APENAS os seguintes campos:
+    {
+      "title": "Título da Oferta",
+      "subtitle": "Subtítulo/Promessa Principal",
+      "bullets": ["Benefício 1", "Benefício 2", "Benefício 3", "Benefício 4"],
+      "cta": "Chamada para Ação",
+      "bonus": "Bônus/Garantia"
+    }
+
+    Certifique-se de que a saída seja APENAS o objeto JSON, sem qualquer texto explicativo antes ou depois.`,
       };
       
       systemPrompt = fallbackPrompts[agent] || fallbackPrompts.sophia;
