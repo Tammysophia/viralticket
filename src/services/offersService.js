@@ -54,6 +54,7 @@ export const deleteOffer = async (id) => {
 };
 
 export const getUserOffers = async (userId) => {
+  if (!userId) return [];
   try {
     const { data, error } = await supabase
       .from('offers')
@@ -65,7 +66,10 @@ export const getUserOffers = async (userId) => {
     return data.map(offer => ({
       ...offer,
       id: offer.id.toString(),
-      content: offer.content
+      content: offer.content,
+      // Mapear campos para compatibilidade com o layout original
+      fullResponse: offer.content,
+      createdAt: offer.created_at
     }));
   } catch (error) {
     console.error('Erro ao buscar ofertas:', error);
@@ -74,29 +78,22 @@ export const getUserOffers = async (userId) => {
 };
 
 export const subscribeToUserOffers = (userId, type, callback) => {
+  if (!userId) return () => {};
+
+  // Busca inicial
   getUserOffers(userId).then(offers => {
-    if (type) {
-      callback(offers.filter(o => o.type === type));
-    } else {
-      callback(offers);
-    }
+    callback(offers);
   });
   
   const subscription = supabase
-    .channel('offers_changes')
+    .channel(`offers_${userId}`)
     .on('postgres_changes', { 
       event: '*', 
       schema: 'public', 
       table: 'offers',
       filter: `user_id=eq.${userId}`
     }, () => {
-      getUserOffers(userId).then(offers => {
-        if (type) {
-          callback(offers.filter(o => o.type === type));
-        } else {
-          callback(offers);
-        }
-      });
+      getUserOffers(userId).then(callback);
     })
     .subscribe();
 
@@ -105,10 +102,5 @@ export const subscribeToUserOffers = (userId, type, callback) => {
   };
 };
 
-export const addYoutubeLink = async (offerId, url) => {
-  return;
-};
-
-export const removeYoutubeLink = async (offerId, url) => {
-  return;
-};
+export const addYoutubeLink = async (offerId, url) => { return; };
+export const removeYoutubeLink = async (offerId, url) => { return; };

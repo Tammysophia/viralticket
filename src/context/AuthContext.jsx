@@ -49,11 +49,32 @@ export const AuthProvider = ({ children }) => {
     try {
       const isAdmin = supabaseUser.email === 'tamara14@gmail.com';
       
-      const { data: userData } = await supabase
+      let { data: userData, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', supabaseUser.id)
         .single();
+
+      // Se o usuário não existir na tabela 'users', cria ele agora
+      if (error && error.code === 'PGRST116') {
+        const newProfile = {
+          id: supabaseUser.id,
+          name: supabaseUser.email.split('@')[0],
+          email: supabaseUser.email,
+          plan: isAdmin ? 'ADMIN' : 'PRATA',
+          daily_usage: { offers: 0, urls: 0 },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        const { data: insertedData } = await supabase
+          .from('users')
+          .insert([newProfile])
+          .select()
+          .single();
+        
+        userData = insertedData;
+      }
 
       const planKey = userData?.plan || (isAdmin ? 'ADMIN' : 'PRATA');
       const planData = PLANS[planKey];
@@ -65,7 +86,7 @@ export const AuthProvider = ({ children }) => {
         plan: isAdmin ? 'ADMIN' : planKey,
         isAdmin,
         avatar: userData?.avatar || `https://ui-avatars.com/api/?name=${supabaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
-        dailyUsage: userData?.dailyUsage || { offers: 0, urls: 0 },
+        dailyUsage: userData?.daily_usage || { offers: 0, urls: 0 },
         limits: isAdmin ? { 
           offers: 'unlimited', 
           urls: 'unlimited'
@@ -79,19 +100,17 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('viralticket_user', JSON.stringify(userProfile));
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
-      // Fallback para garantir acesso mesmo com erro na tabela users
+      // Fallback para evitar loop
       const isAdmin = supabaseUser.email === 'tamara14@gmail.com';
-      const userProfile = {
+      setUser({
         id: supabaseUser.id,
         email: supabaseUser.email,
         name: supabaseUser.email.split('@')[0],
         plan: isAdmin ? 'ADMIN' : 'PRATA',
         isAdmin,
-        avatar: `https://ui-avatars.com/api/?name=${supabaseUser.email.split('@')[0]}&background=8B5CF6&color=fff`,
         dailyUsage: { offers: 0, urls: 0 },
-        limits: isAdmin ? { offers: 'unlimited', urls: 'unlimited' } : { offers: 3, urls: 3 },
-      };
-      setUser(userProfile);
+        limits: { offers: 3, urls: 3 }
+      });
     }
   };
 
@@ -104,8 +123,6 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (error) throw error;
-
-      showSuccess('🎉 Login efetuado com sucesso!');
       return data.user;
     } catch (error) {
       setLoading(false);
@@ -123,18 +140,6 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (error) throw error;
-
-      const userProfile = {
-        id: data.user.id,
-        name: email.split('@')[0],
-        email: email,
-        plan: 'PRATA',
-        dailyUsage: { offers: 0, urls: 0 },
-      };
-
-      await supabase.from('users').insert([userProfile]);
-
-      showSuccess('✅ Cadastro realizado com sucesso!');
       return data.user;
     } catch (error) {
       setLoading(false);
