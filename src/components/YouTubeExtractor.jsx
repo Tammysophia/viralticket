@@ -1,207 +1,122 @@
 import { useState } from 'react';
-import { Youtube, Loader2, Copy, Sparkles, Heart, CheckCircle } from 'lucide-react';
+import { Youtube, Sparkles } from 'lucide-react';
 import Button from './Button';
 import Input from './Input';
 import Card from './Card';
 import { useToast } from './Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
-import { validateYouTubeUrl } from '../utils/validation';
-import { verifyAPIConnection, fetchMultipleVideosComments } from '../services/youtubeService';
+import axios from 'axios';
 
 const YouTubeExtractor = ({ onUseWithAI }) => {
-  const [urls, setUrls] = useState(['', '', '']);
+  const [tema, setTema] = useState('');
   const [loading, setLoading] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [apiConnected, setApiConnected] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState('sophia');
   const { user, updateUser } = useAuth();
   const { success, error } = useToast();
   const { t } = useLanguage();
 
-  const handleVerifyConnection = async () => {
-    setVerifying(true);
-    try {
-      const result = await verifyAPIConnection('youtube');
-      
-      if (result.success) {
-        setApiConnected(true);
-        success('✅ Conexão com YouTube API estabelecida!');
-      } else {
-        setApiConnected(false);
-        if (user.isAdmin) {
-          error(`⚠️ ${result.message}`);
-        } else {
-          error('⚡ Estamos conectando aos servidores do ViralTicket. Tente novamente em instantes!');
-        }
-      }
-    } catch (err) {
-      setApiConnected(false);
-      if (user.isAdmin) {
-        error(`⚠️ Erro: ${err.message}`);
-      } else {
-        error('⚡ Erro ao conectar. Tente novamente em instantes!');
-      }
-    } finally {
-      setVerifying(false);
-    }
-  };
+  const agents = [
+    { id: 'sophia', name: 'Sophia Fênix 🔥' },
+    { id: 'sofia', name: 'Sofia Universal 🌟' }
+  ];
 
-  const handleExtract = async () => {
-    const validUrls = urls.filter(url => url && validateYouTubeUrl(url));
-    
-    if (validUrls.length === 0) {
-      error('Adicione pelo menos uma URL válida do YouTube');
+  const handleGenerate = async () => {
+    if (!tema.trim()) {
+      error('Por favor, digite sobre o que você quer criar uma oferta');
       return;
     }
 
-    // YouTube Extractor agora é ILIMITADO para todos os planos
-    // Não verifica limites de URLs
-
     setLoading(true);
-    setComments([]); // Limpar comentários anteriores
     
     try {
-      console.log('VT: Iniciando extração de comentários...');
-      
-      // Buscar comentários reais (a verificação de API key está dentro do fetchMultipleVideosComments)
-      const fetchedComments = await fetchMultipleVideosComments(validUrls, 50);
-      console.log('VT: Comentários extraídos:', fetchedComments.length);
-      
-      if (fetchedComments.length === 0) {
-        error('❌ Nenhum comentário encontrado nos vídeos');
-        return;
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      if (!webhookUrl) {
+        throw new Error('Webhook do n8n não configurado');
       }
 
-      setComments(fetchedComments);
+      const payload = {
+        userId: user.id,
+        tema: tema,
+        agente: selectedAgent,
+        idioma: 'pt-BR'
+      };
+
+      const response = await axios.post(webhookUrl, payload);
       
-      // Não atualiza contadores de URLs pois é ilimitado
-      // Mas mantém rastreamento para estatísticas (opcional)
-      updateUser({
-        dailyUsage: {
-          ...user.dailyUsage,
-          urls: (user.dailyUsage.urls || 0) + validUrls.length, // Apenas para stats
-        },
-      });
-      
-      success(`✅ ${fetchedComments.length} comentários extraídos com sucesso!`);
-      setApiConnected(true);
-    } catch (err) {
-      console.error('VT: Erro ao extrair comentários:', err);
-      setComments([]);
-      
-      // Mostrar mensagem específica para admin ou genérica para usuário
-      if (user.isAdmin) {
-        // Admin vê detalhes técnicos
-        const adminMsg = err.adminMessage || err.message || 'Erro desconhecido';
-        error(`⚠️ [ADMIN] ${adminMsg}`);
-      } else {
-        // Usuário vê mensagem genérica
-        const userMsg = err.userMessage || '🔧 Sistema em manutenção. Tente novamente em instantes.';
-        error(userMsg);
+      if (response.data) {
+        success('✅ Oferta gerada com sucesso!');
+        onUseWithAI(response.data.oferta || response.data);
+        
+        updateUser({
+          dailyUsage: {
+            ...user.dailyUsage,
+            offers: (user.dailyUsage.offers || 0) + 1,
+          },
+        });
       }
+    } catch (err) {
+      console.error('Erro ao gerar oferta:', err);
+      error('❌ Erro ao processar sua solicitação. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopyAll = () => {
-    const text = comments.map(c => `${c.author}: ${c.text}`).join('\n');
-    navigator.clipboard.writeText(text);
-    success('Comentários copiados!');
-  };
-
-  const handleUseWithAI = () => {
-    const text = comments.map(c => c.text).join('\n');
-    onUseWithAI(text);
-    success('Comentários enviados para IA!');
-  };
-
   return (
     <div className="space-y-6">
-      {/* URL Inputs */}
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
-            <Youtube className="w-6 h-6 text-red-500" />
-            URLs do YouTube
+            <Sparkles className="w-6 h-6 text-purple-500" />
+            Criar Nova Oferta
           </h3>
-          {/* VT: Badge "API Conectada" removido conforme solicitado */}
         </div>
         
-        {user?.isAdmin && (
-          <div className="mb-4">
-            <Button
-              onClick={handleVerifyConnection}
-              loading={verifying}
-              variant="secondary"
-              className="w-full"
-            >
-              {apiConnected ? '✅ Reconectar API' : '🔌 Verificar Conexão API'}
-            </Button>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {urls.map((url, index) => (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">
+              Sobre o que você quer criar uma oferta?
+            </label>
             <Input
-              key={index}
-              placeholder={`URL ${index + 1}`}
-              value={url}
-              onChange={(e) => {
-                const newUrls = [...urls];
-                newUrls[index] = e.target.value;
-                setUrls(newUrls);
-              }}
+              placeholder="Ex: Curso de emagrecimento, Mentoria de investimentos..."
+              value={tema}
+              onChange={(e) => setTema(e.target.value)}
               icon={Youtube}
             />
-          ))}
-        </div>
-        <Button
-          onClick={handleExtract}
-          loading={loading}
-          className="w-full mt-4"
-        >
-          {t('extractComments')}
-        </Button>
-      </Card>
+          </div>
 
-      {/* Comments List */}
-      {comments.length > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">
-              {comments.length} {t('comments')}
-            </h3>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={handleCopyAll} icon={Copy}>
-                {t('copyAll')}
-              </Button>
-              <Button onClick={handleUseWithAI} icon={Sparkles}>
-                {t('useWithAI')}
-              </Button>
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">
+              Selecione sua Estrategista
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {agents.map((agent) => (
+                <button
+                  key={agent.id}
+                  onClick={() => setSelectedAgent(agent.id)}
+                  className={`p-4 rounded-xl border transition-all ${
+                    selectedAgent === agent.id
+                      ? 'border-purple-500 bg-purple-500/10 text-white'
+                      : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
+                  }`}
+                >
+                  {agent.name}
+                </button>
+              ))}
             </div>
           </div>
-          
-          <div className="space-y-3 max-h-[500px] overflow-y-auto">
-            {comments.map((comment) => (
-              <div
-                key={comment.id}
-                className="glass border border-white/5 rounded-lg p-4"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <p className="font-semibold text-purple-400">{comment.author}</p>
-                  <div className="flex items-center gap-1 text-sm text-gray-400">
-                    <Heart className="w-4 h-4" />
-                    {comment.likes}
-                  </div>
-                </div>
-                <p className="text-gray-300">{comment.text}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+        </div>
+
+        <Button
+          onClick={handleGenerate}
+          loading={loading}
+          className="w-full mt-6"
+          icon={Sparkles}
+        >
+          Gerar Oferta Viral
+        </Button>
+      </Card>
     </div>
   );
 };
