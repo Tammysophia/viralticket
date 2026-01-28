@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Key, Webhook, Bot, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import AdminOverview from '../components/AdminOverview';
 import AdminUsers from '../components/AdminUsers';
+import AdminAPIKeys from '../components/AdminAPIKeys';
+import AdminWebhooks from '../components/AdminWebhooks';
+import AdminGPTAgents from '../components/AdminGPTAgents';
 import AdminSettings from '../components/AdminSettings';
 import { useLanguage } from '../hooks/useLanguage';
 
@@ -15,6 +18,9 @@ const Admin = () => {
   const menuItems = [
     { id: 'overview', label: t('overview'), icon: LayoutDashboard },
     { id: 'users', label: t('users'), icon: Users },
+    { id: 'apiKeys', label: t('apiKeys'), icon: Key },
+    { id: 'gptAgents', label: 'Agentes GPT', icon: Bot },
+    { id: 'webhooks', label: t('webhooks'), icon: Webhook },
     { id: 'settings', label: 'Configurações', icon: Settings },
   ];
 
@@ -24,6 +30,12 @@ const Admin = () => {
         return <AdminOverview />;
       case 'users':
         return <AdminUsers />;
+      case 'apiKeys':
+        return <AdminAPIKeys />;
+      case 'gptAgents':
+        return <AdminGPTAgents />;
+      case 'webhooks':
+        return <AdminWebhooks />;
       case 'settings':
         return <AdminSettings />;
       default:
@@ -53,7 +65,7 @@ const Admin = () => {
               {menuItems.find(item => item.id === activePage)?.label}
             </h1>
             <p className="text-gray-400 mt-1">
-              Painel Administrativo ViralTicket
+              {t('managePlatform')}
             </p>
           </motion.div>
 
