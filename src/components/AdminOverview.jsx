@@ -3,8 +3,6 @@ import { TrendingUp, Users, Key, Activity } from 'lucide-react';
 import Card from './Card';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../config/firebase';
 
 const AdminOverview = () => {
   const { user } = useAuth();

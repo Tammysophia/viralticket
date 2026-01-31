@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MoreVertical, Edit, Ban } from 'lucide-react';
 import AdminCreateUser from './AdminCreateUser';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
 import Card from './Card';
 import PlanBadge from './PlanBadge';
 import Button from './Button';

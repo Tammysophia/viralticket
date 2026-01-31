@@ -1,188 +1,78 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Lock, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { useLanguage } from '../hooks/useLanguage';
-import toast, { Toaster } from 'react-hot-toast';
-import Input from '../components/Input';
+import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
-import LanguageSelectorCompact from '../components/LanguageSelectorCompact';
-import { validateEmail, validatePassword } from '../utils/validation';
+import Input from '../components/Input';
+import Card from '../components/Card';
+import toast from 'react-hot-toast';
+import { Mail, Lock } from 'lucide-react';
 
 const Login = () => {
-  const [isLogin] = useState(true); // Sempre login, cadastro removido
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
-  const { login, register, loading } = useAuth();
-  const { t } = useLanguage();
+  const [loading, setLoading] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const { login, register } = useAuth();
   const navigate = useNavigate();
-
-  const validate = () => {
-    const newErrors = {};
-    
-    if (!validateEmail(email)) {
-      newErrors.email = 'E-mail inválido';
-    }
-    
-    if (!validatePassword(password)) {
-      newErrors.password = 'Senha deve ter no mínimo 6 caracteres';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validações básicas
-    if (!email || !password) {
-      toast.error('📝 Preencha email e senha');
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('🔐 Senha deve ter no mínimo 6 caracteres');
-      return;
-    }
-
+    setLoading(true);
     try {
-      // Apenas login, cadastro via webhook ou admin
-      await login(email, password);
-      // Toast já é mostrado no AuthContext
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
+      if (isRegister) {
+        await register(email, password);
+      } else {
+        await login(email, password);
+      }
+      navigate('/dashboard');
     } catch (err) {
-      // Erros já tratados no AuthContext com toasts específicos
-      console.error('Auth error:', err);
+      // Erro já tratado no context
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-      {/* Toast Notifications */}
-      <Toaster 
-        position="top-right" 
-        reverseOrder={false}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: 'rgba(17, 17, 17, 0.95)',
-            color: '#fff',
-            border: '1px solid rgba(139, 92, 246, 0.3)',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
-            fontSize: '14px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#8B5CF6',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
-            },
-          },
-        }}
-      />
-      
-      {/* Background Animated Circles */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 180, 360],
-          }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute -top-1/2 -left-1/2 w-full h-full bg-purple-600/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            rotate: [360, 180, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-pink-600/10 rounded-full blur-3xl"
-        />
-      </div>
-
-      {/* Login Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass border border-white/20 rounded-2xl p-8 max-w-md w-full relative z-10"
-      >
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className="flex justify-center"
-          >
-            <img 
-              src="https://iili.io/KmWkhp1.png" 
-              alt="ViralTicket"
-              className="w-48 h-48 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'block';
-              }}
-            />
-            <div style={{ display: 'none' }} className="text-6xl">🎟️</div>
-          </motion.div>
+    <div className="min-h-screen flex items-center justify-center p-6 gradient-bg">
+      <Card className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white">ViralTicket</h1>
+          <p className="text-gray-400 mt-2">{isRegister ? 'Crie sua conta' : 'Acesse sua conta'}</p>
         </div>
-
-        {/* Form */}
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label={t('email')}
+            label="E-mail"
             type="email"
+            placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="seu@email.com"
-            error={errors.email}
             icon={Mail}
+            required
           />
-
           <Input
-            label={t('password')}
+            label="Senha"
             type="password"
+            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            error={errors.password}
             icon={Lock}
+            required
           />
-
-          <Button 
-            type="submit" 
-            loading={loading} 
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                {isLogin ? 'Entrando...' : 'Cadastrando...'}
-              </span>
-            ) : (
-              isLogin ? t('login') : t('register')
-            )}
+          <Button type="submit" loading={loading} className="w-full">
+            {isRegister ? 'Cadastrar' : 'Entrar'}
           </Button>
         </form>
 
-        {/* Language Selector */}
-        <div className="mt-6 flex justify-center">
-          <LanguageSelectorCompact />
+        <div className="mt-6 text-center">
+          <button 
+            onClick={() => setIsRegister(!isRegister)}
+            className="text-purple-400 hover:text-purple-300 text-sm"
+          >
+            {isRegister ? 'Já tem conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
+          </button>
         </div>
-      </motion.div>
+      </Card>
     </div>
   );
 };
